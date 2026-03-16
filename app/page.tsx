@@ -1,65 +1,135 @@
+"use client";
+
 import Image from "next/image";
+import Footer from "./components/Footer";
+import Hero from "./components/Hero";
+import Navigation from "./components/Navigation";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+    <Hero />
+      {/* ── CATEGORIES ─────────────────────────────── */}
+      <section className="categories">
+        <div className="categories__grid">
+          
+          {/* RESTAURANTS */}
+          <div className="card card--restaurants">
+            <div className="card__icon-wrap">
+              <Image src="/images/restaurant.jpg" width={65} height={65} alt='shopping-basket' />
+            </div>
+            <h2 className="card__title">RESTAURANTS</h2>
+            <p className="card__desc">
+              Order food from a wide variety of restaurants, ranging from African to
+              continental and intercontinental cuisines
+            </p>
+            <div className="card__tags">
+              <div className="card__tag">
+                <div className="card__tag-img" style={{ }}>
+                  <Image src="/images/jollof.png" width={65} height={65} alt='jollof' />
+                </div>
+                <span className="card__tag-label">Jollof Rice</span>
+              </div>
+              <div className="card__tag">
+                <div className="card__tag-img" style={{  }}>
+                  <Image src="/images/hamburger.png" width={65} height={65} alt='burger' />
+                </div>
+              </div>
+              <div className="card__tag">
+                <div className="card__tag-img" style={{  }}>
+                  <Image src="/images/pizza.png" width={65} height={65} alt='pizza' />
+                </div>
+                <span className="card__tag-label">Pizza</span>
+              </div>
+            </div>
+            <div className="card__tags">
+              <div className="card__tag">
+                <span className="card__tag-label">Egusi</span>
+              </div>
+              <div className="card__tag">
+                <span className="card__tag-label">Burgers</span>
+              </div>
+              <div className="card__tag">
+                <span className="card__tag-label">Pasta</span>
+              </div>
+            </div>
+          </div>
+
+          {/* SHOPS */}
+          <div className="card card--shops">
+            <div className="card__icon-wrap">
+              <Image src='/images/food-basket.png' width={65} height={65} alt='food basket' /> 
+            </div>
+            <h2 className="card__title">SHOPS</h2>
+            <p className="card__desc">
+              Groceries, household items, and other daily essentials from your trusted
+              stores and super markets nearby.
+            </p>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "5rem", filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.15))", margin: "16px 0" }}>
+                <Image src="/images/max-food-basket.png" width={231} height={154} alt='shopping-basket' />
+              </div>
+            </div>
+            <div className="card__coming-soon">COMING SOON</div>
+          </div>
+
+          {/* LOCAL MARKETS */}
+          <div className="card card--markets">
+            <div className="card__icon-wrap">
+               <Image src="/images/fruit-basket.png" width={65} height={65} alt='shopping-basket' />
+            </div>
+            <h2 className="card__title">Local Markets</h2>
+            <p className="card__desc">
+              Fresh produce, grains, proteins, fruits, and other groceries directly
+              from local markets closest to you.
+            </p>
+            <div className="card__produce-grid">
+              <div className="card__produce-icon">
+                <Image src="/images/carrot.png" width={55} height={55} alt='carrot' />
+              </div>
+              <div className="card__produce-icon">
+                <Image src="/images/eggplant.png" width={55} height={55} alt='eggplant' />
+              </div>
+              <div className="card__produce-icon">
+                <Image src="/images/olive.png" width={55} height={55} alt='olive' />
+              </div>
+              <div className="card__produce-icon">
+                <Image src="/images/vegetarian-drink.png" width={55} height={55} alt='vegetarian drink' />
+              </div>
+              <div className="card__produce-icon">
+                <Image src="/images/pineapple.png" width={55} height={55} alt='pineapple' />
+              </div>
+              <div className="card__produce-icon">
+                <Image src="/images/potato.png" width={55} height={55} alt='potato' />
+              </div>
+            </div>
+            <div className="card__coming-soon">COMING SOON</div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      {/* ── FOOD ICON STRIP ────────────────────────── */}
+      <div className="food-strip">
+        <span className="food-strip__icon">
+          <Image src='/images/chilli.png' width={70} height={70} alt='chili' />
+        </span>
+        <span className="food-strip__icon">
+          <Image src='/images/spag.png' width={70} height={70} alt='meal' />
+        </span>
+        <span className="food-strip__icon">
+          <Image src='/images/tomato.png' width={70} height={70} alt='tomato' />
+        </span>
+        <span className="food-strip__icon">
+          <Image src='/images/chilli.png' width={70} height={70} alt='chili' />
+        </span>
+        <span className="food-strip__icon">
+          <Image src='/images/spag.png' width={70} height={70} alt='meal' />
+        </span>
+        <span className="food-strip__icon">
+          <Image src='/images/tomato.png' width={70} height={70} alt='tomato' />
+        </span>
+      </div>
+    </main>
   );
 }
+
