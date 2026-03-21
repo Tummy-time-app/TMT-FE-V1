@@ -105,6 +105,7 @@ export default function Home() {
                   src="/images/max-food-basket.png"
                   width={231}
                   height={154}
+                  className="card__basket-img"
                   alt="shopping-basket"
                 />
               </div>
@@ -189,22 +190,58 @@ export default function Home() {
       {/* ── FOOD ICON STRIP ────────────────────────── */}
       <div className="food-strip">
         <span className="food-strip__icon">
-          <Image src="/images/chilli.png" width={70} height={70} alt="chili" />
+          <Image
+            className="food-strip__img"
+            src="/images/chilli.png"
+            width={70}
+            height={70}
+            alt="chili"
+          />
         </span>
         <span className="food-strip__icon">
-          <Image src="/images/spag.png" width={70} height={70} alt="meal" />
+          <Image
+            className="food-strip__img"
+            src="/images/spag.png"
+            width={70}
+            height={70}
+            alt="meal"
+          />
         </span>
         <span className="food-strip__icon">
-          <Image src="/images/tomato.png" width={70} height={70} alt="tomato" />
+          <Image
+            className="food-strip__img"
+            src="/images/tomato.png"
+            width={70}
+            height={70}
+            alt="tomato"
+          />
         </span>
         <span className="food-strip__icon">
-          <Image src="/images/chilli.png" width={70} height={70} alt="chili" />
+          <Image
+            className="food-strip__img"
+            src="/images/chilli.png"
+            width={70}
+            height={70}
+            alt="chili"
+          />
         </span>
         <span className="food-strip__icon">
-          <Image src="/images/spag.png" width={70} height={70} alt="meal" />
+          <Image
+            className="food-strip__img"
+            src="/images/spag.png"
+            width={70}
+            height={70}
+            alt="meal"
+          />
         </span>
         <span className="food-strip__icon">
-          <Image src="/images/tomato.png" width={70} height={70} alt="tomato" />
+          <Image
+            className="food-strip__img"
+            src="/images/tomato.png"
+            width={70}
+            height={70}
+            alt="tomato"
+          />
         </span>
       </div>
     </main>

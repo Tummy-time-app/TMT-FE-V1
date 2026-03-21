@@ -8,6 +8,7 @@ const Footer = () => {
         <div className="app-store__badge">
           <span className="app-store__badge-icon">
             <Image
+              className="app-store__logo"
               src="/images/playstore-logo.png"
               width={112}
               height={112}
@@ -22,6 +23,7 @@ const Footer = () => {
         <div className="app-store__badge">
           <span className="app-store__badge-icon">
             <Image
+              className="app-store__logo"
               src="/images/apple-logo.png"
               width={112}
               height={112}
