@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navigation from "./components/Navigation";
-import Footer from "./components/Footer";
 import ClientWrapper from "./components/ClientWrapper";
+import ConditionalNavbar from "./components/conditionalNavbar";
 
 export const metadata: Metadata = {
   title: "TummyTime - Fastest Delivery & Easy Pickup",
@@ -31,9 +30,8 @@ export default function RootLayout({
       </head>
       <body>
         <ClientWrapper>
-          <Navigation />
+         <ConditionalNavbar />
           {children}
-          <Footer />
         </ClientWrapper>
       </body>
     </html>
