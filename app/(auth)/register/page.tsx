@@ -1,42 +1,33 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in email and password.");
-      return;
-    }
-
-    setError("");
+  const handleCreateAccount = async () => {
     setLoading(true);
     // Simulate API call
     await new Promise((r) => setTimeout(r, 1200));
     setLoading(false);
-
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.push('/');
-    }, 1200);
+    router.push('/verify');
   };
 
   return (
     <div className="root">
       {/* Background */}
-      <div className="bg" />    
+      <div className="bg" />
 
       {/* Card */}
       <div className="card">
@@ -54,13 +45,28 @@ export default function LoginPage() {
         {/* Heading */}
         <h1 className="heading">
           <span className="heading-welcome">Welcome</span>{" "}
-          <span className="heading-back">back</span>
         </h1>
 
-        <p className="subtext">Sign in to your account to continue</p>
+        <p className="subtext">Create an account to get started</p>
 
         {/* Form */}
         <div className="form">
+          {/* Username */}
+          <div className="field">
+            <label htmlFor="username" className="label">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              className="input"
+              placeholder="johndoe"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+            />
+          </div>
+
           {/* Email */}
           <div className="field">
             <label htmlFor="email" className="label">
@@ -77,6 +83,22 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Phone Number */}
+          <div className="field">
+            <label htmlFor="phoneNumber" className="label">
+              Phone Number
+            </label>
+            <input
+              id="phoneNumber"
+              type="tel"
+              className="input"
+              placeholder="+1 (555) 000-0000"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              autoComplete="tel"
+            />
+          </div>
+
           {/* Password */}
           <div className="field">
             <label htmlFor="password" className="label">
@@ -90,7 +112,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -114,40 +136,59 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Forgot password */}
-          <div className="forgot-wrap">
-            <a href="#" className="forgot-link">
-              Forgot password ?
-            </a>
+          {/* Confirm Password */}
+          <div className="field">
+            <label htmlFor="confirmPassword" className="label">
+              Confirm Password
+            </label>
+            <div className="input-wrap">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                className="input"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Login button */}
+          {/* Create Account button */}
           <button
             type="button"
             className={`login-btn${loading ? " loading" : ""}`}
-            onClick={handleLogin}
+            onClick={handleCreateAccount}
             disabled={loading}
           >
-            {loading ? <span className="spinner" /> : "Login"}
+            {loading ? <span className="spinner" /> : "Create Account"}
           </button>
-
-          {error && <p className="error-text">{error}</p>}
-
-          {showSuccess && (
-            <div className="modal-overlay">
-              <div className="success-modal">
-                <h2>Login Successful</h2>
-                <p>Redirecting to dashboard...</p>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Register */}
+        {/* Login Link */}
         <p className="register-text">
-          No account yet ?{" "}
-          <Link href="/register" className="register-link">
-            Register
+          Already have an account ?{" "}
+          <Link href="/login" className="register-link">
+            Login
           </Link>
         </p>
       </div>
@@ -362,45 +403,6 @@ export default function LoginPage() {
         }
 
         .register-link:hover { color: #F5A800; }
-
-        .error-text {
-          margin-top: 8px;
-          color: #c53030;
-          font-size: 13px;
-          text-align: center;
-          font-weight: 600;
-        }
-
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.45);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 999;
-        }
-
-        .success-modal {
-          background: #fff;
-          padding: 22px 24px;
-          border-radius: 14px;
-          text-align: center;
-          box-shadow: 0 18px 35px rgba(0,0,0,0.22);
-          max-width: 300px;
-        }
-
-        .success-modal h2 {
-          margin-bottom: 8px;
-          color: #16a34a;
-          font-size: 20px;
-        }
-
-        .success-modal p {
-          color: #333;
-          font-size: 14px;
-          margin: 0;
-        }
 
         @media (max-width: 480px) {
           .card { padding: 32px 24px 28px; margin: 0 16px; }
