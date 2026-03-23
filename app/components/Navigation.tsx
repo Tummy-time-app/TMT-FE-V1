@@ -36,7 +36,7 @@ const navLinks = [
   { label: "Offers",   href: "/offers",  highlight: true },
 ];
 
-const Navigation = () => {
+const Navigation: React.FC = () => {
   const [mobileMenuOpen,    setMobileMenuOpen]    = useState(false);
   const [vendorsOpen,       setVendorsOpen]       = useState(false);
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
@@ -145,8 +145,8 @@ const Navigation = () => {
               )}
             </Link>
 
-            <button className="navbar__login">Login</button>
-            <button className="nav-signup">Sign up</button>
+            <Link href="/login" className="navbar__login">Login</Link>
+            <Link href="/signup" className="nav-signup">Sign up</Link>
           </div>
         </div>
 
@@ -311,8 +311,8 @@ const Navigation = () => {
 
         {/* Drawer footer */}
         <div className="nav-drawer__footer">
-          <button className="navbar__login nav-drawer__btn-full">Login</button>
-          <button className="nav-signup nav-drawer__btn-full">Create account</button>
+          <Link href="/login" className="navbar__login nav-drawer__btn-full">Login</Link>
+          <Link href="/signup" className="nav-signup nav-drawer__btn-full">Create account</Link>
         </div>
       </aside>
     </>
