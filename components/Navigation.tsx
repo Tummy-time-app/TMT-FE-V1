@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
+import { initialItems } from "@/lib/cartData";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import hamburgerMenuAnimation from "../assets/lottie/hamburger-menu.json";
-import closeXAnimation from "../assets/lottie/close-x.json";
+import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
+import closeXAnimation from "../app/assets/lottie/close-x.json";
 import LottieIcon from "./LottieIcon";
 
 const vendorCategories = [
@@ -42,7 +43,7 @@ const Navigation = () => {
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
   const [searchFocused,     setSearchFocused]     = useState(false);
   const [searchValue,       setSearchValue]       = useState("");
-  const [cartCount]                               = useState(2); // wire to your cart store
+  const [cartCount] = useState(initialItems.length); // wire to cart store
 
   const vendorRef = useRef<HTMLLIElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -89,8 +90,8 @@ const Navigation = () => {
             <Link href="/" className="nav-logo-link">
               <Image
                 src="/images/tummytime-logo.png"
-                width={148}
-                height={99}
+                width={200}
+                height={151}
                 alt="TummyTime"
                 priority
               />
@@ -237,7 +238,7 @@ const Navigation = () => {
       >
         {/* Drawer header */}
         <div className="nav-drawer__header">
-          <Image src="/images/tummytime-logo.png" width={120} height={80} alt="TummyTime" />
+          <Image src="/images/tummytime-logo.png" width={180} height={140} alt="TummyTime" />
           <button onClick={closeAll} className="nav-drawer__close" aria-label="Close">✕</button>
         </div>
 

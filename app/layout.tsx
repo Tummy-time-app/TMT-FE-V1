@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navigation from "./components/Navigation";
-import Footer from "./components/Footer";
-import ClientWrapper from "./components/ClientWrapper";
+import Navigation from "../components/Navigation";
+import Footer from "../components/Footer";
+import ClientWrapper from "../components/ClientWrapper";
 
 export const metadata: Metadata = {
   title: "TummyTime - Fastest Delivery & Easy Pickup",
