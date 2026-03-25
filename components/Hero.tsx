@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import LottieIcon from "./LottieIcon";
-import bicycleAnimation from "../assets/lottie/bicicleta delivery.json";
+import bicycleAnimation from "../app/assets/lottie/bicicleta delivery.json";
 
 const Hero = () => {
   return (

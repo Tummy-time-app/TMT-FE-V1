@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ClientWrapper from "./components/ClientWrapper";
-import ConditionalNavbar from "./components/conditionalNavbar";
+import ClientWrapper from "../components/ClientWrapper";
+import ConditionalNavbar from "../components/conditionalNavbar";
 
 export const metadata: Metadata = {
   title: "TummyTime - Fastest Delivery & Easy Pickup",

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import bicycleAnimation from "./assets/lottie/bicicleta delivery.json";
-import LottieIcon from "./components/LottieIcon";
+import LottieIcon from "../components/LottieIcon";
 
 const loadingMessages = [
   "Finding the best spots near you…",
