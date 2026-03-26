@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Loading from "../loading";
+import Loading from "../app/loading";
 
 export default function ClientWrapper({
   children,
