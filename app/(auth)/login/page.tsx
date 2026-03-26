@@ -116,9 +116,9 @@ export default function LoginPage() {
 
           {/* Forgot password */}
           <div className="forgot-wrap">
-            <a href="#" className="forgot-link">
+            <Link href="/forgot-password" className="forgot-link">
               Forgot password ?
-            </a>
+            </Link>
           </div>
 
           {/* Login button */}
