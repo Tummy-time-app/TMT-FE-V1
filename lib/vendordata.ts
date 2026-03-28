@@ -40,21 +40,21 @@ export const CATEGORIES: Category[] = [
 export const VENDORS: Vendor[] = [
   // Handpicked / featured
   {
-    id: "v1", name: "Mr Toms Spag & Grills", image: "",
+    id: "mr-toms-spag-grills", name: "Mr Toms Spag & Grills", image: "/images/jollof-spaghetti.jpg",
     cuisine: "Italian · Grills", category: "grills",
     rating: 5.0, reviewCount: 142, deliveryTime: "31-40",
     deliveryFee: 0, minOrder: 1500, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: true, promoLabel: "Free delivery",
   },
   {
-    id: "v2", name: "Amarachi Food", image: "",
+    id: "amarachi-food", name: "Amarachi Food", image: "/images/jollof__jolloffestival__yummy-removebg-preview.png",
     cuisine: "Nigerian · Local", category: "rice",
     rating: 4.7, reviewCount: 89, deliveryTime: "31-40",
     deliveryFee: 200, minOrder: 1000, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: true,
   },
   {
-    id: "v3", name: "Foodie.com", image: "",
+    id: "foodie", name: "Foodie.com", image: "/images/friedrice.png",
     cuisine: "Continental · Fast food", category: "burgers",
     rating: 3.5, reviewCount: 34, deliveryTime: "31-40",
     deliveryFee: 300, minOrder: 800, priceRange: 2,
@@ -62,42 +62,42 @@ export const VENDORS: Vendor[] = [
   },
   // All restaurants
   {
-    id: "v4", name: "Bankuli Pot", image: "",
+    id: "bankuli-pot", name: "Bankuli Pot", image: "/images/soup.jpg",
     cuisine: "Nigerian · Soups", category: "soup",
     rating: 5.0, reviewCount: 210, deliveryTime: "31-40",
     deliveryFee: 0, minOrder: 1200, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: false, promoLabel: "20% off",
   },
   {
-    id: "v5", name: "Gracehouse Kitchen", image: "",
+    id: "gracehouse", name: "Gracehouse Kitchen", image: "/images/Jollof stir-fry spaghetti.jpg",
     cuisine: "Nigerian · Home style", category: "rice",
     rating: 5.0, reviewCount: 67, deliveryTime: "31-40",
     deliveryFee: 150, minOrder: 1000, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: false,
   },
   {
-    id: "v6", name: "Burger Boy", image: "",
+    id: "burger-boy", name: "Burger Boy", image: "/images/hamburger.png",
     cuisine: "Fast food · Burgers", category: "burgers",
     rating: 5.0, reviewCount: 195, deliveryTime: "20-30",
     deliveryFee: 0, minOrder: 800, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: false, promoLabel: "Free delivery",
   },
   {
-    id: "v7", name: "The Pepper Spot", image: "",
+    id: "pepper-spot", name: "The Pepper Spot", image: "",
     cuisine: "Nigerian · Grills", category: "grills",
     rating: 4.3, reviewCount: 58, deliveryTime: "35-45",
     deliveryFee: 250, minOrder: 1500, priceRange: 2,
     isOpen: true, isNew: true, isFeatured: false,
   },
   {
-    id: "v8", name: "Chill & Sip Lounge", image: "",
+    id: "chill-sip-lounge", name: "Chill & Sip Lounge", image: "",
     cuisine: "Drinks · Smoothies", category: "drinks",
     rating: 4.8, reviewCount: 112, deliveryTime: "15-25",
     deliveryFee: 100, minOrder: 500, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: false,
   },
   {
-    id: "v9", name: "Mama's Kitchen", image: "",
+    id: "mamas-kitchen", name: "Mama's Kitchen", image: "",
     cuisine: "Nigerian · Home cooking", category: "rice",
     rating: 4.9, reviewCount: 301, deliveryTime: "40-55",
     deliveryFee: 0, minOrder: 1000, priceRange: 1,
