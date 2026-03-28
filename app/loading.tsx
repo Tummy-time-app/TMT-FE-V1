@@ -75,7 +75,7 @@ export default function Loading() {
         {/* logo */}
         <div className="loading-logo-wrap">
           <Image
-            src="/images/tummytime-logo.png"
+            src="/images/logo/tummytime-logo.png"
             fill
             alt="TummyTime"
             className="object-contain p-3"

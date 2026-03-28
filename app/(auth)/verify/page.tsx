@@ -97,7 +97,7 @@ export default function VerifyEmailPage() {
       <div className="card">
         {/* Logo */}
         <Image
-          src="/images/tummytime-logo.png"
+          src="/images/logo/tummytime-logo.png"
           alt="TummyTime"
           width={200}
           height={150}
@@ -206,7 +206,7 @@ export default function VerifyEmailPage() {
         /* ── Logo ── */
         .logo-img {
           object-fit: contain;
-          margin-bottom: -36px;
+          margin-bottom: 8px;
         }
 
         /* ── Heading ── */

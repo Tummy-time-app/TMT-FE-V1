@@ -89,9 +89,9 @@ const Navigation: React.FC = () => {
 
             <Link href="/" className="nav-logo-link">
               <Image
-                src="/images/tummytime-logo.png"
-                width={200}
-                height={151}
+                src="/images/logo/tummytime-logo.png"
+                width={120}
+                height={35}
                 alt="TummyTime"
                 priority
               />
@@ -238,7 +238,7 @@ const Navigation: React.FC = () => {
       >
         {/* Drawer header */}
         <div className="nav-drawer__header">
-          <Image src="/images/tummytime-logo.png" width={180} height={140} alt="TummyTime" />
+          <Image src="/images/logo/tummytime-logo.png" width={130} height={40} alt="TummyTime" className="nav-drawer__img" />
           <button onClick={closeAll} className="nav-drawer__close" aria-label="Close">✕</button>
         </div>
 

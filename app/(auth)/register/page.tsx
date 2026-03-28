@@ -34,10 +34,10 @@ export default function RegisterPage() {
         {/* Logo */}
         
           <Image
-            src="/images/tummytime-logo.png"
+            src="/images/logo/tummytime-logo.png"
             alt="TummyTime"
-            width={300}
-            height={200}
+            width={200}
+            height={100}
             priority
             className="logo-img"
           />
@@ -241,8 +241,8 @@ export default function RegisterPage() {
 
         .logo-img {
           object-fit: contain;
-          margin-bottom: -36px;
-          margin-top: -36px;    
+          margin-bottom: 8px;
+          margin-top: 16px;    
         }
 
         .heading {

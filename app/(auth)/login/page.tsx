@@ -43,10 +43,10 @@ export default function LoginPage() {
         {/* Logo */}
         
           <Image
-            src="/images/tummytime-logo.png"
+            src="/images/logo/tummytime-logo.png"
             alt="TummyTime"
-            width={300}
-            height={200}
+            width={200}
+            height={50}
             priority
             className="logo-img"
           />
@@ -200,8 +200,8 @@ export default function LoginPage() {
 
         .logo-img {
           object-fit: contain;
-          margin-bottom: -36px;
-          margin-top: -36px;    
+          margin-bottom: 32px;
+          margin-top: 16px;    
         }
 
         .heading {
