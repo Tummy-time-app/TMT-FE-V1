@@ -1,9 +1,15 @@
 "use client";
-import { MenuItem, type RestaurantData } from "@/lib/restaurantData";
 import { useCart } from "@/lib/CartContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { notFound } from "next/navigation";
+import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
+import type { MenuItem, VendorDetail } from "@/features/vendors/types";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { Map } from "@/components/maps/Map";
+import { VendorMarker } from "@/components/maps/VendorMarker";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -30,10 +36,44 @@ const PACK_OPTIONS: PackOption[] = [
 ];
 
 interface Props {
-  data: RestaurantData;
+  id: string;
 }
 
-export function RestaurantClient({ data }: Props) {
+function VendorDetailSkeleton() {
+  return (
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[380px_1fr]">
+      <div className="space-y-4">
+        <div className="aspect-video w-full animate-pulse rounded-xl bg-black/5" />
+        <div className="h-6 w-2/3 animate-pulse rounded bg-black/5" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-black/5" />
+        <div className="h-4 w-1/3 animate-pulse rounded bg-black/5" />
+      </div>
+      <div className="space-y-4">
+        <div className="h-10 w-full animate-pulse rounded-full bg-black/5" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-20 w-full animate-pulse rounded-xl bg-black/5" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function RestaurantClient({ id }: Props) {
+  const { data, isLoading, error, refetch } = useGetVendorDetailQuery(id);
+
+  if (isLoading) return <VendorDetailSkeleton />;
+
+  if (error) {
+    if (normalizeApiError(error).status === 404) notFound();
+    return <ErrorState error={error} onRetry={refetch} />;
+  }
+
+  if (!data) return null;
+
+  return <RestaurantDetail data={data} />;
+}
+
+function RestaurantDetail({ data }: { data: VendorDetail }) {
   const { restaurant, menuItems: allItems } = data;
   const { items: cartItems, cartCount, cartTotal, addItem, changeQty, getItemQty } = useCart();
 
@@ -190,6 +230,13 @@ export function RestaurantClient({ data }: Props) {
                 <span className="rp-left__meta-icon">📍</span>
                 <span>{restaurant.address}</span>
               </div>
+            </div>
+
+            {/* location */}
+            <div className="my-1 overflow-hidden rounded-lg">
+              <Map center={restaurant.location} zoom={15} height={140}>
+                <VendorMarker position={restaurant.location} />
+              </Map>
             </div>
 
             {/* tags */}

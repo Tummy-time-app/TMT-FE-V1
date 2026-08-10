@@ -3,36 +3,80 @@
 import { useCart } from "@/lib/CartContext";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
+import { useCreateOrderMutation } from "@/features/orders/ordersApi";
+import type { PaymentMethod } from "@/features/orders/types";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { useToast } from "@/components/feedback/ToastProvider";
 
 const DELIVERY_FEE = 500;
+const PICKUP_ADDRESS_NOTE = "Pre-assigned for delivery";
+const DELIVERY_ADDRESS = "23 Awolowo Road, Ikoyi Lagos";
 
 function formatNaira(n: number) {
-  return `\u20A6${n.toLocaleString("en-NG")}`;
+  return `₦${n.toLocaleString("en-NG")}`;
 }
 
 /* ── Main checkout content ─────────────────────────────── */
 function CheckoutContent() {
   const params = useSearchParams();
-  const vendorId = params.get("vendor") ?? "";
+  const vendorIdParam = params.get("vendor") ?? "";
   const initialType = (params.get("type") as "delivery" | "pickup") ?? "delivery";
   const riderNote = params.get("note") ?? "";
 
-  const { items } = useCart();
+  const { items, clearCart } = useCart();
   const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialType);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash_on_delivery");
+  const [submitError, setSubmitError] = useState("");
+  const router = useRouter();
+  const toast = useToast();
+  const [createOrder, { isLoading }] = useCreateOrderMutation();
 
-  /* If a vendor is specified, show only that vendor's items; otherwise show all */
-  const checkoutItems = vendorId
-    ? items.filter(i => i.vendorId === vendorId)
-    : items;
+  /* Group cart items by vendor — an order can only include one vendor. */
+  const vendorIds = useMemo(() => Array.from(new Set(items.map((i) => i.vendorId))), [items]);
+  const resolvedVendorId = vendorIdParam || vendorIds[0] || "";
+  const checkoutItems = resolvedVendorId ? items.filter((i) => i.vendorId === resolvedVendorId) : items;
+  const hasOtherVendorItems = !vendorIdParam && vendorIds.length > 1;
 
   const vendorName = checkoutItems.length > 0 ? checkoutItems[0].vendor : "vendor";
-  const backHref = vendorId ? `/vendors/restaurants/${vendorId}` : "/cart";
+  const backHref = resolvedVendorId ? `/vendors/restaurants/${resolvedVendorId}` : "/cart";
 
   const subtotal = checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = orderType === "delivery" ? DELIVERY_FEE : 0;
   const total = subtotal + delivery;
+
+  const handlePlaceOrder = async () => {
+    setSubmitError("");
+    try {
+      const order = await createOrder({
+        vendorId: resolvedVendorId,
+        vendorName,
+        items: checkoutItems.map((i) => ({
+          id: i.id,
+          name: i.name,
+          image: i.image,
+          price: i.price,
+          qty: i.qty,
+          note: i.note,
+        })),
+        orderType,
+        deliveryAddress: orderType === "delivery" ? DELIVERY_ADDRESS : undefined,
+        riderNote: riderNote || undefined,
+        paymentMethod,
+        subtotal,
+        deliveryFee: delivery,
+        total,
+      }).unwrap();
+
+      clearCart();
+      toast.success("Order placed! Tracking it now…");
+      router.push(`/orders/${order.id}`);
+    } catch (err) {
+      setSubmitError(normalizeApiError(err as never).message);
+    }
+  };
 
   if (checkoutItems.length === 0) {
     return (
@@ -54,6 +98,13 @@ function CheckoutContent() {
         </svg>
         Back to vendor
       </Link>
+
+      {hasOtherVendorItems && (
+        <div className="co-vendor-notice">
+          Your cart has items from other vendors too — orders can only include one vendor at a time, so only{" "}
+          <strong>{vendorName}</strong> items are included here. <Link href="/cart">Manage your cart</Link>
+        </div>
+      )}
 
       <div className="co-layout">
         {/* ── LEFT: Checkout form ──────────────────────── */}
@@ -79,7 +130,7 @@ function CheckoutContent() {
           {/* Delivery address / Pickup info */}
           {orderType === "delivery" ? (
             <div className="co-address">
-              <div className="co-address__badge">Pre-assigned for delivery</div>
+              <div className="co-address__badge">{PICKUP_ADDRESS_NOTE}</div>
               <div className="co-address__row">
                 <span className="co-address__icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--crimson)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,7 +140,7 @@ function CheckoutContent() {
                 </span>
                 <div>
                   <p className="co-address__label">Delivery address</p>
-                  <p className="co-address__value">23 Awolowo Road, Ikoyi Lagos</p>
+                  <p className="co-address__value">{DELIVERY_ADDRESS}</p>
                 </div>
                 <button className="co-address__change">Change</button>
               </div>
@@ -143,13 +194,25 @@ function CheckoutContent() {
           <div className="co-payment">
             <h2 className="co-payment__title">Payment method</h2>
             <div className="co-payment__options">
-              <label className="co-payment__option co-payment__option--active">
-                <input type="radio" name="payment" defaultChecked className="co-payment__radio" />
+              <label className={`co-payment__option ${paymentMethod === "cash_on_delivery" ? "co-payment__option--active" : ""}`}>
+                <input
+                  type="radio"
+                  name="payment"
+                  className="co-payment__radio"
+                  checked={paymentMethod === "cash_on_delivery"}
+                  onChange={() => setPaymentMethod("cash_on_delivery")}
+                />
                 <span className="co-payment__option-icon">💳</span>
                 <span>Pay on delivery</span>
               </label>
-              <label className="co-payment__option">
-                <input type="radio" name="payment" className="co-payment__radio" />
+              <label className={`co-payment__option ${paymentMethod === "bank_transfer" ? "co-payment__option--active" : ""}`}>
+                <input
+                  type="radio"
+                  name="payment"
+                  className="co-payment__radio"
+                  checked={paymentMethod === "bank_transfer"}
+                  onChange={() => setPaymentMethod("bank_transfer")}
+                />
                 <span className="co-payment__option-icon">🏦</span>
                 <span>Bank transfer</span>
               </label>
@@ -179,9 +242,15 @@ function CheckoutContent() {
             <span>{formatNaira(total)}</span>
           </div>
 
-          <button className="co-summary__cta">
-            Place Order &mdash; {formatNaira(total)}
+          <button className="co-summary__cta" onClick={handlePlaceOrder} disabled={isLoading}>
+            {isLoading ? (
+              <span className="co-summary__cta-spinner" />
+            ) : (
+              <>Place Order &mdash; {formatNaira(total)}</>
+            )}
           </button>
+
+          {submitError && <p className="co-summary__error">{submitError}</p>}
 
           <p className="co-summary__note">
             By placing this order, you agree to our terms & conditions.
@@ -192,11 +261,13 @@ function CheckoutContent() {
   );
 }
 
-/* ── Page wrapper with Suspense (for useSearchParams) ── */
+/* ── Page wrapper with Suspense (for useSearchParams) + auth gate ── */
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="co-page" style={{ minHeight: "60vh" }} />}>
-      <CheckoutContent />
-    </Suspense>
+    <RequireAuth>
+      <Suspense fallback={<div className="co-page" style={{ minHeight: "60vh" }} />}>
+        <CheckoutContent />
+      </Suspense>
+    </RequireAuth>
   );
 }

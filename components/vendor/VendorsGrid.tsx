@@ -1,58 +1,64 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useVendorFilters } from "./VendorFilters";
-import { Vendor, VENDORS } from "@/lib/vendordata";
+import { useGetVendorsQuery } from "@/features/vendors/vendorsApi";
 import VendorCard from "../VendorCard";
+import { ErrorState } from "@/components/feedback/ErrorState";
+
+const PAGE_SIZE = 6;
 
 const VendorsGrid = () => {
-  const { activeCategory, sortKey, filters, search, page, setPage } =
+  const { activeCategory, sortKey, filters, search, page, setPage, resetFilters, setFilteredCount } =
     useVendorFilters();
 
-  const { setFilteredCount } = useVendorFilters();
+  const { data, isLoading, isFetching, error, refetch } = useGetVendorsQuery({
+    category: activeCategory,
+    search,
+    sort: sortKey,
+    freeDelivery: filters.freeDelivery,
+    openNow: filters.openNow,
+    maxDeliveryTime: filters.maxDeliveryTime,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
-  const PAGE_SIZE = 6;
-
-  const filtered = useMemo<Vendor[]>(() => {
-    let list = [...VENDORS];
-
-    if (activeCategory !== "all")
-      list = list.filter((v) => v.category === activeCategory);
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (v) =>
-          v.name.toLowerCase().includes(q) ||
-          v.cuisine.toLowerCase().includes(q),
-      );
-    }
-
-    if (filters.freeDelivery) list = list.filter((v) => v.deliveryFee === 0);
-    if (filters.openNow) list = list.filter((v) => v.isOpen);
-
-    if (filters.maxDeliveryTime > 0)
-      list = list.filter(
-        (v) =>
-          parseInt(v.deliveryTime.split("-")[1]) <= filters.maxDeliveryTime,
-      );
-
-    if (sortKey === "rating") list.sort((a, b) => b.rating - a.rating);
-    if (sortKey === "delivery_time")
-      list.sort((a, b) => parseInt(a.deliveryTime) - parseInt(b.deliveryTime));
-    if (sortKey === "delivery_fee")
-      list.sort((a, b) => a.deliveryFee - b.deliveryFee);
-
-    return list;
-  }, [activeCategory, sortKey, filters, search]);
+  const featured = data?.featured ?? [];
+  const visibleAll = data?.vendors ?? [];
+  const total = data?.total ?? 0;
+  const hasMore = visibleAll.length < total;
+  const isPaginating = isFetching && page > 1;
 
   useEffect(() => {
-    setFilteredCount(filtered.length);
-  }, [filtered, setFilteredCount]);
+    setFilteredCount(featured.length + total);
+  }, [featured.length, total, setFilteredCount]);
 
-  const featured = filtered.filter((v) => v.isFeatured);
-  const allVendors = filtered.filter((v) => !v.isFeatured);
+  if (isLoading) {
+    return (
+      <section className="vp-section">
+        <div className="vp-grid">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <VendorCard key={i} skeleton />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
-  const visibleAll = allVendors.slice(0, page * PAGE_SIZE);
-  const hasMore = visibleAll.length < allVendors.length;
+  if (error) {
+    return <ErrorState error={error} onRetry={refetch} />;
+  }
+
+  if (featured.length === 0 && visibleAll.length === 0) {
+    return (
+      <div className="vp-empty">
+        <div className="vp-empty-icon">🍽️</div>
+        <p className="vp-empty-title">No restaurants found</p>
+        <p className="vp-empty-sub">Try a different search term or clear your filters.</p>
+        <button className="vp-empty-cta" onClick={resetFilters}>
+          Clear filters
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -70,29 +76,32 @@ const VendorsGrid = () => {
         </section>
       )}
 
-      <section className="vp-section">
-        <div className="vp-section-row">
-          <h2 className="vp-section-title">All restaurants</h2>
-          <span className="vp-count">{allVendors.length} restaurants</span>
-        </div>
-
-        <div className="vp-grid">
-          {visibleAll.map((v) => (
-            <VendorCard key={v.id} vendor={v} />
-          ))}
-        </div>
-
-        {hasMore && (
-          <div className="vp-load-more">
-            <button
-              className="vp-load-more-btn"
-              onClick={() => setPage((p) => p + 1)}
-            >
-              View more restaurants
-            </button>
+      {visibleAll.length > 0 && (
+        <section className="vp-section">
+          <div className="vp-section-row">
+            <h2 className="vp-section-title">All restaurants</h2>
+            <span className="vp-count">{total} restaurants</span>
           </div>
-        )}
-      </section>
+
+          <div className="vp-grid">
+            {visibleAll.map((v) => (
+              <VendorCard key={v.id} vendor={v} />
+            ))}
+          </div>
+
+          {hasMore && (
+            <div className="vp-load-more">
+              <button
+                className="vp-load-more-btn"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={isPaginating}
+              >
+                {isPaginating ? "Loading…" : "View more restaurants"}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
     </>
   );
 };

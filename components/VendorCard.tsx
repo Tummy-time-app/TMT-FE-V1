@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Vendor } from "../lib/vendordata";
+import type { Vendor } from "@/features/vendors/types";
 import Image from "next/image";
 
 function StarRating({ rating }: { rating: number }) {

@@ -29,7 +29,6 @@ const parsed = envSchema.safeParse({
 });
 
 if (!parsed.success && process.env.NODE_ENV !== "production") {
-  // eslint-disable-next-line no-console
   console.warn(
     "[config/env] Invalid environment variables:",
     parsed.error.flatten().fieldErrors

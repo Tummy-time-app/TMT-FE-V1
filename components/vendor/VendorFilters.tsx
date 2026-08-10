@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { CATEGORIES } from "@/lib/vendordata";
+import { useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
 
 /* ───────────────────────── TYPES ───────────────────────── */
 
@@ -116,7 +116,7 @@ function VendorFilters({ children }: { children: ReactNode }) {
 /* ───────────────────────── SEARCH ───────────────────────── */
 
 VendorFilters.Search = function Search() {
-  const { search, setSearch, page, setPage } = useVendorFilters();
+  const { search, setSearch, setPage } = useVendorFilters();
 
   return (
     <div className="vp-search-wrap">
@@ -279,30 +279,35 @@ VendorFilters.Drawer = function Drawer() {
 
 VendorFilters.Categories = function Categories() {
   const { activeCategory, setActiveCategory, setPage } = useVendorFilters();
+  const { data: categories, isLoading } = useGetVendorCategoriesQuery();
 
   return (
     <section className="vp-section">
       <h2 className="vp-section-title">Explore categories</h2>
       <div className="vp-categories" role="list">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            role="listitem"
-            className={`vp-cat-btn ${
-              activeCategory === cat.id ? "vp-cat-btn--active" : ""
-            }`}
-            style={{
-              background: activeCategory === cat.id ? cat.gradient : undefined,
-            }}
-            onClick={() => {
-              setActiveCategory(cat.id);
-              setPage(1);
-            }}
-          >
-            <span className="vp-cat-emoji">{cat.emoji}</span>
-            <span className="vp-cat-label">{cat.label}</span>
-          </button>
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="vc-skel" style={{ width: 88, height: 78, borderRadius: 16, flexShrink: 0 }} aria-hidden />
+            ))
+          : categories?.map((cat) => (
+              <button
+                key={cat.id}
+                role="listitem"
+                className={`vp-cat-btn ${
+                  activeCategory === cat.id ? "vp-cat-btn--active" : ""
+                }`}
+                style={{
+                  background: activeCategory === cat.id ? cat.gradient : undefined,
+                }}
+                onClick={() => {
+                  setActiveCategory(cat.id);
+                  setPage(1);
+                }}
+              >
+                <span className="vp-cat-emoji">{cat.emoji}</span>
+                <span className="vp-cat-label">{cat.label}</span>
+              </button>
+            ))}
       </div>
     </section>
   );

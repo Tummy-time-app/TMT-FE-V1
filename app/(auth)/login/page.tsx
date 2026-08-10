@@ -2,34 +2,51 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAppDispatch } from "@/store/hooks";
+import { useLoginMutation } from "@/features/auth/authApi";
+import { setCredentials } from "@/features/auth/authSlice";
+import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { safeRedirectPath } from "@/lib/utils/safeRedirect";
+import { cn } from "@/lib/utils/cn";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+  const [login, { isLoading }] = useLoginMutation();
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in email and password.");
-      return;
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      const response = await login(values).unwrap();
+      dispatch(setCredentials(response));
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        if (!response.user.emailVerified) {
+          router.push(`/verify?email=${encodeURIComponent(response.user.email)}`);
+          return;
+        }
+        router.push(safeRedirectPath(searchParams.get("redirect")));
+      }, 1000);
+    } catch (err) {
+      const { message } = normalizeApiError(err as never);
+      setError("root", { message });
     }
-
-    setError("");
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.push('/');
-    }, 1200);
   };
 
   return (
@@ -53,7 +70,7 @@ export default function LoginPage() {
 
         <p className="auth-subtext">Sign in to your account to continue</p>
 
-        <div className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="auth-field">
             <label htmlFor="email" className="auth-label">
               Email
@@ -61,12 +78,13 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
-              className="auth-input"
+              className={cn("auth-input", errors.email && "auth-input--invalid")}
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
+            {errors.email && <p className="auth-field-error">{errors.email.message}</p>}
           </div>
 
           <div className="auth-field">
@@ -77,11 +95,11 @@ export default function LoginPage() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                className="auth-input"
+                className={cn("auth-input", errors.password && "auth-input--invalid")}
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                aria-invalid={!!errors.password}
+                {...register("password")}
               />
               <button
                 type="button"
@@ -103,34 +121,34 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+            {errors.password && <p className="auth-field-error">{errors.password.message}</p>}
           </div>
 
           <div className="auth-forgot-wrap">
-            <a href="#" className="auth-forgot-link">
+            <Link href="/forgot-password" className="auth-forgot-link">
               Forgot password ?
-            </a>
+            </Link>
           </div>
 
           <button
-            type="button"
-            className={`auth-submit-btn${loading ? " auth-submit-btn--loading" : ""}`}
-            onClick={handleLogin}
-            disabled={loading}
+            type="submit"
+            className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
+            disabled={isLoading}
           >
-            {loading ? <span className="auth-spinner" /> : "Login"}
+            {isLoading ? <span className="auth-spinner" /> : "Login"}
           </button>
 
-          {error && <p className="auth-error-text">{error}</p>}
+          {errors.root && <p className="auth-error-text">{errors.root.message}</p>}
 
           {showSuccess && (
             <div className="auth-modal-overlay">
               <div className="auth-success-modal">
                 <h2>Login Successful</h2>
-                <p>Redirecting to dashboard...</p>
+                <p>Redirecting…</p>
               </div>
             </div>
           )}
-        </div>
+        </form>
 
         <p className="auth-switch-text">
           No account yet ?{" "}
@@ -140,5 +158,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="auth-root" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

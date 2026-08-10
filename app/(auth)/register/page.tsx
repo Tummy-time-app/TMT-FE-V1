@@ -4,23 +4,43 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRegisterMutation } from "@/features/auth/authApi";
+import { registerSchema, type RegisterFormValues } from "@/features/auth/schemas";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { cn } from "@/lib/utils/cn";
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [registerUser, { isLoading }] = useRegisterMutation();
 
-  const handleCreateAccount = async () => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    router.push('/verify');
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
+
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      const response = await registerUser({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        password: values.password,
+      }).unwrap();
+      router.push(`/verify?email=${encodeURIComponent(response.user.email)}`);
+    } catch (err) {
+      const { message, fieldErrors } = normalizeApiError(err as never);
+      if (fieldErrors?.email) {
+        setError("email", { message: fieldErrors.email[0] });
+      } else {
+        setError("root", { message });
+      }
+    }
   };
 
   return (
@@ -43,20 +63,21 @@ export default function RegisterPage() {
 
         <p className="auth-subtext">Create an account to get started</p>
 
-        <div className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="auth-field">
-            <label htmlFor="username" className="auth-label">
+            <label htmlFor="name" className="auth-label">
               Username
             </label>
             <input
-              id="username"
+              id="name"
               type="text"
-              className="auth-input"
+              className={cn("auth-input", errors.name && "auth-input--invalid")}
               placeholder="johndoe"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
+              aria-invalid={!!errors.name}
+              {...register("name")}
             />
+            {errors.name && <p className="auth-field-error">{errors.name.message}</p>}
           </div>
 
           <div className="auth-field">
@@ -66,27 +87,29 @@ export default function RegisterPage() {
             <input
               id="email"
               type="email"
-              className="auth-input"
+              className={cn("auth-input", errors.email && "auth-input--invalid")}
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              aria-invalid={!!errors.email}
+              {...register("email")}
             />
+            {errors.email && <p className="auth-field-error">{errors.email.message}</p>}
           </div>
 
           <div className="auth-field">
-            <label htmlFor="phoneNumber" className="auth-label">
+            <label htmlFor="phone" className="auth-label">
               Phone Number
             </label>
             <input
-              id="phoneNumber"
+              id="phone"
               type="tel"
-              className="auth-input"
+              className={cn("auth-input", errors.phone && "auth-input--invalid")}
               placeholder="+234 800 000 0000"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
               autoComplete="tel"
+              aria-invalid={!!errors.phone}
+              {...register("phone")}
             />
+            {errors.phone && <p className="auth-field-error">{errors.phone.message}</p>}
           </div>
 
           <div className="auth-field">
@@ -97,11 +120,11 @@ export default function RegisterPage() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                className="auth-input"
+                className={cn("auth-input", errors.password && "auth-input--invalid")}
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
+                aria-invalid={!!errors.password}
+                {...register("password")}
               />
               <button
                 type="button"
@@ -123,6 +146,7 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+            {errors.password && <p className="auth-field-error">{errors.password.message}</p>}
           </div>
 
           <div className="auth-field">
@@ -133,11 +157,11 @@ export default function RegisterPage() {
               <input
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                className="auth-input"
+                className={cn("auth-input", errors.confirmPassword && "auth-input--invalid")}
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
+                aria-invalid={!!errors.confirmPassword}
+                {...register("confirmPassword")}
               />
               <button
                 type="button"
@@ -159,17 +183,19 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+            {errors.confirmPassword && <p className="auth-field-error">{errors.confirmPassword.message}</p>}
           </div>
 
           <button
-            type="button"
-            className={`auth-submit-btn${loading ? " auth-submit-btn--loading" : ""}`}
-            onClick={handleCreateAccount}
-            disabled={loading}
+            type="submit"
+            className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
+            disabled={isLoading}
           >
-            {loading ? <span className="auth-spinner" /> : "Create Account"}
+            {isLoading ? <span className="auth-spinner" /> : "Create Account"}
           </button>
-        </div>
+
+          {errors.root && <p className="auth-error-text">{errors.root.message}</p>}
+        </form>
 
         <p className="auth-switch-text">
           Already have an account ?{" "}

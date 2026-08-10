@@ -1,8 +1,12 @@
 import { mockDelay } from "@/lib/dev/devMode";
 import type {
   AuthResponse,
+  ForgotPasswordPayload,
   LoginCredentials,
+  MessageResponse,
   RegisterPayload,
+  ResendOtpPayload,
+  ResetPasswordPayload,
   User,
   VerifyOtpPayload,
 } from "@/features/auth/types";
@@ -70,8 +74,16 @@ function issueSession(userId: string) {
 }
 
 function toPublicUser(record: MockUserRecord): User {
-  const { password: _password, ...user } = record;
-  return user;
+  return {
+    id: record.id,
+    email: record.email,
+    name: record.name,
+    phone: record.phone,
+    role: record.role,
+    avatarUrl: record.avatarUrl,
+    emailVerified: record.emailVerified,
+    createdAt: record.createdAt,
+  };
 }
 
 export async function mockLogin({ email, password }: LoginCredentials): Promise<AuthResponse> {
@@ -103,7 +115,6 @@ export async function mockRegister(payload: RegisterPayload): Promise<AuthRespon
   };
   saveUsers([...users, record]);
   if (typeof window !== "undefined") {
-    // eslint-disable-next-line no-console
     console.info(`[dev mock] Verification code for ${record.email}: ${MOCK_OTP}`);
   }
   return { user: toPublicUser(record), session: issueSession(record.id) };
@@ -133,4 +144,71 @@ export async function mockGetSession(token: string): Promise<AuthResponse> {
     throw { status: 401, message: "Session expired." };
   }
   return { user: toPublicUser(record), session: issueSession(record.id) };
+}
+
+export async function mockResendOtp({ email }: ResendOtpPayload): Promise<MessageResponse> {
+  await mockDelay(400);
+  const users = loadUsers();
+  if (!users.some((u) => u.email.toLowerCase() === email.trim().toLowerCase())) {
+    throw { status: 404, message: "No account found for this email." };
+  }
+  if (typeof window !== "undefined") {
+    console.info(`[dev mock] Verification code for ${email}: ${MOCK_OTP}`);
+  }
+  return { message: "Verification code resent." };
+}
+
+const RESET_TOKENS_STORAGE_KEY = "tummytime_mock_reset_tokens";
+
+function loadResetTokens(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(RESET_TOKENS_STORAGE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveResetTokens(tokens: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(RESET_TOKENS_STORAGE_KEY, JSON.stringify(tokens));
+}
+
+export async function mockRequestPasswordReset({ email }: ForgotPasswordPayload): Promise<MessageResponse> {
+  await mockDelay(500);
+  const users = loadUsers();
+  const record = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+  // Always report success even if the account doesn't exist, so the UI
+  // can't be used to enumerate registered emails.
+  if (record) {
+    const token = `reset.${record.id}.${Date.now()}`;
+    const tokens = loadResetTokens();
+    tokens[token] = record.id;
+    saveResetTokens(tokens);
+    if (typeof window !== "undefined") {
+      console.info(
+        `[dev mock] Password reset link for ${email}: /reset-password?token=${token}`
+      );
+    }
+  }
+  return { message: "If an account exists for that email, a reset link has been sent." };
+}
+
+export async function mockResetPassword({ token, password }: ResetPasswordPayload): Promise<AuthResponse> {
+  await mockDelay(500);
+  const tokens = loadResetTokens();
+  const userId = tokens[token];
+  if (!userId) {
+    throw { status: 422, message: "This reset link is invalid or has expired." };
+  }
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) {
+    throw { status: 404, message: "No account found for this reset link." };
+  }
+  users[idx] = { ...users[idx], password };
+  saveUsers(users);
+  delete tokens[token];
+  saveResetTokens(tokens);
+  return { user: toPublicUser(users[idx]), session: issueSession(users[idx].id) };
 }

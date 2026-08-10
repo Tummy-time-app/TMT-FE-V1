@@ -2,10 +2,15 @@
 import Image from "next/image";
 import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { LogOut, PackageSearch } from "lucide-react";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "../app/assets/lottie/close-x.json";
 import LottieIcon from "./LottieIcon";
+import { useAuth } from "@/features/auth/hooks";
+import { useToast } from "@/components/feedback/ToastProvider";
+import { addRecentSearch } from "@/lib/utils/recentSearches";
 
 const vendorCategories = [
   {
@@ -41,11 +46,16 @@ const Navigation: React.FC = () => {
   const [mobileMenuOpen,    setMobileMenuOpen]    = useState(false);
   const [vendorsOpen,       setVendorsOpen]       = useState(false);
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
+  const [userMenuOpen,      setUserMenuOpen]      = useState(false);
   const [searchFocused,     setSearchFocused]     = useState(false);
   const [searchValue,       setSearchValue]       = useState("");
   const { cartCount } = useCart();
+  const { user, isAuthenticated, isSessionLoading, logout } = useAuth();
+  const toast = useToast();
+  const router = useRouter();
 
   const vendorRef = useRef<HTMLLIElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /* close vendor dropdown on outside click */
@@ -54,10 +64,35 @@ const Navigation: React.FC = () => {
       if (vendorRef.current && !vendorRef.current.contains(e.target as Node)) {
         setVendorsOpen(false);
       }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleLogout = () => {
+    setUserMenuOpen(false);
+    logout();
+    toast.success("You've been logged out.");
+    router.push("/");
+  };
+
+  const submitSearch = (value: string) => {
+    const q = value.trim();
+    if (!q) return;
+    addRecentSearch(q);
+    closeAll();
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitSearch(searchValue);
+    }
+  };
 
   /* lock body scroll when drawer is open */
   useEffect(() => {
@@ -123,6 +158,7 @@ const Navigation: React.FC = () => {
                 placeholder="Search restaurants, foods, stores…"
                 value={searchValue}
                 onChange={e => setSearchValue(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 aria-label="Search"
@@ -146,8 +182,52 @@ const Navigation: React.FC = () => {
               )}
             </Link>
 
-            <Link href="/login" className="navbar__login">Login</Link>
-            <Link href="/register" className="nav-signup">Sign up</Link>
+            {isSessionLoading ? (
+              <span className="nav-user-skeleton" aria-hidden />
+            ) : isAuthenticated && user ? (
+              <div className="nav-user" ref={userMenuRef}>
+                <button
+                  className="nav-user-btn"
+                  onClick={() => setUserMenuOpen((p) => !p)}
+                  aria-haspopup="true"
+                  aria-expanded={userMenuOpen}
+                >
+                  <span className="nav-user-avatar" aria-hidden>
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="nav-user-name">{user.name.split(" ")[0]}</span>
+                  <span className={`nav-chevron ${userMenuOpen ? "nav-chevron--up" : ""}`}>▾</span>
+                </button>
+
+                {userMenuOpen && (
+                  <div className="nav-user-dropdown" role="menu">
+                    <Link
+                      href="/orders"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <PackageSearch size={15} aria-hidden />
+                      My orders
+                    </Link>
+                    <button
+                      type="button"
+                      className="nav-user-dropdown__item nav-user-dropdown__item--danger"
+                      role="menuitem"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={15} aria-hidden />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="navbar__login">Login</Link>
+                <Link href="/register" className="nav-signup">Sign up</Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -262,6 +342,9 @@ const Navigation: React.FC = () => {
             type="text"
             placeholder="Search restaurants, foods…"
             className="nav-drawer__search-input"
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
         </div>
 
@@ -312,8 +395,36 @@ const Navigation: React.FC = () => {
 
         {/* Drawer footer */}
         <div className="nav-drawer__footer">
-          <Link href="/login" className="navbar__login nav-drawer__btn-full">Login</Link>
-          <Link href="/register" className="nav-signup nav-drawer__btn-full">Create account</Link>
+          {isAuthenticated && user ? (
+            <>
+              <div className="nav-drawer__user">
+                <span className="nav-user-avatar" aria-hidden>
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+                <div>
+                  <p className="nav-drawer__user-name">{user.name}</p>
+                  <p className="nav-drawer__user-email">{user.email}</p>
+                </div>
+              </div>
+              <Link href="/orders" className="navbar__login nav-drawer__btn-full" onClick={closeAll}>
+                <PackageSearch size={15} aria-hidden style={{ marginRight: 6, verticalAlign: -2 }} />
+                My orders
+              </Link>
+              <button
+                type="button"
+                className="nav-signup nav-drawer__btn-full"
+                onClick={() => { closeAll(); handleLogout(); }}
+              >
+                <LogOut size={15} aria-hidden style={{ marginRight: 6, verticalAlign: -2 }} />
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="navbar__login nav-drawer__btn-full" onClick={closeAll}>Login</Link>
+              <Link href="/register" className="nav-signup nav-drawer__btn-full" onClick={closeAll}>Create account</Link>
+            </>
+          )}
         </div>
       </aside>
     </>

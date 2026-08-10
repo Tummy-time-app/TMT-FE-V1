@@ -36,6 +36,7 @@ export interface RestaurantData {
     logo: string;
     tags: string[];
     categories: string[];
+    location: { lat: number; lng: number };
   };
   menuItems: MenuItem[];
 }
@@ -58,6 +59,7 @@ const GRACEHOUSE_BASE: RestaurantData = {
     logo: "/images/logo/tummytime-logo.png",
     tags: ["African", "Continental", "Rice dishes", "Proteins"],
     categories: ["Popular", "Rice & Swallows", "Proteins", "Sides", "Drinks"],
+    location: { lat: 6.455, lng: 3.430 },
   },
   menuItems: [
     { id: 1,  name: "Jollof Rice + Chicken",   description: "Smoky party jollof with golden fried chicken, coleslaw & fried plantain",  price: 3500, image: "/images/jollof.png",     category: "Popular",          popular: true,  spicy: true,  available: true },
@@ -117,6 +119,7 @@ export function getRestaurantData(id: string): RestaurantData | null {
       logo: '/images/logo/tummytime-logo.png',
       tags: [vendor.cuisine.split(' · ')[0]],
       categories: ['Popular'],
+      location: vendor.location,
     },
     menuItems: GRACEHOUSE_BASE.menuItems,
   };

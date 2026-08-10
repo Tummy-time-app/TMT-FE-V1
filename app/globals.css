@@ -472,6 +472,123 @@ body {
   align-items: center;
   gap: 16px;
 }
+
+/* ── User menu (authenticated state) ─────────────────────── */
+.nav-user-skeleton {
+  width: 96px;
+  height: 38px;
+  border-radius: 100px;
+  background: rgba(172, 0, 0, 0.06);
+}
+
+.nav-user {
+  position: relative;
+}
+
+.nav-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border: 1.5px solid rgba(172, 0, 0, 0.15);
+  border-radius: 100px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.nav-user-btn:hover {
+  background: rgba(172, 0, 0, 0.04);
+  border-color: var(--crimson);
+}
+
+.nav-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--crimson);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-user-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 170px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  z-index: 300;
+  padding: 6px;
+  animation: navDropdown 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.nav-user-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-user-dropdown__item:hover {
+  background: rgba(172, 0, 0, 0.06);
+}
+
+.nav-user-dropdown__item--danger {
+  color: var(--crimson);
+}
+
+/* ── Drawer user card (mobile) ───────────────────────────── */
+.nav-drawer__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 14px;
+}
+
+.nav-drawer__user-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.nav-drawer__user-email {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 1px;
+}
  
 /* ── Bottom row — desktop nav ─────────────────────────────── */
 .nav-bottom {
@@ -3195,6 +3312,36 @@ body {
   }
 }
 
+/* ── Recent searches (search page) ───────────────────────── */
+.search-recent__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.search-recent__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1.5px solid rgba(172, 0, 0, 0.15);
+  background: #fff;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.search-recent__chip svg { color: #aaa; flex-shrink: 0; }
+
+.search-recent__chip:hover {
+  border-color: var(--crimson);
+  color: var(--crimson);
+}
+
 /* ═══════════════════════════════════════════════════════════
    AUTH PAGES  (Login / Register / Verify)
 ═══════════════════════════════════════════════════════════ */
@@ -3477,6 +3624,65 @@ body {
   .auth-otp-row { gap: 8px; }
 }
 
+/* ── Field-level validation (RHF + Zod) ──────────────────── */
+.auth-input--invalid {
+  border-color: #c53030 !important;
+  background: #fff5f5 !important;
+}
+
+.auth-field-error {
+  color: #c53030;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: -2px;
+}
+
+.auth-otp-row--invalid .auth-otp-box {
+  border-color: #c53030;
+}
+
+/* ── OTP resend ───────────────────────────────────────────── */
+.auth-resend-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.auth-resend-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #C8102E;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.auth-resend-btn:hover:not(:disabled) { color: #F5A800; }
+.auth-resend-btn:disabled { color: #bbb; cursor: not-allowed; }
+
+/* ── Confirmation / info panel (forgot-password sent state) ── */
+.auth-confirm-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(200, 16, 46, 0.08);
+  color: #C8102E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.auth-confirm-email {
+  font-weight: 700;
+  color: #222;
+}
+
 
 /* ═══════════════════════════════════════════════════════════
    CHECKOUT PAGE
@@ -3496,6 +3702,33 @@ body {
   transition: opacity 0.2s;
 }
 .co-back:hover { opacity: 0.7; }
+
+/* ── Mock map surface (components/maps/Map.tsx dev fallback) ────────── */
+.mock-map-grid {
+  background-color: #EAF0E4;
+  background-image:
+    linear-gradient(rgba(120, 150, 110, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 150, 110, 0.14) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.co-vendor-notice {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  padding: 12px 18px;
+  background: rgba(255, 183, 3, 0.12);
+  border: 1.5px solid rgba(255, 183, 3, 0.35);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: #7a5300;
+  line-height: 1.5;
+}
+
+.co-vendor-notice a {
+  color: var(--crimson);
+  font-weight: 700;
+  text-decoration: underline;
+}
 
 .co-layout {
   display: grid;
@@ -3686,10 +3919,33 @@ body {
   cursor: pointer; transition: all 0.2s;
   margin-bottom: 12px;
 }
-.co-summary__cta:hover {
+.co-summary__cta:hover:not(:disabled) {
   background: var(--crimson-dark);
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(172,0,0,0.25);
+}
+
+.co-summary__cta:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.co-summary__cta-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: authSpin 0.7s linear infinite;
+}
+
+.co-summary__error {
+  color: #c53030;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 .co-summary__note {

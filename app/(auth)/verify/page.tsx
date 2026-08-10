@@ -1,18 +1,37 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef, KeyboardEvent, ClipboardEvent } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Suspense, useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAppDispatch } from "@/store/hooks";
+import { useResendOtpMutation, useVerifyOtpMutation } from "@/features/auth/authApi";
+import { setCredentials } from "@/features/auth/authSlice";
+import { otpSchema } from "@/features/auth/schemas";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { cn } from "@/lib/utils/cn";
 
 const OTP_LENGTH = 6;
+const RESEND_COOLDOWN_SECONDS = 30;
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
+  const email = useSearchParams().get("email") ?? "";
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   const focusNext = (index: number) => {
     if (index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
@@ -51,42 +70,73 @@ export default function VerifyEmailPage() {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (!pasted) return;
     const next = [...otp];
-    pasted.split("").forEach((char, i) => { next[i] = char; });
+    pasted.split("").forEach((char, i) => {
+      next[i] = char;
+    });
     setOtp(next);
     const lastIndex = Math.min(pasted.length, OTP_LENGTH - 1);
     inputs.current[lastIndex]?.focus();
   };
 
   const handleConfirm = async () => {
-    if (otp.some((d) => !d)) {
-      setError("Please enter all 6 digits.");
-      return;
-    }
-
     const code = otp.join("");
-    setError("");
-    setLoading(true);
-
-    await new Promise((r) => setTimeout(r, 1200));
-
-    const isCodeValid = code === "123456";
-
-    setLoading(false);
-
-    if (!isCodeValid) {
-      setError("Invalid code. Please try again.");
+    const result = otpSchema.safeParse({ code });
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Please enter all 6 digits.");
       return;
     }
 
-    setShowSuccess(true);
+    setError("");
+    try {
+      const response = await verifyOtp({ email, code }).unwrap();
+      dispatch(setCredentials(response));
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.push("/");
+      }, 1200);
+    } catch (err) {
+      setError(normalizeApiError(err as never).message);
+    }
+  };
 
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.push('/login');
-    }, 1200);
+  const handleResend = async () => {
+    if (cooldown > 0) return;
+    try {
+      await resendOtp({ email }).unwrap();
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setError("");
+    } catch (err) {
+      setError(normalizeApiError(err as never).message);
+    }
   };
 
   const isFilled = otp.every((d) => d !== "");
+
+  if (!email) {
+    return (
+      <div className="auth-root">
+        <div className="auth-bg" />
+        <div className="auth-card">
+          <Image
+            src="/images/logo/tummytime-logo.png"
+            alt="TummyTime"
+            width={200}
+            height={150}
+            priority
+            className="auth-logo-img"
+          />
+          <h1 className="auth-heading" style={{ color: "#1A1A1A" }}>
+            Nothing to verify
+          </h1>
+          <p className="auth-subtext">Create an account first to get a verification code.</p>
+          <Link href="/register" className="auth-submit-btn" style={{ textDecoration: "none" }}>
+            Go to registration
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-root">
@@ -102,14 +152,20 @@ export default function VerifyEmailPage() {
           className="auth-logo-img"
         />
 
-        <h1 className="auth-heading" style={{ color: "#1A1A1A" }}>Verify Email Address</h1>
-        <p className="auth-subtext" style={{ maxWidth: 280 }}>Enter the six digit code sent to your email address</p>
+        <h1 className="auth-heading" style={{ color: "#1A1A1A" }}>
+          Verify Email Address
+        </h1>
+        <p className="auth-subtext" style={{ maxWidth: 280 }}>
+          Enter the six digit code sent to <span className="auth-confirm-email">{email}</span>
+        </p>
 
-        <div className="auth-otp-row">
+        <div className={cn("auth-otp-row", error && "auth-otp-row--invalid")}>
           {otp.map((digit, i) => (
             <input
               key={i}
-              ref={(el) => { inputs.current[i] = el; }}
+              ref={(el) => {
+                inputs.current[i] = el;
+              }}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -124,29 +180,47 @@ export default function VerifyEmailPage() {
           ))}
         </div>
 
+        <div className="auth-resend-row">
+          <span>Didn&apos;t get a code?</span>
+          <button
+            type="button"
+            className="auth-resend-btn"
+            onClick={handleResend}
+            disabled={isResending || cooldown > 0}
+          >
+            {cooldown > 0 ? `Resend in ${cooldown}s` : isResending ? "Sending…" : "Resend"}
+          </button>
+        </div>
+
         <button
           type="button"
           className="auth-submit-btn"
           onClick={handleConfirm}
-          disabled={!isFilled || loading}
+          disabled={!isFilled || isLoading}
           style={{ marginBottom: 20 }}
         >
-          {loading ? <span className="auth-spinner" /> : "Confirm code"}
+          {isLoading ? <span className="auth-spinner" /> : "Confirm code"}
         </button>
 
-        {error && (
-          <p className="auth-error-text">{error}</p>
-        )}
+        {error && <p className="auth-error-text">{error}</p>}
 
         {showSuccess && (
           <div className="auth-modal-overlay">
             <div className="auth-success-modal">
               <h2>Success!</h2>
-              <p>Your email has been verified. Redirecting to login...</p>
+              <p>Your email has been verified. Redirecting…</p>
             </div>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="auth-root" />}>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }

@@ -59,3 +59,7 @@ export interface ResetPasswordPayload {
   token: string;
   password: string;
 }
+
+export interface MessageResponse {
+  message: string;
+}
