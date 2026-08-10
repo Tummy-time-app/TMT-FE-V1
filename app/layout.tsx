@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ClientWrapper from "../components/ClientWrapper";
 import ConditionalNavbar from "../components/conditionalNavbar";
+import { StoreProvider } from "@/store/provider";
+import { AuthProvider } from "@/features/auth/AuthProvider";
+import { ToastProvider } from "@/components/feedback/ToastProvider";
 
 export const metadata: Metadata = {
   title: "TummyTime - Fastest Delivery & Easy Pickup",
@@ -29,10 +32,16 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ClientWrapper>
-         <ConditionalNavbar />
-          {children}
-        </ClientWrapper>
+        <StoreProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <ClientWrapper>
+                <ConditionalNavbar />
+                {children}
+              </ClientWrapper>
+            </ToastProvider>
+          </AuthProvider>
+        </StoreProvider>
       </body>
     </html>
   );

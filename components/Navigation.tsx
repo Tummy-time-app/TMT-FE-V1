@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { initialItems } from "@/lib/cartData";
+import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
@@ -43,7 +43,7 @@ const Navigation: React.FC = () => {
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
   const [searchFocused,     setSearchFocused]     = useState(false);
   const [searchValue,       setSearchValue]       = useState("");
-  const [cartCount] = useState(initialItems.length); // wire to cart store
+  const { cartCount } = useCart();
 
   const vendorRef = useRef<HTMLLIElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -313,7 +313,7 @@ const Navigation: React.FC = () => {
         {/* Drawer footer */}
         <div className="nav-drawer__footer">
           <Link href="/login" className="navbar__login nav-drawer__btn-full">Login</Link>
-          <Link href="/signup" className="nav-signup nav-drawer__btn-full">Create account</Link>
+          <Link href="/register" className="nav-signup nav-drawer__btn-full">Create account</Link>
         </div>
       </aside>
     </>

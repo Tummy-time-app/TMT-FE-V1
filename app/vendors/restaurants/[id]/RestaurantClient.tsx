@@ -1,8 +1,9 @@
 "use client";
-import { CartEntry, MenuItem, type RestaurantData } from "@/lib/restaurantData";
+import { MenuItem, type RestaurantData } from "@/lib/restaurantData";
+import { useCart } from "@/lib/CartContext";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -34,39 +35,34 @@ interface Props {
 
 export function RestaurantClient({ data }: Props) {
   const { restaurant, menuItems: allItems } = data;
+  const { items: cartItems, cartCount, cartTotal, addItem, changeQty, getItemQty } = useCart();
 
   const [activeCategory, setActiveCategory] = useState(restaurant.categories[0] ?? "");
-  const [cart, setCart]         = useState<CartEntry[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [search, setSearch]     = useState("");
   const [modal, setModal]       = useState<ModalState | null>(null);
+  const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
+  const [riderNote, setRiderNote] = useState("");
+  const [showRiderNote, setShowRiderNote] = useState(false);
 
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
-  /* ── Cart helpers ──────────────────────────────────────── */
-  const cartTotal = cart.reduce((s, e) => s + e.item.price * e.qty, 0);
-  const cartCount = cart.reduce((s, e) => s + e.qty, 0);
+  /* ── Cart items for this vendor ────────────────────────── */
+  const vendorCart = cartItems.filter(i => i.vendorId === restaurant.id);
+  const vendorTotal = vendorCart.reduce((s, i) => s + i.price * i.qty, 0);
 
-  const addToCart = useCallback((item: MenuItem, qty: number) => {
-    setCart(prev => {
-      const existing = prev.find(e => e.item.id === item.id);
-      if (existing) return prev.map(e =>
-        e.item.id === item.id ? { ...e, qty: e.qty + qty } : e
-      );
-      return [...prev, { item, qty }];
-    });
-  }, []);
-
-  const changeCartQty = (id: number, delta: number) => {
-    setCart(prev =>
-      prev
-        .map(e => e.item.id === id ? { ...e, qty: Math.max(0, e.qty + delta) } : e)
-        .filter(e => e.qty > 0)
-    );
+  const addToCart = (item: MenuItem, qty: number) => {
+    addItem({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      vendor: restaurant.name,
+      vendorId: restaurant.id,
+      price: item.price,
+      image: item.image,
+    }, qty);
   };
-
-  const getCartQty = (id: number) => cart.find(e => e.item.id === id)?.qty ?? 0;
 
   /* ── Modal helpers ─────────────────────────────────────── */
   const openModal = (item: MenuItem) => {
@@ -263,7 +259,7 @@ export function RestaurantClient({ data }: Props) {
 
                   <div className="rp-list">
                     {items.map(item => {
-                      const qty = getCartQty(item.id);
+                      const qty = getItemQty(item.id);
                       return (
                         <div
                           key={item.id}
@@ -321,11 +317,11 @@ export function RestaurantClient({ data }: Props) {
       {/* ══════════════════════════════════════════════════════
           FLOATING CART BAR
       ══════════════════════════════════════════════════════ */}
-      {cartCount > 0 && (
+      {vendorCart.length > 0 && (
         <div className="rp-cart-bar" onClick={() => setCartOpen(true)}>
-          <div className="rp-cart-bar__count">{cartCount}</div>
+          <div className="rp-cart-bar__count">{vendorCart.reduce((s, i) => s + i.qty, 0)}</div>
           <span className="rp-cart-bar__label">View Cart</span>
-          <span className="rp-cart-bar__total">{formatNaira(cartTotal)}</span>
+          <span className="rp-cart-bar__total">{formatNaira(vendorTotal)}</span>
         </div>
       )}
 
@@ -341,37 +337,87 @@ export function RestaurantClient({ data }: Props) {
         <div className="rp-cart-drawer__vendor">
           <span>🏪</span><span>{restaurant.name}</span>
         </div>
+
+        {/* Delivery / Pickup toggle */}
+        <div className="rp-cart-drawer__toggle">
+          <button
+            className={`rp-cart-drawer__toggle-btn ${orderType === "delivery" ? "rp-cart-drawer__toggle-btn--active" : ""}`}
+            onClick={() => setOrderType("delivery")}
+          >
+            Delivery
+          </button>
+          <button
+            className={`rp-cart-drawer__toggle-btn ${orderType === "pickup" ? "rp-cart-drawer__toggle-btn--active" : ""}`}
+            onClick={() => setOrderType("pickup")}
+          >
+            Pickup
+          </button>
+        </div>
+
         <div className="rp-cart-drawer__items">
-          {cart.map(entry => (
-            <div key={entry.item.id} className="rp-cart-entry">
+          {vendorCart.map(entry => (
+            <div key={entry.id} className="rp-cart-entry">
               <div className="rp-cart-entry__img-wrap">
-                <Image src={entry.item.image} alt={entry.item.name} fill className="object-cover" />
+                <Image src={entry.image} alt={entry.name} fill className="object-cover" />
               </div>
               <div className="rp-cart-entry__body">
-                <p className="rp-cart-entry__name">{entry.item.name}</p>
-                <p className="rp-cart-entry__price">{formatNaira(entry.item.price * entry.qty)}</p>
+                <p className="rp-cart-entry__name">{entry.name}</p>
+                <p className="rp-cart-entry__price">{formatNaira(entry.price * entry.qty)}</p>
               </div>
               <div className="rp-stepper rp-stepper--sm">
-                <button className="rp-stepper__btn" onClick={() => changeCartQty(entry.item.id, -1)}>−</button>
+                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -1)}>−</button>
                 <span className="rp-stepper__val">{entry.qty}</span>
-                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeCartQty(entry.item.id, 1)}>+</button>
+                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, 1)}>+</button>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Rider note */}
+        <div className="rp-cart-drawer__note-section">
+          <label className="rp-cart-drawer__note-toggle">
+            <input
+              type="checkbox"
+              checked={showRiderNote}
+              onChange={() => setShowRiderNote(!showRiderNote)}
+              className="rp-cart-drawer__note-check"
+            />
+            <span>Leave a note for the rider</span>
+          </label>
+          {showRiderNote && (
+            <textarea
+              className="rp-cart-drawer__note-input"
+              placeholder="E.g. Please call when you arrive..."
+              value={riderNote}
+              onChange={e => setRiderNote(e.target.value)}
+              rows={2}
+            />
+          )}
+        </div>
+
         <div className="rp-cart-drawer__summary">
           <div className="rp-cart-drawer__line">
-            <span>Subtotal</span><span>{formatNaira(cartTotal)}</span>
+            <span>Subtotal</span><span>{formatNaira(vendorTotal)}</span>
           </div>
-          <div className="rp-cart-drawer__line">
-            <span>Delivery fee</span><span>{formatNaira(restaurant.deliveryFee)}</span>
-          </div>
+          {orderType === "delivery" && (
+            <div className="rp-cart-drawer__line">
+              <span>Delivery fee</span><span>{formatNaira(restaurant.deliveryFee)}</span>
+            </div>
+          )}
           <div className="rp-cart-drawer__total">
             <span>Total</span>
-            <span>{formatNaira(cartTotal + restaurant.deliveryFee)}</span>
+            <span>{formatNaira(vendorTotal + (orderType === "delivery" ? restaurant.deliveryFee : 0))}</span>
           </div>
         </div>
-        <Link href="/cart" className="rp-cart-drawer__cta">Go to Cart →</Link>
+
+        <div className="rp-cart-drawer__actions">
+          <Link
+            href={`/checkout?vendor=${restaurant.id}&type=${orderType}${riderNote ? `&note=${encodeURIComponent(riderNote)}` : ""}`}
+            className="rp-cart-drawer__cta"
+          >
+            Checkout to {orderType}
+          </Link>
+        </div>
       </aside>
 
       {/* ══════════════════════════════════════════════════════

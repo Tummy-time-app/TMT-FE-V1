@@ -1,17 +1,11 @@
 "use client";
-import { CartItem, initialItems } from "@/lib/cartData";
+import { useCart } from "@/lib/CartContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
 const DELIVERY_FEE = 500;
 const FREE_DELIVERY_THRESHOLD = 10000;
-
-const vendorTypeLabel: Record<CartItem["vendorType"], string> = {
-  restaurant: "🏪 Restaurant",
-  shop: "🛒 Shop",
-  market: "🌿 Market",
-};
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function formatNaira(amount: number) {
@@ -20,7 +14,7 @@ function formatNaira(amount: number) {
 
 /* ── Component ───────────────────────────────────────────── */
 export default function CartPage() {
-  const [items, setItems]           = useState<CartItem[]>(initialItems);
+  const { items, cartTotal: subtotal, changeQty, removeItem, updateNote, clearCart } = useCart();
   const [promo, setPromo]           = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(false);
@@ -28,30 +22,17 @@ export default function CartPage() {
   const [removingId, setRemovingId] = useState<number | null>(null);
 
   /* calculations */
-  const subtotal   = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const discount   = promoApplied ? Math.round(subtotal * 0.1) : 0;
   const delivery   = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total      = subtotal - discount + delivery;
 
   /* actions */
-  const changeQty = (id: number, delta: number) => {
-    setItems(prev =>
-      prev
-        .map(i => i.id === id ? { ...i, qty: Math.max(0, i.qty + delta) } : i)
-        .filter(i => i.qty > 0)
-    );
-  };
-
-  const removeItem = (id: number) => {
+  const handleRemove = (id: number) => {
     setRemovingId(id);
     setTimeout(() => {
-      setItems(prev => prev.filter(i => i.id !== id));
+      removeItem(id);
       setRemovingId(null);
     }, 320);
-  };
-
-  const updateNote = (id: number, note: string) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, note } : i));
   };
 
   const applyPromo = () => {
@@ -98,7 +79,7 @@ export default function CartPage() {
           </div>
           <button
             className="cart-header__clear"
-            onClick={() => setItems([])}
+            onClick={() => clearCart()}
           >
             Clear all
           </button>
@@ -131,12 +112,12 @@ export default function CartPage() {
                   <div>
                     <p className="cart-item__name">{item.name}</p>
                     <span className="cart-item__vendor">
-                      {vendorTypeLabel[item.vendorType]} &nbsp;·&nbsp; {item.vendor}
+                      🏪 Restaurant &nbsp;·&nbsp; {item.vendor}
                     </span>
                   </div>
                   <button
                     className="cart-item__remove"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemove(item.id)}
                     aria-label={`Remove ${item.name}`}
                   >
                     ✕
@@ -299,10 +280,10 @@ export default function CartPage() {
           </div>
 
           {/* checkout CTA */}
-          <button className="cart-checkout">
+          <Link href="/checkout" className="cart-checkout">
             <span>Proceed to Checkout</span>
             <span className="cart-checkout__arrow">→</span>
-          </button>
+          </Link>
 
           <p className="cart-summary__note">
             🔒 Secure checkout &nbsp;·&nbsp; Pay on delivery available
