@@ -15,6 +15,8 @@ export interface User {
   avatarUrl: string | null;
   emailVerified: boolean;
   createdAt: string;
+  /** Only set for role "vendor" — which vendor record (features/vendors) this account manages. */
+  vendorId?: string;
 }
 
 export interface AuthSession {

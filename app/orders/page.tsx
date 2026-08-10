@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PackageSearch } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { useAuth } from "@/features/auth/hooks";
 import { useGetOrdersQuery } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -19,7 +20,8 @@ function formatDate(iso: string) {
 
 function OrdersContent() {
   const router = useRouter();
-  const { data: orders, isLoading, error, refetch } = useGetOrdersQuery();
+  const { user } = useAuth();
+  const { data: orders, isLoading, error, refetch } = useGetOrdersQuery(user?.id ?? "", { skip: !user });
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">

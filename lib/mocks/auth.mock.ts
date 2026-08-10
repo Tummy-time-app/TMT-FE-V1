@@ -43,6 +43,17 @@ function seedUsers(): MockUserRecord[] {
       createdAt: new Date().toISOString(),
       password: "password123",
     },
+    {
+      id: "dev-vendor-1",
+      email: "vendor@tummytime.dev",
+      name: "Gracehouse Kitchen",
+      role: "vendor",
+      vendorId: "gracehouse",
+      avatarUrl: null,
+      emailVerified: true,
+      createdAt: new Date().toISOString(),
+      password: "password123",
+    },
   ];
 }
 
@@ -83,6 +94,7 @@ function toPublicUser(record: MockUserRecord): User {
     avatarUrl: record.avatarUrl,
     emailVerified: record.emailVerified,
     createdAt: record.createdAt,
+    vendorId: record.vendorId,
   };
 }
 

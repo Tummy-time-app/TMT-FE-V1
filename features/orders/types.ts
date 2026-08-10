@@ -42,6 +42,8 @@ export interface RiderInfo {
 
 export interface Order {
   id: string;
+  customerId: string;
+  customerName: string;
   vendorId: string;
   vendorName: string;
   vendorLocation: LatLng;
@@ -62,6 +64,8 @@ export interface Order {
 }
 
 export interface CreateOrderPayload {
+  customerId: string;
+  customerName: string;
   vendorId: string;
   vendorName: string;
   items: OrderItem[];

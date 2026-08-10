@@ -1,6 +1,7 @@
 import { mockDelay } from "@/lib/dev/devMode";
 import { CATEGORIES, VENDORS } from "@/lib/vendordata";
 import { getRestaurantData } from "@/lib/restaurantData";
+import { getVendorProductsInternal } from "./products.mock";
 import type {
   VendorCategory,
   VendorDetail,
@@ -66,5 +67,8 @@ export async function mockGetVendorDetail(id: string): Promise<VendorDetail> {
   if (!data) {
     throw { status: 404, message: "We couldn't find this vendor." };
   }
-  return data;
+  // Menu items come from the mutable product store (seeded from `data.menuItems`
+  // on first read), not straight from static seed data — so a vendor's edits
+  // via /vendor/products show up here immediately.
+  return { restaurant: data.restaurant, menuItems: getVendorProductsInternal(id) };
 }

@@ -14,37 +14,45 @@ import type {
 /**
  * DEVELOPMENT MOCK — see lib/mocks/auth.mock.ts for the pattern.
  *
- * Orders don't carry a live server-side timer; instead each order's
- * current status is *derived* from elapsed wall-clock time against a
- * fixed schedule (computeLiveState). That makes progression resumable
- * across refreshes/tabs for free, and is what `useOrderRealtime`'s
- * polling picks up — the honest dev stand-in for the Supabase Realtime
- * subscription the real backend would push (spec §49).
+ * Status progression is a hybrid:
+ *  - pending → accepted → preparing → ready_for_pickup are real vendor
+ *    actions (mockUpdateOrderStatus), stored as timestamps — this is the
+ *    part spec §16 wants actual "status transition controls" for, and an
+ *    order genuinely sits at "pending" until a vendor acts on it.
+ *  - ready_for_pickup → in_transit/picked_up → delivered is *derived*
+ *    from elapsed time since `readyAt`, standing in for the rider app
+ *    (not built yet — Phase 7) the same way order status as a whole stood
+ *    in for Supabase Realtime in Phase 4. Resumable across refreshes for
+ *    free, no server-side timer needed.
  */
 
 interface StoredOrder extends CreateOrderPayload {
   id: string;
   createdAt: string;
+  acceptedAt?: string;
+  preparingAt?: string;
+  readyAt?: string;
   cancelledAt?: string;
 }
 
 const ORDERS_STORAGE_KEY = "tummytime_mock_orders";
 
-const DELIVERY_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
-  { status: "pending", afterMs: 0 },
-  { status: "accepted", afterMs: 10_000 },
-  { status: "preparing", afterMs: 25_000 },
-  { status: "ready_for_pickup", afterMs: 45_000 },
-  { status: "in_transit", afterMs: 65_000 },
-  { status: "delivered", afterMs: 95_000 },
+/** Vendor-driven forward transitions — anything not listed here is rejected. */
+const ALLOWED_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus>> = {
+  pending: "accepted",
+  accepted: "preparing",
+  preparing: "ready_for_pickup",
+};
+
+const POST_READY_DELIVERY_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
+  { status: "ready_for_pickup", afterMs: 0 },
+  { status: "in_transit", afterMs: 20_000 },
+  { status: "delivered", afterMs: 50_000 },
 ];
 
-const PICKUP_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
-  { status: "pending", afterMs: 0 },
-  { status: "accepted", afterMs: 10_000 },
-  { status: "preparing", afterMs: 25_000 },
-  { status: "ready_for_pickup", afterMs: 45_000 },
-  { status: "picked_up", afterMs: 70_000 },
+const POST_READY_PICKUP_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
+  { status: "ready_for_pickup", afterMs: 0 },
+  { status: "picked_up", afterMs: 25_000 },
 ];
 
 const TERMINAL_PAYMENT_STATUSES: OrderStatus[] = ["delivered", "picked_up"];
@@ -84,11 +92,11 @@ function deriveRider(
 
   const base = RIDER_POOL[hashToIndex(order.id, RIDER_POOL.length)];
 
-  if ((status === "in_transit" || status === "delivered") && deliveryLocation) {
-    const createdMs = new Date(order.createdAt).getTime();
-    const elapsed = Date.now() - createdMs;
-    const transitStart = DELIVERY_SCHEDULE.find((s) => s.status === "in_transit")!.afterMs;
-    const transitEnd = DELIVERY_SCHEDULE.find((s) => s.status === "delivered")!.afterMs;
+  if ((status === "in_transit" || status === "delivered") && deliveryLocation && order.readyAt) {
+    const readyMs = new Date(order.readyAt).getTime();
+    const elapsed = Date.now() - readyMs;
+    const transitStart = POST_READY_DELIVERY_SCHEDULE.find((s) => s.status === "in_transit")!.afterMs;
+    const transitEnd = POST_READY_DELIVERY_SCHEDULE.find((s) => s.status === "delivered")!.afterMs;
     const progress = Math.min(1, Math.max(0, (elapsed - transitStart) / (transitEnd - transitStart)));
     return { ...base, location: interpolate(vendorLocation, deliveryLocation, progress) };
   }
@@ -113,23 +121,33 @@ function saveOrders(orders: StoredOrder[]) {
 }
 
 function deriveStatus(order: StoredOrder): { status: OrderStatus; history: OrderStatusEvent[] } {
+  const history: OrderStatusEvent[] = [{ status: "pending", at: order.createdAt }];
+
   if (order.cancelledAt) {
-    return {
-      status: "cancelled",
-      history: [{ status: "pending", at: order.createdAt }, { status: "cancelled", at: order.cancelledAt }],
-    };
+    return { status: "cancelled", history: [...history, { status: "cancelled", at: order.cancelledAt }] };
+  }
+  if (!order.acceptedAt) {
+    return { status: "pending", history };
+  }
+  history.push({ status: "accepted", at: order.acceptedAt });
+  if (!order.preparingAt) {
+    return { status: "accepted", history };
+  }
+  history.push({ status: "preparing", at: order.preparingAt });
+  if (!order.readyAt) {
+    return { status: "preparing", history };
   }
 
-  const schedule = order.orderType === "pickup" ? PICKUP_SCHEDULE : DELIVERY_SCHEDULE;
-  const createdMs = new Date(order.createdAt).getTime();
-  const elapsed = Date.now() - createdMs;
+  // Past "ready" — the rest is time-derived (standing in for the rider app).
+  const schedule = order.orderType === "pickup" ? POST_READY_PICKUP_SCHEDULE : POST_READY_DELIVERY_SCHEDULE;
+  const readyMs = new Date(order.readyAt).getTime();
+  const elapsed = Date.now() - readyMs;
 
-  let status: OrderStatus = schedule[0].status;
-  const history: OrderStatusEvent[] = [];
+  let status: OrderStatus = "ready_for_pickup";
   for (const step of schedule) {
     if (elapsed >= step.afterMs) {
       status = step.status;
-      history.push({ status: step.status, at: new Date(createdMs + step.afterMs).toISOString() });
+      history.push({ status: step.status, at: new Date(readyMs + step.afterMs).toISOString() });
     }
   }
   return { status, history };
@@ -154,6 +172,8 @@ function hydrate(order: StoredOrder): Order {
 
   return {
     id: order.id,
+    customerId: order.customerId,
+    customerName: order.customerName,
     vendorId: order.vendorId,
     vendorName: order.vendorName,
     vendorLocation,
@@ -185,9 +205,18 @@ export async function mockCreateOrder(payload: CreateOrderPayload): Promise<Orde
   return hydrate(stored);
 }
 
-export async function mockGetOrders(): Promise<Order[]> {
+export async function mockGetOrders(customerId: string): Promise<Order[]> {
   await mockDelay(400);
   return loadOrders()
+    .filter((o) => o.customerId === customerId)
+    .map(hydrate)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function mockGetVendorOrders(vendorId: string): Promise<Order[]> {
+  await mockDelay(400);
+  return loadOrders()
+    .filter((o) => o.vendorId === vendorId)
     .map(hydrate)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
@@ -211,6 +240,32 @@ export async function mockCancelOrder(id: string): Promise<Order> {
   }
 
   orders[idx] = { ...orders[idx], cancelledAt: new Date().toISOString() };
+  saveOrders(orders);
+  return hydrate(orders[idx]);
+}
+
+const STATUS_TIMESTAMP_FIELD: Partial<Record<OrderStatus, keyof StoredOrder>> = {
+  accepted: "acceptedAt",
+  preparing: "preparingAt",
+  ready_for_pickup: "readyAt",
+};
+
+/** Vendor action — advances an order exactly one allowed step. */
+export async function mockUpdateOrderStatus(id: string, nextStatus: OrderStatus): Promise<Order> {
+  await mockDelay(500);
+  const orders = loadOrders();
+  const idx = orders.findIndex((o) => o.id === id);
+  if (idx === -1) throw { status: 404, message: "We couldn't find this order." };
+
+  const current = hydrate(orders[idx]);
+  if (ALLOWED_TRANSITIONS[current.status] !== nextStatus) {
+    throw { status: 422, message: `Can't move an order from "${current.status}" to "${nextStatus}".` };
+  }
+
+  const field = STATUS_TIMESTAMP_FIELD[nextStatus];
+  if (!field) throw { status: 422, message: "Unsupported status transition." };
+
+  orders[idx] = { ...orders[idx], [field]: new Date().toISOString() };
   saveOrders(orders);
   return hydrate(orders[idx]);
 }

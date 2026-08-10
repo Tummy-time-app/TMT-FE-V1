@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { useAuth } from "@/features/auth/hooks";
 import { useCreateOrderMutation } from "@/features/orders/ordersApi";
 import type { PaymentMethod } from "@/features/orders/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
@@ -32,6 +33,7 @@ function CheckoutContent() {
   const [submitError, setSubmitError] = useState("");
   const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
   const [createOrder, { isLoading }] = useCreateOrderMutation();
 
   /* Group cart items by vendor — an order can only include one vendor. */
@@ -48,9 +50,12 @@ function CheckoutContent() {
   const total = subtotal + delivery;
 
   const handlePlaceOrder = async () => {
+    if (!user) return;
     setSubmitError("");
     try {
       const order = await createOrder({
+        customerId: user.id,
+        customerName: user.name,
         vendorId: resolvedVendorId,
         vendorName,
         items: checkoutItems.map((i) => ({
