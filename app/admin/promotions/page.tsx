@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Tag, Trash2 } from "lucide-react";
+import { Plus, Tag, Trash2 } from "@/components/icons";
 import {
   useCreatePromotionMutation,
   useDeletePromotionMutation,

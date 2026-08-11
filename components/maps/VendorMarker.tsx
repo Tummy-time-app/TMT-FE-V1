@@ -1,6 +1,6 @@
 "use client";
 
-import { Store } from "lucide-react";
+import { Store } from "@/components/icons";
 import { MarkerF } from "@react-google-maps/api";
 import { useMapContext } from "./MapContext";
 import type { LatLng } from "@/lib/maps/types";

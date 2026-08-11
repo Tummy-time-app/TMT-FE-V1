@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { Pencil, Plus, Trash2, UtensilsCrossed } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useDeleteProductMutation, useGetVendorProductsQuery, useUpdateProductMutation } from "@/features/products/productsApi";
 import { EmptyState } from "@/components/feedback/EmptyState";

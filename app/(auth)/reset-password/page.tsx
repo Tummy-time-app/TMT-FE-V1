@@ -162,7 +162,13 @@ function ResetPasswordForm() {
             {errors.confirmPassword && <p className="auth-field-error">{errors.confirmPassword.message}</p>}
           </div>
 
-          <button type="submit" className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`} disabled={isLoading}>
+          <button
+            type="submit"
+            className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
+            disabled={isLoading}
+            aria-busy={isLoading}
+            aria-label={isLoading ? "Resetting password…" : undefined}
+          >
             {isLoading ? <span className="auth-spinner" /> : "Reset password"}
           </button>
 

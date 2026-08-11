@@ -1,4 +1,6 @@
-import { LayoutDashboard, Users, Store, Bike, ClipboardList, Tag, LifeBuoy } from "lucide-react";
+"use client";
+
+import { LayoutDashboard, Users, Store, Bike, ClipboardList, Tag, LifeBuoy } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { RoleShell } from "@/components/layout/RoleShell";
 

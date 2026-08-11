@@ -10,6 +10,7 @@ import { normalizeApiError } from "@/lib/utils/apiError";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Map } from "@/components/maps/Map";
 import { VendorMarker } from "@/components/maps/VendorMarker";
+import { StarSolid, Bike, ClipboardList, MapPin, Heart, Share, X, Flame, Store, Check } from "@/components/icons";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -75,7 +76,7 @@ export function RestaurantClient({ id }: Props) {
 
 function RestaurantDetail({ data }: { data: VendorDetail }) {
   const { restaurant, menuItems: allItems } = data;
-  const { items: cartItems, cartCount, cartTotal, addItem, changeQty, getItemQty } = useCart();
+  const { items: cartItems, addItem, changeQty, getItemQty } = useCart();
 
   const [activeCategory, setActiveCategory] = useState(restaurant.categories[0] ?? "");
   const [cartOpen, setCartOpen] = useState(false);
@@ -206,7 +207,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
               <h1 className="rp-left__name">{restaurant.name}</h1>
               <div className="rp-left__rating">
                 <span className="rp-left__rating-score">{restaurant.rating}</span>
-                <span className="rp-left__rating-star">★</span>
+                <span className="rp-left__rating-star"><StarSolid size={13} aria-hidden /></span>
               </div>
             </div>
 
@@ -219,15 +220,15 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
             {/* extra meta */}
             <div className="rp-left__meta-list">
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon">🛵</span>
+                <span className="rp-left__meta-icon"><Bike size={15} aria-hidden /></span>
                 <span>Delivery · {formatNaira(restaurant.deliveryFee)}</span>
               </div>
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon">📋</span>
+                <span className="rp-left__meta-icon"><ClipboardList size={15} aria-hidden /></span>
                 <span>Min. order {formatNaira(restaurant.minOrder)}</span>
               </div>
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon">📍</span>
+                <span className="rp-left__meta-icon"><MapPin size={15} aria-hidden /></span>
                 <span>{restaurant.address}</span>
               </div>
             </div>
@@ -248,8 +249,8 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
 
             {/* actions */}
             <div className="rp-left__actions">
-              <button className="rp-action-btn">🤍 Save</button>
-              <button className="rp-action-btn">🔗 Share</button>
+              <button className="rp-action-btn"><Heart size={14} aria-hidden style={{ verticalAlign: -2 }} /> Save</button>
+              <button className="rp-action-btn"><Share size={14} aria-hidden style={{ verticalAlign: -2 }} /> Share</button>
             </div>
           </div>
         </aside>
@@ -272,7 +273,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                 onChange={e => setSearch(e.target.value)}
               />
               {search && (
-                <button className="rp-search__clear" onClick={() => setSearch("")}>✕</button>
+                <button className="rp-search__clear" onClick={() => setSearch("")} aria-label="Clear search"><X size={12} aria-hidden /></button>
               )}
             </div>
 
@@ -347,7 +348,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                             )}
                             {/* badges */}
                             {item.popular && (
-                              <span className="rp-list-item__badge rp-list-item__badge--popular">🔥</span>
+                              <span className="rp-list-item__badge rp-list-item__badge--popular"><Flame size={13} aria-hidden /></span>
                             )}
                           </div>
                         </div>
@@ -379,10 +380,10 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
       <aside className={`rp-cart-drawer ${cartOpen ? "rp-cart-drawer--open" : ""}`}>
         <div className="rp-cart-drawer__header">
           <h3 className="rp-cart-drawer__title">Your Order</h3>
-          <button className="rp-cart-drawer__close" onClick={() => setCartOpen(false)}>✕</button>
+          <button className="rp-cart-drawer__close" onClick={() => setCartOpen(false)} aria-label="Close cart"><X size={14} aria-hidden /></button>
         </div>
         <div className="rp-cart-drawer__vendor">
-          <span>🏪</span><span>{restaurant.name}</span>
+          <span><Store size={14} aria-hidden /></span><span>{restaurant.name}</span>
         </div>
 
         {/* Delivery / Pickup toggle */}
@@ -412,9 +413,9 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                 <p className="rp-cart-entry__price">{formatNaira(entry.price * entry.qty)}</p>
               </div>
               <div className="rp-stepper rp-stepper--sm">
-                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -1)}>−</button>
+                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -1)} aria-label={`Decrease ${entry.name} quantity`}>−</button>
                 <span className="rp-stepper__val">{entry.qty}</span>
-                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, 1)}>+</button>
+                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, 1)} aria-label={`Increase ${entry.name} quantity`}>+</button>
               </div>
             </div>
           ))}
@@ -475,7 +476,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
           <div className="rp-modal-backdrop" onClick={closeModal} />
           <div className="rp-modal" role="dialog" aria-modal="true" aria-label={modal.item.name}>
             {/* close */}
-            <button className="rp-modal__close" onClick={closeModal} aria-label="Close">✕</button>
+            <button className="rp-modal__close" onClick={closeModal} aria-label="Close"><X size={16} aria-hidden /></button>
 
             {/* hero image */}
             <div className="rp-modal__img-wrap">
@@ -511,7 +512,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                     >
                       <div className={`rp-modal__option-radio ${modal.selectedPack === opt.id ? "rp-modal__option-radio--checked" : ""}`}>
                         {modal.selectedPack === opt.id
-                          ? <span className="rp-modal__option-check">✓</span>
+                          ? <span className="rp-modal__option-check"><Check size={11} aria-hidden /></span>
                           : <span className="rp-modal__option-plus">+</span>}
                       </div>
                       <span className="rp-modal__option-label">{opt.label}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { LocateFixed, Minus, Plus } from "lucide-react";
+import { LocateFixed, Minus, Plus } from "@/components/icons";
 
 interface MapControlsProps {
   zoom: number;

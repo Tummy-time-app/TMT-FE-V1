@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Clock, Search as SearchIcon } from "lucide-react";
+import { Clock, Search as SearchIcon, X, SadFace } from "@/components/icons";
 import { useSearchQuery } from "@/features/search/searchApi";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { addRecentSearch, clearRecentSearches, useRecentSearches } from "@/lib/utils/recentSearches";
@@ -70,7 +70,7 @@ function SearchContent() {
           />
           {inputValue && (
             <button type="button" className="vp-search-clear" onClick={() => setInputValue("")} aria-label="Clear">
-              ✕
+              <X size={13} aria-hidden />
             </button>
           )}
         </div>
@@ -96,7 +96,7 @@ function SearchContent() {
           </section>
         ) : (
           <div className="vp-empty">
-            <div className="vp-empty-icon">🔍</div>
+            <div className="vp-empty-icon"><SearchIcon size={32} aria-hidden /></div>
             <p className="vp-empty-title">Search TummyTime</p>
             <p className="vp-empty-sub">Find restaurants and cuisines near you.</p>
           </div>
@@ -123,7 +123,7 @@ function SearchContent() {
         </section>
       ) : (
         <div className="vp-empty">
-          <div className="vp-empty-icon">😕</div>
+          <div className="vp-empty-icon"><SadFace size={32} aria-hidden /></div>
           <p className="vp-empty-title">No results for &ldquo;{query}&rdquo;</p>
           <p className="vp-empty-sub">Try a different search term.</p>
         </div>

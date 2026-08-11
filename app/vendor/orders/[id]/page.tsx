@@ -4,7 +4,7 @@ import { useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 import { useGetOrderQuery, useCancelOrderMutation, useUpdateOrderStatusMutation } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { getVendorAction, canReject, waitingMessage } from "@/features/orders/vendorTransitions";

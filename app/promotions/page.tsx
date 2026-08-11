@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Tag } from "lucide-react";
+import { Check, Copy, Tag } from "@/components/icons";
 import { useGetPromotionsQuery } from "@/features/promotions/promotionsApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike } from "lucide-react";
+import { Bike } from "@/components/icons";
 import { MarkerF } from "@react-google-maps/api";
 import { useMapContext } from "./MapContext";
 import { useAnimatedLatLng } from "@/hooks/useAnimatedLatLng";

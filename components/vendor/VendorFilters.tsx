@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { X } from "@/components/icons";
 import { useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
 
 /* ───────────────────────── TYPES ───────────────────────── */
@@ -152,7 +153,7 @@ VendorFilters.Search = function Search() {
           onClick={() => setSearch("")}
           aria-label="Clear"
         >
-          ✕
+          <X size={13} aria-hidden />
         </button>
       )}
     </div>
@@ -304,7 +305,7 @@ VendorFilters.Categories = function Categories() {
                   setPage(1);
                 }}
               >
-                <span className="vp-cat-emoji">{cat.emoji}</span>
+                <span className="vp-cat-emoji"><cat.icon size={26} aria-hidden /></span>
                 <span className="vp-cat-label">{cat.label}</span>
               </button>
             ))}

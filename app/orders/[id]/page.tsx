@@ -4,7 +4,7 @@ import { useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Bike, Car, Phone, Star } from "lucide-react";
+import { ArrowLeft, Bike, Car, Phone, StarSolid } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useOrderRealtime } from "@/features/orders/useOrderRealtime";
 import { useCancelOrderMutation } from "@/features/orders/ordersApi";
@@ -128,7 +128,7 @@ function OrderDetailContent({ id }: { id: string }) {
                 <p className="flex items-center gap-2 text-caption text-text-muted">
                   {VEHICLE_LABEL[order.rider.vehicleType]}
                   <span className="inline-flex items-center gap-0.5">
-                    <Star size={11} className="fill-secondary text-secondary" aria-hidden />
+                    <StarSolid size={11} className="text-secondary" aria-hidden />
                     {order.rider.rating.toFixed(1)}
                   </span>
                 </p>

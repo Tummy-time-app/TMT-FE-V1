@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "@/components/icons";
 import { cn } from "@/lib/utils/cn";
 import type { Order, OrderStatus } from "../types";
 import { STATUS_LABEL } from "./OrderStatusBadge";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
 import { useGetVendorProductsQuery, useUpdateProductMutation } from "@/features/products/productsApi";

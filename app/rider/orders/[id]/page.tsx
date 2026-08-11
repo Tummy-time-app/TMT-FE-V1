@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Navigation } from "lucide-react";
+import { ArrowLeft, Navigation } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetOrderQuery, useMarkDeliveredMutation } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";

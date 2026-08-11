@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bike } from "lucide-react";
+import { Bike } from "@/components/icons";
 import { useGetAllUsersQuery, useSetUserActiveMutation } from "@/features/auth/authApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";

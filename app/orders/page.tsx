@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetOrdersQuery } from "@/features/orders/ordersApi";

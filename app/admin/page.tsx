@@ -1,6 +1,6 @@
 "use client";
 
-import { Wallet, ClipboardList, Store, Bike, CheckCircle2, XCircle } from "lucide-react";
+import { Wallet, ClipboardList, Store, Bike, CheckCircle2, XCircle } from "@/components/icons";
 import { useGetAllOrdersQuery } from "@/features/orders/ordersApi";
 import { useGetAllVendorsAdminQuery } from "@/features/vendors/vendorsApi";
 import { useGetAllUsersQuery } from "@/features/auth/authApi";

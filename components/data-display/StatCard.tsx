@@ -1,10 +1,10 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "@/components/icons";
 import { cn } from "@/lib/utils/cn";
 
 interface StatCardProps {
   label: string;
   value: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   accent?: "primary" | "success" | "warning";
   className?: string;
 }

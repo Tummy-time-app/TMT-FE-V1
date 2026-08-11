@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Bike } from "lucide-react";
+import { Bike } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetRiderOrdersQuery } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";

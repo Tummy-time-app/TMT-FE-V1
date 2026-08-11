@@ -190,6 +190,8 @@ export default function RegisterPage() {
             type="submit"
             className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
             disabled={isLoading}
+            aria-busy={isLoading}
+            aria-label={isLoading ? "Creating account…" : undefined}
           >
             {isLoading ? <span className="auth-spinner" /> : "Create Account"}
           </button>

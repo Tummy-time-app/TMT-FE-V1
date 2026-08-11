@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowUpRight, Wallet } from "@/components/icons";
 import { useCreateWithdrawalMutation, useGetWithdrawalsQuery } from "@/features/payouts/payoutsApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";

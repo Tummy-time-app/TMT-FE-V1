@@ -93,6 +93,41 @@
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ── Accessibility: respect the OS-level "reduce motion" preference ──
+   Neutralizes CSS animations/transitions/smooth-scroll everywhere rather
+   than deleting them, so layout never breaks — things just stop moving.
+   Framer Motion is handled separately via <MotionConfig reducedMotion="user">
+   in app/layout.tsx. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Accessibility: skip-to-content link — hidden until keyboard-focused ── */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 12px;
+  z-index: 10000;
+  background: var(--crimson);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 12px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
 html, body {
   max-width: 100%;
   overflow-x: hidden;

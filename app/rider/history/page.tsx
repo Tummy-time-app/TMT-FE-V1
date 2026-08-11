@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { History } from "lucide-react";
+import { History } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetRiderOrdersQuery } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";

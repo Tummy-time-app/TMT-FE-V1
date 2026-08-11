@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LifeBuoy } from "lucide-react";
+import { LifeBuoy } from "@/components/icons";
 import { useGetAllTicketsQuery } from "@/features/support/supportApi";
 import { TicketPriorityBadge, TicketStatusBadge } from "@/features/support/components/TicketBadges";
 import { EmptyState } from "@/components/feedback/EmptyState";

@@ -1,9 +1,22 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import bicycleAnimation from "./assets/lottie/bicicleta delivery.json";
-import LottieIcon from "@/components/LottieIcon";
 import LoadingBike from "@/components/LoadingBike";
+import {
+  RiceBowl,
+  Burger,
+  Flame,
+  Pizza,
+  Cherries,
+  Soup,
+  Drumstick,
+  UtensilsCrossed,
+  Store,
+  ShoppingCart,
+  Leaf,
+  Bag,
+  type IconComponent,
+} from "@/components/icons";
 
 const hungerLines = [
   "Looks like this page went out for delivery… and never came back.",
@@ -14,24 +27,6 @@ const hungerLines = [
 
 export default function NotFound() {
   const [line, setLine] = useState(0);
-  const [progress, setProgress]   = useState(0);
-
-  /* progress bar */
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setProgress((p) => {
-          if (p >= 100) { clearInterval(interval); return 100; }
-          return Math.min(p + Math.random() * 9 + 2, 100);
-        });
-      }, 120);
-  
-      const timeout = setTimeout(() => {
-        clearInterval(interval);
-        setProgress(100);
-      }, 2500);
-  
-      return () => { clearInterval(interval); clearTimeout(timeout); };
-    }, []);
 
   /* cycle through witty lines */
   useEffect(() => {
@@ -48,17 +43,21 @@ export default function NotFound() {
 
       {/* ── floating food icons ── */}
       <div className="nf-floats" aria-hidden>
-        {[
-          { e: "🍛", cls: "nf-float--1" },
-          { e: "🍔", cls: "nf-float--2" },
-          { e: "🌶️", cls: "nf-float--3" },
-          { e: "🍕", cls: "nf-float--4" },
-          { e: "🍅", cls: "nf-float--5" },
-          { e: "🥘", cls: "nf-float--6" },
-          { e: "🍗", cls: "nf-float--7" },
-          { e: "🧆", cls: "nf-float--8" },
-        ].map(({ e, cls }) => (
-          <span key={cls} className={`nf-float ${cls}`}>{e}</span>
+        {(
+          [
+            { Icon: RiceBowl, size: 38, cls: "nf-float--1" },
+            { Icon: Burger, size: 29, cls: "nf-float--2" },
+            { Icon: Flame, size: 32, cls: "nf-float--3" },
+            { Icon: Pizza, size: 35, cls: "nf-float--4" },
+            { Icon: Cherries, size: 26, cls: "nf-float--5" },
+            { Icon: Soup, size: 32, cls: "nf-float--6" },
+            { Icon: Drumstick, size: 29, cls: "nf-float--7" },
+            { Icon: UtensilsCrossed, size: 26, cls: "nf-float--8" },
+          ] as { Icon: IconComponent; size: number; cls: string }[]
+        ).map(({ Icon, size, cls }) => (
+          <span key={cls} className={`nf-float ${cls}`}>
+            <Icon size={size} aria-hidden />
+          </span>
         ))}
       </div>
 
@@ -72,7 +71,7 @@ export default function NotFound() {
             <div className="nf-plate">
               <div className="nf-plate__ring" />
               <div className="nf-plate__inner">
-                <span className="nf-plate__emoji">🍽️</span>
+                <span className="nf-plate__emoji"><UtensilsCrossed size={30} aria-hidden /></span>
               </div>
               {/* steam lines */}
               <div className="nf-steam">
@@ -89,7 +88,7 @@ export default function NotFound() {
         <h1 className="nf-heading">Page Not Found</h1>
 
         {/* rotating witty line */}
-        {/* <p className="nf-line" key={line}>{hungerLines[line]}</p> */}
+        <p className="nf-line" key={line}>{hungerLines[line]}</p>
 
         {/* rider illustration */}
         <LoadingBike />
@@ -108,10 +107,18 @@ export default function NotFound() {
         <div className="nf-links">
           <p className="nf-links__label">Or go straight to</p>
           <div className="nf-links__row">
-            <Link href="/vendors/restaurants" className="nf-quick">🏪 Restaurants</Link>
-            <Link href="/vendors/shops"       className="nf-quick">🛒 Shops</Link>
-            <Link href="/vendors/markets"     className="nf-quick">🌿 Markets</Link>
-            <Link href="/cart"                className="nf-quick">🛍️ Cart</Link>
+            <Link href="/vendors/restaurants" className="nf-quick">
+              <Store size={13} aria-hidden style={{ verticalAlign: -2 }} /> Restaurants
+            </Link>
+            <Link href="/vendors/shops" className="nf-quick">
+              <ShoppingCart size={13} aria-hidden style={{ verticalAlign: -2 }} /> Shops
+            </Link>
+            <Link href="/vendors/markets" className="nf-quick">
+              <Leaf size={13} aria-hidden style={{ verticalAlign: -2 }} /> Markets
+            </Link>
+            <Link href="/cart" className="nf-quick">
+              <Bag size={13} aria-hidden style={{ verticalAlign: -2 }} /> Cart
+            </Link>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CreditCard, Package, Tag } from "lucide-react";
+import { Bell, CreditCard, Package, Tag } from "@/components/icons";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { cn } from "@/lib/utils/cn";
 import type { AppNotification, NotificationType } from "@/features/notifications/types";

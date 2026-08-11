@@ -198,6 +198,8 @@ function VerifyEmailForm() {
           onClick={handleConfirm}
           disabled={!isFilled || isLoading}
           style={{ marginBottom: 20 }}
+          aria-busy={isLoading}
+          aria-label={isLoading ? "Confirming code…" : undefined}
         >
           {isLoading ? <span className="auth-spinner" /> : "Confirm code"}
         </button>

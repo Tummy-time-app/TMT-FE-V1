@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MailCheck } from "lucide-react";
+import { MailCheck } from "@/components/icons";
 import { useRequestPasswordResetMutation } from "@/features/auth/authApi";
 import { forgotPasswordSchema, type ForgotPasswordFormValues } from "@/features/auth/schemas";
 import { normalizeApiError } from "@/lib/utils/apiError";
@@ -96,7 +96,13 @@ export default function ForgotPasswordPage() {
             {errors.email && <p className="auth-field-error">{errors.email.message}</p>}
           </div>
 
-          <button type="submit" className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`} disabled={isLoading}>
+          <button
+            type="submit"
+            className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
+            disabled={isLoading}
+            aria-busy={isLoading}
+            aria-label={isLoading ? "Sending reset link…" : undefined}
+          >
             {isLoading ? <span className="auth-spinner" /> : "Send reset link"}
           </button>
 

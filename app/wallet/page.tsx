@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Plus, Wallet as WalletIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Plus, Wallet as WalletIcon } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetWalletQuery, useGetWalletTransactionsQuery, useTopUpWalletMutation } from "@/features/wallet/walletApi";

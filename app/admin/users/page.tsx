@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users as UsersIcon } from "lucide-react";
+import { Users as UsersIcon } from "@/components/icons";
 import { useGetAllUsersQuery, useSetUserActiveMutation } from "@/features/auth/authApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";

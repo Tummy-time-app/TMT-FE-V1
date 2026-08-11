@@ -3,6 +3,7 @@ import { useVendorFilters } from "./VendorFilters";
 import { useGetVendorsQuery } from "@/features/vendors/vendorsApi";
 import VendorCard from "../VendorCard";
 import { ErrorState } from "@/components/feedback/ErrorState";
+import { UtensilsCrossed, Heart } from "@/components/icons";
 
 const PAGE_SIZE = 6;
 
@@ -50,7 +51,7 @@ const VendorsGrid = () => {
   if (featured.length === 0 && visibleAll.length === 0) {
     return (
       <div className="vp-empty">
-        <div className="vp-empty-icon">🍽️</div>
+        <div className="vp-empty-icon"><UtensilsCrossed size={32} aria-hidden /></div>
         <p className="vp-empty-title">No restaurants found</p>
         <p className="vp-empty-sub">Try a different search term or clear your filters.</p>
         <button className="vp-empty-cta" onClick={resetFilters}>
@@ -65,7 +66,7 @@ const VendorsGrid = () => {
       {featured.length > 0 && (
         <section className="vp-section">
           <h2 className="vp-section-title">
-            Handpicked for you <span>🤍</span>
+            Handpicked for you <span><Heart size={18} aria-hidden /></span>
           </h2>
 
           <div className="vp-grid">

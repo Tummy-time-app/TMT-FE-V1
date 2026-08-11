@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Store } from "lucide-react";
+import { Store, StarSolid } from "@/components/icons";
 import { useGetAllVendorsAdminQuery, useSetVendorApprovalStatusMutation } from "@/features/vendors/vendorsApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
@@ -64,8 +64,10 @@ export default function AdminVendorsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-small font-semibold text-text">{vendor.name}</p>
-                <p className="truncate text-caption text-text-subtle">
-                  {vendor.cuisine} · {vendor.rating.toFixed(1)} ★ ({vendor.reviewCount})
+                <p className="flex items-center gap-1 truncate text-caption text-text-subtle">
+                  {vendor.cuisine} · {vendor.rating.toFixed(1)}
+                  <StarSolid size={11} className="text-secondary" aria-hidden />
+                  ({vendor.reviewCount})
                 </p>
               </div>
               <span className={cn("shrink-0 rounded-full px-3 py-1 text-caption font-semibold capitalize", STATUS_CLASSES[vendor.approvalStatus])}>

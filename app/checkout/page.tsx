@@ -12,6 +12,7 @@ import { useGetWalletQuery } from "@/features/wallet/walletApi";
 import type { PaymentMethod } from "@/features/orders/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { useToast } from "@/components/feedback/ToastProvider";
+import { Pencil, CreditCard, Bank, Wallet as WalletIcon } from "@/components/icons";
 
 const DELIVERY_FEE = 500;
 const PICKUP_ADDRESS_NOTE = "Pre-assigned for delivery";
@@ -157,7 +158,7 @@ function CheckoutContent() {
 
               {riderNote && (
                 <div className="co-address__note">
-                  <span className="co-address__note-icon">📝</span>
+                  <span className="co-address__note-icon"><Pencil size={13} aria-hidden /></span>
                   <span>{riderNote}</span>
                 </div>
               )}
@@ -212,7 +213,7 @@ function CheckoutContent() {
                   checked={paymentMethod === "cash_on_delivery"}
                   onChange={() => setPaymentMethod("cash_on_delivery")}
                 />
-                <span className="co-payment__option-icon">💳</span>
+                <span className="co-payment__option-icon"><CreditCard size={18} aria-hidden /></span>
                 <span>Pay on delivery</span>
               </label>
               <label className={`co-payment__option ${paymentMethod === "bank_transfer" ? "co-payment__option--active" : ""}`}>
@@ -223,7 +224,7 @@ function CheckoutContent() {
                   checked={paymentMethod === "bank_transfer"}
                   onChange={() => setPaymentMethod("bank_transfer")}
                 />
-                <span className="co-payment__option-icon">🏦</span>
+                <span className="co-payment__option-icon"><Bank size={18} aria-hidden /></span>
                 <span>Bank transfer</span>
               </label>
               <label
@@ -239,7 +240,7 @@ function CheckoutContent() {
                   disabled={(wallet?.balance ?? 0) < total}
                   onChange={() => setPaymentMethod("wallet")}
                 />
-                <span className="co-payment__option-icon">👛</span>
+                <span className="co-payment__option-icon"><WalletIcon size={18} aria-hidden /></span>
                 <span>
                   Wallet
                   <span className="co-payment__balance">
@@ -281,7 +282,13 @@ function CheckoutContent() {
             <span>{formatNaira(total)}</span>
           </div>
 
-          <button className="co-summary__cta" onClick={handlePlaceOrder} disabled={isLoading}>
+          <button
+            className="co-summary__cta"
+            onClick={handlePlaceOrder}
+            disabled={isLoading}
+            aria-busy={isLoading}
+            aria-label={isLoading ? "Placing order…" : undefined}
+          >
             {isLoading ? (
               <span className="co-summary__cta-spinner" />
             ) : (

@@ -1,5 +1,17 @@
 // types/vendor.ts  — or paste inline above your component
 
+import {
+  UtensilsCrossed,
+  Pizza,
+  CupSoda,
+  Soup,
+  RiceBowl,
+  Flame,
+  Burger,
+  Dessert,
+  type IconComponent,
+} from "@/components/icons";
+
 export type Vendor = {
   id: string;
   name: string;
@@ -23,20 +35,20 @@ export type Vendor = {
 export type Category = {
   id: string;
   label: string;
-  emoji: string;
+  icon: IconComponent;
   gradient: string;
 };
 
 /* ── seed data ─────────────────────────────────────────── */
 export const CATEGORIES: Category[] = [
-  { id: "all",      label: "All",        emoji: "🍽️",  gradient: "linear-gradient(135deg,#AC0000,#FFB703)" },
-  { id: "pizza",    label: "Pizza",      emoji: "🍕",  gradient: "linear-gradient(135deg,#AC0000,#e05c00)" },
-  { id: "drinks",   label: "Drinks",     emoji: "🥤",  gradient: "linear-gradient(135deg,#c25000,#FFB703)" },
-  { id: "soup",     label: "Soups",      emoji: "🍲",  gradient: "linear-gradient(135deg,#8B0000,#c44b00)" },
-  { id: "rice",     label: "Rice",       emoji: "🍛",  gradient: "linear-gradient(135deg,#AC0000,#b86a00)" },
-  { id: "grills",   label: "Grills",     emoji: "🔥",  gradient: "linear-gradient(135deg,#7a0000,#AC0000)" },
-  { id: "burgers",  label: "Burgers",    emoji: "🍔",  gradient: "linear-gradient(135deg,#b85000,#FFB703)" },
-  { id: "desserts", label: "Desserts",   emoji: "🍰",  gradient: "linear-gradient(135deg,#c23a00,#e08000)" },
+  { id: "all",      label: "All",        icon: UtensilsCrossed, gradient: "linear-gradient(135deg,#AC0000,#FFB703)" },
+  { id: "pizza",    label: "Pizza",      icon: Pizza,           gradient: "linear-gradient(135deg,#AC0000,#e05c00)" },
+  { id: "drinks",   label: "Drinks",     icon: CupSoda,         gradient: "linear-gradient(135deg,#c25000,#FFB703)" },
+  { id: "soup",     label: "Soups",      icon: Soup,            gradient: "linear-gradient(135deg,#8B0000,#c44b00)" },
+  { id: "rice",     label: "Rice",       icon: RiceBowl,        gradient: "linear-gradient(135deg,#AC0000,#b86a00)" },
+  { id: "grills",   label: "Grills",     icon: Flame,           gradient: "linear-gradient(135deg,#7a0000,#AC0000)" },
+  { id: "burgers",  label: "Burgers",    icon: Burger,          gradient: "linear-gradient(135deg,#b85000,#FFB703)" },
+  { id: "desserts", label: "Desserts",   icon: Dessert,         gradient: "linear-gradient(135deg,#c23a00,#e08000)" },
 ];
 
 export const VENDORS: Vendor[] = [

@@ -4,7 +4,19 @@ import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, PackageSearch, Wallet, Tag, LifeBuoy } from "lucide-react";
+import {
+  LogOut,
+  PackageSearch,
+  Wallet,
+  Tag,
+  LifeBuoy,
+  MapPin,
+  X,
+  Store,
+  ShoppingCart,
+  Leaf,
+  type IconComponent,
+} from "@/components/icons";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "../app/assets/lottie/close-x.json";
 import LottieIcon from "./LottieIcon";
@@ -13,23 +25,29 @@ import { useToast } from "@/components/feedback/ToastProvider";
 import { addRecentSearch } from "@/lib/utils/recentSearches";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
-const vendorCategories = [
+const vendorCategories: {
+  icon: IconComponent;
+  label: string;
+  desc: string;
+  href: string;
+  badge: string | null;
+}[] = [
   {
-    emoji: "🏪",
+    icon: Store,
     label: "Restaurants",
     desc: "African, continental & intercontinental",
     href: "/vendors/restaurants",
     badge: null,
   },
   {
-    emoji: "🛒",
+    icon: ShoppingCart,
     label: "Shops",
     desc: "Groceries & daily household essentials",
     href: "/vendors/shops",
     badge: "Coming soon",
   },
   {
-    emoji: "🌿",
+    icon: Leaf,
     label: "Local Markets",
     desc: "Fresh produce directly from local markets",
     href: "/vendors/markets",
@@ -59,9 +77,9 @@ const Navigation: React.FC = () => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  /* close vendor dropdown on outside click */
+  /* close vendor dropdown / user menu on outside click or Escape */
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (vendorRef.current && !vendorRef.current.contains(e.target as Node)) {
         setVendorsOpen(false);
       }
@@ -69,8 +87,19 @@ const Navigation: React.FC = () => {
         setUserMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setVendorsOpen(false);
+        setUserMenuOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -137,7 +166,7 @@ const Navigation: React.FC = () => {
           {/* CENTER — location + search */}
           <div className="nav-search-group">
             <button className="nav-location-btn" aria-label="Change delivery address">
-              <span className="nav-location-icon">📍</span>
+              <span className="nav-location-icon"><MapPin size={14} aria-hidden /></span>
               <span className="nav-location-text">
                 <span className="nav-location-label">Deliver to</span>
                 <span className="nav-location-value">Current location</span>
@@ -169,7 +198,7 @@ const Navigation: React.FC = () => {
                   className="nav-search-clear"
                   onClick={() => { setSearchValue(""); searchRef.current?.focus(); }}
                   aria-label="Clear search"
-                >✕</button>
+                ><X size={12} aria-hidden /></button>
               )}
             </div>
           </div>
@@ -293,7 +322,7 @@ const Navigation: React.FC = () => {
                         role="menuitem"
                         onClick={() => setVendorsOpen(false)}
                       >
-                        <span className="nav-dropdown__emoji">{v.emoji}</span>
+                        <span className="nav-dropdown__emoji"><v.icon size={22} aria-hidden /></span>
                         <div className="nav-dropdown__item-body">
                           <span className="nav-dropdown__item-label">
                             {v.label}
@@ -349,12 +378,12 @@ const Navigation: React.FC = () => {
         {/* Drawer header */}
         <div className="nav-drawer__header">
           <Image src="/images/logo/tummytime-logo.png" width={130} height={40} alt="TummyTime" className="nav-drawer__img" />
-          <button onClick={closeAll} className="nav-drawer__close" aria-label="Close">✕</button>
+          <button onClick={closeAll} className="nav-drawer__close" aria-label="Close"><X size={14} aria-hidden /></button>
         </div>
 
         {/* Location inside drawer */}
         <button className="nav-drawer__location">
-          <span>📍</span>
+          <span><MapPin size={16} aria-hidden /></span>
           <div>
             <p className="nav-drawer__location-label">Deliver to</p>
             <p className="nav-drawer__location-value">Current location ▾</p>
@@ -399,7 +428,7 @@ const Navigation: React.FC = () => {
                   className="nav-drawer__sub-link"
                   onClick={closeAll}
                 >
-                  <span className="nav-drawer__sub-emoji">{v.emoji}</span>
+                  <span className="nav-drawer__sub-emoji"><v.icon size={20} aria-hidden /></span>
                   <div className="nav-drawer__sub-body">
                     <p className="nav-drawer__sub-label">{v.label}</p>
                     <p className="nav-drawer__sub-desc">{v.desc}</p>

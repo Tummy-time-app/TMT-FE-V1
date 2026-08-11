@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import LoadingBike from "@/components/LoadingBike";
+import { RiceBowl, Burger, Flame, Cherries, Pizza, Soup, type IconComponent } from "@/components/icons";
 
 const loadingMessages = [
   "Finding the best spots near you…",
@@ -67,9 +68,18 @@ export default function Loading() {
 
       {/* floating food icons */}
       <div className="loading-floats" aria-hidden>
-        {["🍛", "🍔", "🌶️", "🍅", "🍕", "🥘"].map((icon, i) => (
+        {(
+          [
+            { Icon: RiceBowl, size: 38 },
+            { Icon: Burger, size: 29 },
+            { Icon: Flame, size: 32 },
+            { Icon: Cherries, size: 35 },
+            { Icon: Pizza, size: 26 },
+            { Icon: Soup, size: 32 },
+          ] as { Icon: IconComponent; size: number }[]
+        ).map(({ Icon, size }, i) => (
           <span key={i} className={`loading-float loading-float--${i + 1}`}>
-            {icon}
+            <Icon size={size} aria-hidden />
           </span>
         ))}
       </div>

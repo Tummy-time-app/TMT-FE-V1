@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MotionConfig } from "framer-motion";
 import "./globals.css";
 import ClientWrapper from "../components/ClientWrapper";
 import ConditionalNavbar from "../components/conditionalNavbar";
@@ -32,16 +33,21 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <StoreProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <ClientWrapper>
-                <ConditionalNavbar />
-                {children}
-              </ClientWrapper>
-            </ToastProvider>
-          </AuthProvider>
-        </StoreProvider>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
+        <MotionConfig reducedMotion="user">
+          <StoreProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <ClientWrapper>
+                  <ConditionalNavbar />
+                  <div id="main-content">{children}</div>
+                </ClientWrapper>
+              </ToastProvider>
+            </AuthProvider>
+          </StoreProvider>
+        </MotionConfig>
       </body>
     </html>
   );

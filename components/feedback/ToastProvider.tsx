@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, XCircle, Info, AlertTriangle, X } from "lucide-react";
+import { CheckCircle2, XCircle, Info, AlertTriangle, X } from "@/components/icons";
 import { cn } from "@/lib/utils/cn";
 
 export type ToastType = "success" | "error" | "info" | "warning";

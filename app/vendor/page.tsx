@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, ListChecks, Star, Wallet } from "lucide-react";
+import { ClipboardList, ListChecks, Star, Wallet } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetVendorOrdersQuery } from "@/features/orders/ordersApi";
 import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";

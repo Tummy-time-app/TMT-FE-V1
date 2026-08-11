@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useValidatePromoCodeMutation } from "@/features/promotions/promotionsApi";
 import { normalizeApiError } from "@/lib/utils/apiError";
+import { ShoppingCart, Store, X, Pencil, Zap, Tag, PartyPopper, Lock } from "@/components/icons";
 
 const DELIVERY_FEE = 500;
 const FREE_DELIVERY_THRESHOLD = 10000;
@@ -68,7 +69,7 @@ export default function CartPage() {
     return (
       <div className="cart-empty">
         <div className="cart-empty__inner">
-          <div className="cart-empty__icon">🛒</div>
+          <div className="cart-empty__icon"><ShoppingCart size={36} aria-hidden /></div>
           <h2 className="cart-empty__heading">Your cart is empty</h2>
           <p className="cart-empty__sub">
             {`Looks like you haven't added anything yet.`}
@@ -130,7 +131,7 @@ export default function CartPage() {
                   <div>
                     <p className="cart-item__name">{item.name}</p>
                     <span className="cart-item__vendor">
-                      🏪 Restaurant &nbsp;·&nbsp; {item.vendor}
+                      <Store size={12} aria-hidden style={{ verticalAlign: -2 }} /> Restaurant &nbsp;·&nbsp; {item.vendor}
                     </span>
                   </div>
                   <button
@@ -138,7 +139,7 @@ export default function CartPage() {
                     onClick={() => handleRemove(item.id)}
                     aria-label={`Remove ${item.name}`}
                   >
-                    ✕
+                    <X size={13} aria-hidden />
                   </button>
                 </div>
 
@@ -159,9 +160,13 @@ export default function CartPage() {
                     className="cart-item__note-btn"
                     onClick={() => setNoteId(item.id)}
                   >
-                    {item.note
-                      ? `📝 ${item.note}`
-                      : "+ Add a note"}
+                    {item.note ? (
+                      <>
+                        <Pencil size={12} aria-hidden style={{ verticalAlign: -2 }} /> {item.note}
+                      </>
+                    ) : (
+                      "+ Add a note"
+                    )}
                   </button>
                 )}
 
@@ -200,7 +205,7 @@ export default function CartPage() {
 
           {/* delivery estimate banner */}
           <div className="cart-eta">
-            <span className="cart-eta__icon">⚡</span>
+            <span className="cart-eta__icon"><Zap size={18} aria-hidden /></span>
             <div>
               <p className="cart-eta__label">Estimated delivery</p>
               <p className="cart-eta__time">25 – 35 min</p>
@@ -255,7 +260,7 @@ export default function CartPage() {
           {/* promo code */}
           <div className="cart-promo">
             <div className={`cart-promo__wrap ${promoError ? "cart-promo__wrap--error" : ""} ${appliedPromo ? "cart-promo__wrap--success" : ""}`}>
-              <span className="cart-promo__icon">🏷️</span>
+              <span className="cart-promo__icon"><Tag size={15} aria-hidden /></span>
               <input
                 className="cart-promo__input"
                 placeholder="Promo code"
@@ -287,7 +292,9 @@ export default function CartPage() {
               <p className="cart-promo__error">{promoError}</p>
             )}
             {appliedPromo && (
-              <p className="cart-promo__success">🎉 {appliedPromo.code} applied — you saved {formatNaira(discount)}!</p>
+              <p className="cart-promo__success">
+                <PartyPopper size={13} aria-hidden style={{ verticalAlign: -2 }} /> {appliedPromo.code} applied — you saved {formatNaira(discount)}!
+              </p>
             )}
           </div>
 
@@ -304,7 +311,7 @@ export default function CartPage() {
           </Link>
 
           <p className="cart-summary__note">
-            🔒 Secure checkout &nbsp;·&nbsp; Pay on delivery available
+            <Lock size={12} aria-hidden style={{ verticalAlign: -2 }} /> Secure checkout &nbsp;·&nbsp; Pay on delivery available
           </p>
         </aside>
       </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LifeBuoy, Plus } from "lucide-react";
+import { LifeBuoy, Plus } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useCreateTicketMutation, useGetTicketsQuery } from "@/features/support/supportApi";

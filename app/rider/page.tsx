@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Bike, Navigation, Power } from "lucide-react";
+import { Bike, Navigation, Power } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import {
   useGetAvailableDeliveriesQuery,

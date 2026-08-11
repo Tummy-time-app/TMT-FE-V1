@@ -1,6 +1,6 @@
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import type { SerializedError } from "@reduxjs/toolkit";
-import { AlertCircle, RefreshCw, WifiOff } from "lucide-react";
+import { AlertCircle, RefreshCw, WifiOff } from "@/components/icons";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
 

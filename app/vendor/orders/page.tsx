@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetVendorOrdersQuery } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";

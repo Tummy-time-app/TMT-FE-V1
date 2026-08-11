@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import { LogOut, Menu, X, type IconComponent } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils/cn";
 export interface RoleNavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   exact?: boolean;
 }
 
@@ -31,6 +31,15 @@ export function RoleShell({ roleLabel, navItems, sidebarFooter, children }: Role
   const { user, logout } = useAuth();
   const toast = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
 
   const handleLogout = () => {
     logout();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList } from "@/components/icons";
 import { useGetAllOrdersQuery } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { EmptyState } from "@/components/feedback/EmptyState";

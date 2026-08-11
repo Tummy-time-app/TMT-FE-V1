@@ -135,6 +135,8 @@ function LoginForm() {
             type="submit"
             className={`auth-submit-btn${isLoading ? " auth-submit-btn--loading" : ""}`}
             disabled={isLoading}
+            aria-busy={isLoading}
+            aria-label={isLoading ? "Signing in…" : undefined}
           >
             {isLoading ? <span className="auth-spinner" /> : "Login"}
           </button>

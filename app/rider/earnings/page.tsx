@@ -1,6 +1,6 @@
 "use client";
 
-import { Wallet, CalendarDays, TrendingUp } from "lucide-react";
+import { Wallet, CalendarDays, TrendingUp } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetRiderOrdersQuery } from "@/features/orders/ordersApi";
 import { useGetWithdrawalsQuery } from "@/features/payouts/payoutsApi";

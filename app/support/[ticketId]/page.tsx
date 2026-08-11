@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Paperclip, Send } from "lucide-react";
+import { ArrowLeft, Paperclip, Send } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useAddTicketMessageMutation, useGetTicketQuery, useUpdateTicketStatusMutation } from "@/features/support/supportApi";

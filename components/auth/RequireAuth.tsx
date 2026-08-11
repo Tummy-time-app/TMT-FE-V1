@@ -6,7 +6,7 @@ import { useAuth } from "@/features/auth/hooks";
 import type { UserRole } from "@/features/auth/types";
 import { PageSpinner } from "@/components/feedback/PageSpinner";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "@/components/icons";
 
 interface RequireAuthProps {
   children: ReactNode;

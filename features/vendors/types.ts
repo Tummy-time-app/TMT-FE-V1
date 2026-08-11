@@ -1,4 +1,5 @@
 import type { LatLng } from "@/lib/maps/types";
+import type { IconComponent } from "@/components/icons";
 
 export type VendorApprovalStatus = "pending" | "approved" | "suspended";
 
@@ -25,7 +26,7 @@ export type Vendor = {
 export type VendorCategory = {
   id: string;
   label: string;
-  emoji: string;
+  icon: IconComponent;
   gradient: string;
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, ClipboardList, Wallet, History, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Wallet, History, LifeBuoy } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { RoleShell } from "@/components/layout/RoleShell";
 import { useRiderOnline } from "@/hooks/useRiderAvailability";
