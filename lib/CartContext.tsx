@@ -15,11 +15,18 @@ export interface CartItem {
   note?: string;
 }
 
+/* ── Applied promo code ──────────────────────────────── */
+export interface AppliedPromo {
+  code: string;
+  discountAmount: number;
+}
+
 /* ── Context shape ────────────────────────────────────── */
 interface CartContextValue {
   items: CartItem[];
   cartCount: number;
   cartTotal: number;
+  appliedPromo: AppliedPromo | null;
 
   addItem: (item: Omit<CartItem, "qty">, qty?: number) => void;
   removeItem: (id: number) => void;
@@ -27,6 +34,8 @@ interface CartContextValue {
   updateNote: (id: number, note: string) => void;
   clearCart: () => void;
   getItemQty: (id: number) => number;
+  applyPromo: (promo: AppliedPromo) => void;
+  removePromo: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -34,6 +43,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 /* ── Provider ─────────────────────────────────────────── */
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
 
   const cartCount = items.reduce((s, i) => s + i.qty, 0);
   const cartTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -68,16 +78,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(prev => prev.map(i => (i.id === id ? { ...i, note } : i)));
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setAppliedPromo(null);
+  }, []);
 
   const getItemQty = useCallback(
     (id: number) => items.find(i => i.id === id)?.qty ?? 0,
     [items]
   );
 
+  const applyPromo = useCallback((promo: AppliedPromo) => setAppliedPromo(promo), []);
+  const removePromo = useCallback(() => setAppliedPromo(null), []);
+
   return (
     <CartContext.Provider
-      value={{ items, cartCount, cartTotal, addItem, removeItem, changeQty, updateNote, clearCart, getItemQty }}
+      value={{
+        items,
+        cartCount,
+        cartTotal,
+        appliedPromo,
+        addItem,
+        removeItem,
+        changeQty,
+        updateNote,
+        clearCart,
+        getItemQty,
+        applyPromo,
+        removePromo,
+      }}
     >
       {children}
     </CartContext.Provider>

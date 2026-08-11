@@ -40,6 +40,7 @@ function seedUsers(): MockUserRecord[] {
       role: "customer",
       avatarUrl: null,
       emailVerified: true,
+      active: true,
       createdAt: new Date().toISOString(),
       password: "password123",
     },
@@ -51,6 +52,31 @@ function seedUsers(): MockUserRecord[] {
       vendorId: "gracehouse",
       avatarUrl: null,
       emailVerified: true,
+      active: true,
+      createdAt: new Date().toISOString(),
+      password: "password123",
+    },
+    {
+      id: "dev-rider-1",
+      email: "rider@tummytime.dev",
+      name: "Ibrahim Musa",
+      phone: "+234 803 111 2222",
+      role: "rider",
+      vehicleType: "bike",
+      avatarUrl: null,
+      emailVerified: true,
+      active: true,
+      createdAt: new Date().toISOString(),
+      password: "password123",
+    },
+    {
+      id: "dev-admin-1",
+      email: "admin@tummytime.dev",
+      name: "TummyTime Admin",
+      role: "admin",
+      avatarUrl: null,
+      emailVerified: true,
+      active: true,
       createdAt: new Date().toISOString(),
       password: "password123",
     },
@@ -95,6 +121,8 @@ function toPublicUser(record: MockUserRecord): User {
     emailVerified: record.emailVerified,
     createdAt: record.createdAt,
     vendorId: record.vendorId,
+    vehicleType: record.vehicleType,
+    active: record.active,
   };
 }
 
@@ -104,6 +132,9 @@ export async function mockLogin({ email, password }: LoginCredentials): Promise<
   const record = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
   if (!record || record.password !== password) {
     throw { status: 401, message: "Invalid email or password." };
+  }
+  if (!record.active) {
+    throw { status: 403, message: "Your account has been deactivated. Contact support for help." };
   }
   return { user: toPublicUser(record), session: issueSession(record.id) };
 }
@@ -122,6 +153,7 @@ export async function mockRegister(payload: RegisterPayload): Promise<AuthRespon
     role: payload.role ?? "customer",
     avatarUrl: null,
     emailVerified: false,
+    active: true,
     createdAt: new Date().toISOString(),
     password: payload.password,
   };
@@ -152,7 +184,7 @@ export async function mockGetSession(token: string): Promise<AuthResponse> {
   const userId = token.split(".")[1];
   const users = loadUsers();
   const record = users.find((u) => u.id === userId);
-  if (!record) {
+  if (!record || !record.active) {
     throw { status: 401, message: "Session expired." };
   }
   return { user: toPublicUser(record), session: issueSession(record.id) };
@@ -223,4 +255,29 @@ export async function mockResetPassword({ token, password }: ResetPasswordPayloa
   delete tokens[token];
   saveResetTokens(tokens);
   return { user: toPublicUser(users[idx]), session: issueSession(users[idx].id) };
+}
+
+/** Looks up which user account owns a given vendor — used by orders.mock.ts to notify the vendor of new orders. */
+export function findVendorOwnerId(vendorId: string): string | null {
+  const record = loadUsers().find((u) => u.role === "vendor" && u.vendorId === vendorId);
+  return record?.id ?? null;
+}
+
+/** Admin — every account on the platform. */
+export async function mockGetAllUsers(): Promise<User[]> {
+  await mockDelay(400);
+  return loadUsers()
+    .map(toPublicUser)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Admin — activate/deactivate an account. Deactivated accounts can't log in (see mockLogin/mockGetSession). */
+export async function mockSetUserActive(userId: string, active: boolean): Promise<User> {
+  await mockDelay(400);
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) throw { status: 404, message: "User not found." };
+  users[idx] = { ...users[idx], active };
+  saveUsers(users);
+  return toPublicUser(users[idx]);
 }

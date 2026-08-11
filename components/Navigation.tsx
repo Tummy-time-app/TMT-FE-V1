@@ -4,13 +4,14 @@ import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, PackageSearch } from "lucide-react";
+import { LogOut, PackageSearch, Wallet, Tag, LifeBuoy } from "lucide-react";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "../app/assets/lottie/close-x.json";
 import LottieIcon from "./LottieIcon";
 import { useAuth } from "@/features/auth/hooks";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { addRecentSearch } from "@/lib/utils/recentSearches";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const vendorCategories = [
   {
@@ -182,6 +183,8 @@ const Navigation: React.FC = () => {
               )}
             </Link>
 
+            {isAuthenticated && <NotificationBell />}
+
             {isSessionLoading ? (
               <span className="nav-user-skeleton" aria-hidden />
             ) : isAuthenticated && user ? (
@@ -209,6 +212,33 @@ const Navigation: React.FC = () => {
                     >
                       <PackageSearch size={15} aria-hidden />
                       My orders
+                    </Link>
+                    <Link
+                      href="/wallet"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Wallet size={15} aria-hidden />
+                      Wallet
+                    </Link>
+                    <Link
+                      href="/promotions"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Tag size={15} aria-hidden />
+                      Promotions
+                    </Link>
+                    <Link
+                      href="/support"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <LifeBuoy size={15} aria-hidden />
+                      Support
                     </Link>
                     <button
                       type="button"

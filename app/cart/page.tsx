@@ -3,6 +3,8 @@ import { useCart } from "@/lib/CartContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useValidatePromoCodeMutation } from "@/features/promotions/promotionsApi";
+import { normalizeApiError } from "@/lib/utils/apiError";
 
 const DELIVERY_FEE = 500;
 const FREE_DELIVERY_THRESHOLD = 10000;
@@ -14,15 +16,25 @@ function formatNaira(amount: number) {
 
 /* ── Component ───────────────────────────────────────────── */
 export default function CartPage() {
-  const { items, cartTotal: subtotal, changeQty, removeItem, updateNote, clearCart } = useCart();
+  const {
+    items,
+    cartTotal: subtotal,
+    changeQty,
+    removeItem,
+    updateNote,
+    clearCart,
+    appliedPromo,
+    applyPromo: setAppliedPromo,
+    removePromo,
+  } = useCart();
   const [promo, setPromo]           = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const [noteId, setNoteId]         = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [validatePromoCode, { isLoading: isValidatingPromo }] = useValidatePromoCodeMutation();
 
   /* calculations */
-  const discount   = promoApplied ? Math.round(subtotal * 0.1) : 0;
+  const discount   = appliedPromo?.discountAmount ?? 0;
   const delivery   = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total      = subtotal - discount + delivery;
 
@@ -35,14 +47,20 @@ export default function CartPage() {
     }, 320);
   };
 
-  const applyPromo = () => {
-    if (promo.trim().toUpperCase() === "TUMMY10") {
-      setPromoApplied(true);
-      setPromoError(false);
-    } else {
-      setPromoError(true);
-      setPromoApplied(false);
+  const handleApplyPromo = async () => {
+    setPromoError("");
+    try {
+      const result = await validatePromoCode({ code: promo, vendorId: items[0]?.vendorId, subtotal }).unwrap();
+      setAppliedPromo({ code: result.promotion.code, discountAmount: result.discountAmount });
+    } catch (err) {
+      setPromoError(normalizeApiError(err as never).message);
     }
+  };
+
+  const handleRemovePromo = () => {
+    removePromo();
+    setPromo("");
+    setPromoError("");
   };
 
   /* ── Empty state ──────────────────────────────────────── */
@@ -209,9 +227,9 @@ export default function CartPage() {
                 {formatNaira(DELIVERY_FEE)}
               </span>
             </div>
-            {promoApplied && (
+            {appliedPromo && (
               <div className="cart-summary__line cart-summary__line--discount">
-                <span>Promo (TUMMY10)</span>
+                <span>Promo ({appliedPromo.code})</span>
                 <span>− {formatNaira(discount)}</span>
               </div>
             )}
@@ -236,7 +254,7 @@ export default function CartPage() {
 
           {/* promo code */}
           <div className="cart-promo">
-            <div className={`cart-promo__wrap ${promoError ? "cart-promo__wrap--error" : ""} ${promoApplied ? "cart-promo__wrap--success" : ""}`}>
+            <div className={`cart-promo__wrap ${promoError ? "cart-promo__wrap--error" : ""} ${appliedPromo ? "cart-promo__wrap--success" : ""}`}>
               <span className="cart-promo__icon">🏷️</span>
               <input
                 className="cart-promo__input"
@@ -244,32 +262,32 @@ export default function CartPage() {
                 value={promo}
                 onChange={e => {
                   setPromo(e.target.value);
-                  setPromoError(false);
+                  setPromoError("");
                 }}
-                disabled={promoApplied}
+                disabled={!!appliedPromo}
               />
-              {promoApplied ? (
+              {appliedPromo ? (
                 <button
                   className="cart-promo__btn cart-promo__btn--remove"
-                  onClick={() => { setPromoApplied(false); setPromo(""); }}
+                  onClick={handleRemovePromo}
                 >
                   Remove
                 </button>
               ) : (
                 <button
                   className="cart-promo__btn"
-                  onClick={applyPromo}
-                  disabled={!promo.trim()}
+                  onClick={handleApplyPromo}
+                  disabled={!promo.trim() || isValidatingPromo}
                 >
-                  Apply
+                  {isValidatingPromo ? "Checking…" : "Apply"}
                 </button>
               )}
             </div>
             {promoError && (
-              <p className="cart-promo__error">Invalid promo code. Try TUMMY10</p>
+              <p className="cart-promo__error">{promoError}</p>
             )}
-            {promoApplied && (
-              <p className="cart-promo__success">🎉 10% discount applied!</p>
+            {appliedPromo && (
+              <p className="cart-promo__success">🎉 {appliedPromo.code} applied — you saved {formatNaira(discount)}!</p>
             )}
           </div>
 

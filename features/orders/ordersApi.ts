@@ -3,12 +3,20 @@ import { isDevMode } from "@/lib/dev/devMode";
 import { toQueryError } from "@/lib/utils/apiError";
 import {
   mockCancelOrder,
+  mockClaimDelivery,
   mockCreateOrder,
+  mockGetAllOrders,
+  mockGetAvailableDeliveries,
   mockGetOrder,
   mockGetOrders,
+  mockGetRiderOrders,
   mockGetVendorOrders,
+  mockMarkDelivered,
   mockUpdateOrderStatus,
+  mockUpdateRiderLocation,
+  type ClaimDeliveryInput,
 } from "@/lib/mocks/orders.mock";
+import type { LatLng } from "@/lib/maps/types";
 import type { CreateOrderPayload, Order, OrderStatus } from "./types";
 
 export const ordersApi = baseApi.injectEndpoints({
@@ -101,6 +109,103 @@ export const ordersApi = baseApi.injectEndpoints({
       },
       invalidatesTags: (_result, _error, { id }) => [{ type: "Orders", id }, "Orders"],
     }),
+
+    /** Ready-for-pickup deliveries not yet claimed by any rider — the rider dashboard's incoming feed. */
+    getAvailableDeliveries: builder.query<Order[], void>({
+      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockGetAvailableDeliveries() };
+          const result = await fetchWithBQ("/rider/available-deliveries");
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order[] };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      providesTags: ["Orders"],
+    }),
+
+    /** A rider's own deliveries, active + past. */
+    getRiderOrders: builder.query<Order[], string>({
+      queryFn: async (riderId, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockGetRiderOrders(riderId) };
+          const result = await fetchWithBQ({ url: "/rider/orders", params: { riderId } });
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order[] };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      providesTags: (result) =>
+        result ? [...result.map((o) => ({ type: "Orders" as const, id: o.id })), "Orders"] : ["Orders"],
+    }),
+
+    claimDelivery: builder.mutation<Order, { orderId: string; rider: ClaimDeliveryInput }>({
+      queryFn: async ({ orderId, rider }, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockClaimDelivery(orderId, rider) };
+          const result = await fetchWithBQ({ url: `/orders/${orderId}/claim`, method: "PATCH", body: rider });
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      invalidatesTags: (_result, _error, { orderId }) => [{ type: "Orders", id: orderId }, "Orders"],
+    }),
+
+    markDelivered: builder.mutation<Order, { orderId: string; riderId: string; proofNote: string }>({
+      queryFn: async ({ orderId, riderId, proofNote }, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockMarkDelivered(orderId, riderId, proofNote) };
+          const result = await fetchWithBQ({
+            url: `/orders/${orderId}/deliver`,
+            method: "PATCH",
+            body: { riderId, proofNote },
+          });
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      invalidatesTags: (_result, _error, { orderId }) => [{ type: "Orders", id: orderId }, "Orders"],
+    }),
+
+    /** Fired frequently from a geolocation watcher — deliberately not shown in any loading UI. */
+    updateRiderLocation: builder.mutation<Order, { orderId: string; riderId: string; location: LatLng }>({
+      queryFn: async ({ orderId, riderId, location }, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockUpdateRiderLocation(orderId, riderId, location) };
+          const result = await fetchWithBQ({
+            url: `/orders/${orderId}/rider-location`,
+            method: "PATCH",
+            body: { riderId, location },
+          });
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      invalidatesTags: (_result, _error, { orderId }) => [{ type: "Orders", id: orderId }],
+    }),
+
+    /** Admin — every order on the platform. */
+    getAllOrders: builder.query<Order[], void>({
+      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockGetAllOrders() };
+          const result = await fetchWithBQ("/admin/orders");
+          if (result.error) return { error: result.error };
+          return { data: result.data as Order[] };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      providesTags: ["Orders"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -112,4 +217,10 @@ export const {
   useGetOrderQuery,
   useCancelOrderMutation,
   useUpdateOrderStatusMutation,
+  useGetAvailableDeliveriesQuery,
+  useGetRiderOrdersQuery,
+  useClaimDeliveryMutation,
+  useMarkDeliveredMutation,
+  useUpdateRiderLocationMutation,
+  useGetAllOrdersQuery,
 } = ordersApi;

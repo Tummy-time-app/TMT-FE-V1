@@ -3878,6 +3878,18 @@ body {
 .co-payment__radio { accent-color: var(--crimson); }
 .co-payment__option-icon { font-size: 1.2rem; }
 
+.co-payment__option--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.co-payment__option--disabled:hover { border-color: rgba(0,0,0,0.08); }
+
+.co-payment__balance {
+  font-weight: 500;
+  color: #999;
+  font-size: 0.8rem;
+}
+
 /* ── Summary sidebar (right) ─────────────────────────── */
 .co-summary {
   position: sticky; top: 100px;

@@ -8,6 +8,7 @@ import { Suspense, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useCreateOrderMutation } from "@/features/orders/ordersApi";
+import { useGetWalletQuery } from "@/features/wallet/walletApi";
 import type { PaymentMethod } from "@/features/orders/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { useToast } from "@/components/feedback/ToastProvider";
@@ -27,7 +28,7 @@ function CheckoutContent() {
   const initialType = (params.get("type") as "delivery" | "pickup") ?? "delivery";
   const riderNote = params.get("note") ?? "";
 
-  const { items, clearCart } = useCart();
+  const { items, clearCart, appliedPromo } = useCart();
   const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialType);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash_on_delivery");
   const [submitError, setSubmitError] = useState("");
@@ -35,6 +36,7 @@ function CheckoutContent() {
   const toast = useToast();
   const { user } = useAuth();
   const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const { data: wallet } = useGetWalletQuery(user?.id ?? "", { skip: !user });
 
   /* Group cart items by vendor — an order can only include one vendor. */
   const vendorIds = useMemo(() => Array.from(new Set(items.map((i) => i.vendorId))), [items]);
@@ -47,7 +49,8 @@ function CheckoutContent() {
 
   const subtotal = checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = orderType === "delivery" ? DELIVERY_FEE : 0;
-  const total = subtotal + delivery;
+  const discount = appliedPromo?.discountAmount ?? 0;
+  const total = Math.max(0, subtotal + delivery - discount);
 
   const handlePlaceOrder = async () => {
     if (!user) return;
@@ -70,6 +73,8 @@ function CheckoutContent() {
         deliveryAddress: orderType === "delivery" ? DELIVERY_ADDRESS : undefined,
         riderNote: riderNote || undefined,
         paymentMethod,
+        promoCode: appliedPromo?.code,
+        discount: discount || undefined,
         subtotal,
         deliveryFee: delivery,
         total,
@@ -221,6 +226,29 @@ function CheckoutContent() {
                 <span className="co-payment__option-icon">🏦</span>
                 <span>Bank transfer</span>
               </label>
+              <label
+                className={`co-payment__option ${paymentMethod === "wallet" ? "co-payment__option--active" : ""} ${
+                  (wallet?.balance ?? 0) < total ? "co-payment__option--disabled" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  className="co-payment__radio"
+                  checked={paymentMethod === "wallet"}
+                  disabled={(wallet?.balance ?? 0) < total}
+                  onChange={() => setPaymentMethod("wallet")}
+                />
+                <span className="co-payment__option-icon">👛</span>
+                <span>
+                  Wallet
+                  <span className="co-payment__balance">
+                    {" "}
+                    — {formatNaira(wallet?.balance ?? 0)} available
+                    {(wallet?.balance ?? 0) < total && " (insufficient)"}
+                  </span>
+                </span>
+              </label>
             </div>
           </div>
         </section>
@@ -238,6 +266,12 @@ function CheckoutContent() {
               <div className="co-summary__line">
                 <span>Delivery fee</span>
                 <span>{formatNaira(delivery)}</span>
+              </div>
+            )}
+            {appliedPromo && (
+              <div className="co-summary__line">
+                <span>Promo ({appliedPromo.code})</span>
+                <span>− {formatNaira(discount)}</span>
               </div>
             )}
           </div>

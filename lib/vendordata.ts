@@ -17,6 +17,7 @@ export type Vendor = {
   isFeatured: boolean;
   promoLabel?: string;    // e.g. "20% off"
   location: { lat: number; lng: number }; // seed coords around Lagos Ikoyi/VI, for the maps feature
+  approvalStatus: "pending" | "approved" | "suspended"; // default state — lib/mocks/vendors.mock.ts overlays admin changes
 };
 
 export type Category = {
@@ -46,7 +47,7 @@ export const VENDORS: Vendor[] = [
     rating: 5.0, reviewCount: 142, deliveryTime: "31-40",
     deliveryFee: 0, minOrder: 1500, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: true, promoLabel: "Free delivery",
-    location: { lat: 6.451, lng: 3.421 },
+    location: { lat: 6.451, lng: 3.421 }, approvalStatus: "approved",
   },
   {
     id: "amarachi-food", name: "Amarachi Food", image: "/images/jollof__jolloffestival__yummy-removebg-preview.png",
@@ -54,7 +55,7 @@ export const VENDORS: Vendor[] = [
     rating: 4.7, reviewCount: 89, deliveryTime: "31-40",
     deliveryFee: 200, minOrder: 1000, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: true,
-    location: { lat: 6.438, lng: 3.401 },
+    location: { lat: 6.438, lng: 3.401 }, approvalStatus: "approved",
   },
   {
     id: "foodie", name: "Foodie.com", image: "/images/friedrice.png",
@@ -62,7 +63,7 @@ export const VENDORS: Vendor[] = [
     rating: 3.5, reviewCount: 34, deliveryTime: "31-40",
     deliveryFee: 300, minOrder: 800, priceRange: 2,
     isOpen: false, isNew: true, isFeatured: true,
-    location: { lat: 6.462, lng: 3.445 },
+    location: { lat: 6.462, lng: 3.445 }, approvalStatus: "approved",
   },
   // All restaurants
   {
@@ -71,7 +72,7 @@ export const VENDORS: Vendor[] = [
     rating: 5.0, reviewCount: 210, deliveryTime: "31-40",
     deliveryFee: 0, minOrder: 1200, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: false, promoLabel: "20% off",
-    location: { lat: 6.445, lng: 3.390 },
+    location: { lat: 6.445, lng: 3.390 }, approvalStatus: "approved",
   },
   {
     id: "gracehouse", name: "Gracehouse Kitchen", image: "/images/Jollof stir-fry spaghetti.jpg",
@@ -79,7 +80,7 @@ export const VENDORS: Vendor[] = [
     rating: 5.0, reviewCount: 67, deliveryTime: "31-40",
     deliveryFee: 150, minOrder: 1000, priceRange: 1,
     isOpen: true, isNew: false, isFeatured: false,
-    location: { lat: 6.455, lng: 3.430 },
+    location: { lat: 6.455, lng: 3.430 }, approvalStatus: "approved",
   },
   {
     id: "burger-boy", name: "Burger Boy", image: "/images/hamburger.png",
@@ -87,7 +88,7 @@ export const VENDORS: Vendor[] = [
     rating: 5.0, reviewCount: 195, deliveryTime: "20-30",
     deliveryFee: 0, minOrder: 800, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: false, promoLabel: "Free delivery",
-    location: { lat: 6.430, lng: 3.415 },
+    location: { lat: 6.430, lng: 3.415 }, approvalStatus: "approved",
   },
   {
     id: "pepper-spot", name: "The Pepper Spot", image: "/images/jollof.png",
@@ -95,7 +96,7 @@ export const VENDORS: Vendor[] = [
     rating: 4.3, reviewCount: 58, deliveryTime: "35-45",
     deliveryFee: 250, minOrder: 1500, priceRange: 2,
     isOpen: true, isNew: true, isFeatured: false,
-    location: { lat: 6.458, lng: 3.408 },
+    location: { lat: 6.458, lng: 3.408 }, approvalStatus: "approved",
   },
   {
     id: "chill-sip-lounge", name: "Chill & Sip Lounge", image: "/images/friedrice.png",
@@ -103,7 +104,7 @@ export const VENDORS: Vendor[] = [
     rating: 4.8, reviewCount: 112, deliveryTime: "15-25",
     deliveryFee: 100, minOrder: 500, priceRange: 2,
     isOpen: true, isNew: false, isFeatured: false,
-    location: { lat: 6.440, lng: 3.440 },
+    location: { lat: 6.440, lng: 3.440 }, approvalStatus: "approved",
   },
   {
     id: "mamas-kitchen", name: "Mama's Kitchen", image: "/images/jollof.png",
@@ -111,6 +112,6 @@ export const VENDORS: Vendor[] = [
     rating: 4.9, reviewCount: 301, deliveryTime: "40-55",
     deliveryFee: 0, minOrder: 1000, priceRange: 1,
     isOpen: false, isNew: false, isFeatured: false, promoLabel: "Popular",
-    location: { lat: 6.465, lng: 3.395 },
+    location: { lat: 6.465, lng: 3.395 }, approvalStatus: "approved",
   },
 ];

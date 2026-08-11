@@ -10,7 +10,7 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
-export type PaymentMethod = "cash_on_delivery" | "bank_transfer";
+export type PaymentMethod = "cash_on_delivery" | "bank_transfer" | "wallet";
 export type PaymentStatus = "pending" | "processing" | "paid" | "failed";
 export type OrderType = "delivery" | "pickup";
 
@@ -57,6 +57,10 @@ export interface Order {
   status: OrderStatus;
   statusHistory: OrderStatusEvent[];
   rider?: RiderInfo;
+  /** Proof-of-delivery note the rider leaves when marking the order delivered. */
+  proofNote?: string;
+  promoCode?: string;
+  discount?: number;
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -73,6 +77,8 @@ export interface CreateOrderPayload {
   deliveryAddress?: string;
   riderNote?: string;
   paymentMethod: PaymentMethod;
+  promoCode?: string;
+  discount?: number;
   subtotal: number;
   deliveryFee: number;
   total: number;

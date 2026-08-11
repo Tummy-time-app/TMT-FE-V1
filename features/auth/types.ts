@@ -17,6 +17,10 @@ export interface User {
   createdAt: string;
   /** Only set for role "vendor" — which vendor record (features/vendors) this account manages. */
   vendorId?: string;
+  /** Only set for role "rider". */
+  vehicleType?: "bike" | "bicycle" | "car";
+  /** Deactivated accounts (admin action) can't log in. */
+  active: boolean;
 }
 
 export interface AuthSession {

@@ -3,18 +3,29 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks";
 import { useToast } from "@/components/feedback/ToastProvider";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils/cn";
 
-const NAV_ITEMS = [
-  { href: "/vendor", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/vendor/orders", label: "Orders", icon: ClipboardList, exact: false },
-  { href: "/vendor/products", label: "Products", icon: UtensilsCrossed, exact: false },
-];
+export interface RoleNavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+}
 
-export function VendorShell({ children }: { children: ReactNode }) {
+interface RoleShellProps {
+  roleLabel: string;
+  navItems: RoleNavItem[];
+  /** Optional content rendered above the logout button (e.g. a live status pill). */
+  sidebarFooter?: ReactNode;
+  children: ReactNode;
+}
+
+/** Shared sidebar+topbar shell for role-gated app areas (vendor, rider, admin…). Sidebar on desktop, drawer on mobile. */
+export function RoleShell({ roleLabel, navItems, sidebarFooter, children }: RoleShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -27,11 +38,11 @@ export function VendorShell({ children }: { children: ReactNode }) {
     router.push("/login");
   };
 
-  const isActive = (href: string, exact: boolean) => (exact ? pathname === href : pathname.startsWith(href));
+  const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
 
   const navLinks = (
     <nav className="flex flex-1 flex-col gap-1 p-3">
-      {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => (
+      {navItems.map(({ href, label, icon: Icon, exact }) => (
         <Link
           key={href}
           href={href}
@@ -48,8 +59,9 @@ export function VendorShell({ children }: { children: ReactNode }) {
     </nav>
   );
 
-  const logoutButton = (
+  const footer = (
     <div className="border-t border-white/10 p-3">
+      {sidebarFooter}
       <button
         type="button"
         onClick={handleLogout}
@@ -68,11 +80,11 @@ export function VendorShell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2 border-b border-white/10 px-5 py-5">
           <span className="font-display text-h3 font-bold text-white">TummyTime</span>
           <span className="rounded bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-            Vendor
+            {roleLabel}
           </span>
         </div>
         {navLinks}
-        {logoutButton}
+        {footer}
       </aside>
 
       {/* Mobile drawer */}
@@ -87,7 +99,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             {navLinks}
-            {logoutButton}
+            {footer}
           </aside>
         </div>
       )}
@@ -104,7 +116,8 @@ export function VendorShell({ children }: { children: ReactNode }) {
             <Menu size={22} />
           </button>
           <div className="hidden md:block" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-small font-bold text-white">
               {user?.name.charAt(0).toUpperCase()}
             </span>

@@ -1,5 +1,7 @@
 import type { LatLng } from "@/lib/maps/types";
 
+export type VendorApprovalStatus = "pending" | "approved" | "suspended";
+
 export type Vendor = {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ export type Vendor = {
   isFeatured: boolean;
   promoLabel?: string;
   location: LatLng;
+  approvalStatus: VendorApprovalStatus;
 };
 
 export type VendorCategory = {
@@ -56,6 +59,7 @@ export interface VendorSummary {
   tags: string[];
   categories: string[];
   location: LatLng;
+  approvalStatus: VendorApprovalStatus;
 }
 
 export interface VendorDetail {

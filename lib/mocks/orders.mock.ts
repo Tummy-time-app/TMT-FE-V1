@@ -1,6 +1,10 @@
 import { mockDelay } from "@/lib/dev/devMode";
 import { VENDORS } from "@/lib/vendordata";
 import { DEFAULT_MAP_CENTER, MOCK_DELIVERY_LOCATION } from "@/lib/maps/config";
+import { chargeWalletInternal } from "@/lib/mocks/wallet.mock";
+import { mockRedeemPromoCode } from "@/lib/mocks/promotions.mock";
+import { findVendorOwnerId } from "@/lib/mocks/auth.mock";
+import { pushNotificationInternal } from "@/lib/mocks/notifications.mock";
 import type { LatLng } from "@/lib/maps/types";
 import type {
   CreateOrderPayload,
@@ -9,21 +13,23 @@ import type {
   OrderStatusEvent,
   PaymentStatus,
   RiderInfo,
+  VehicleType,
 } from "@/features/orders/types";
 
 /**
  * DEVELOPMENT MOCK — see lib/mocks/auth.mock.ts for the pattern.
  *
- * Status progression is a hybrid:
- *  - pending → accepted → preparing → ready_for_pickup are real vendor
- *    actions (mockUpdateOrderStatus), stored as timestamps — this is the
- *    part spec §16 wants actual "status transition controls" for, and an
- *    order genuinely sits at "pending" until a vendor acts on it.
- *  - ready_for_pickup → in_transit/picked_up → delivered is *derived*
- *    from elapsed time since `readyAt`, standing in for the rider app
- *    (not built yet — Phase 7) the same way order status as a whole stood
- *    in for Supabase Realtime in Phase 4. Resumable across refreshes for
- *    free, no server-side timer needed.
+ * Status progression is a three-part hybrid:
+ *  - pending → accepted → preparing → ready_for_pickup are real VENDOR
+ *    actions (mockUpdateOrderStatus), stored as timestamps.
+ *  - For delivery orders, ready_for_pickup → in_transit → delivered are
+ *    real RIDER actions (mockClaimDelivery / mockMarkDelivered) — a
+ *    delivery sits at "ready_for_pickup", visible to every rider, until
+ *    one of them actually claims it. This is spec §21's real "incoming
+ *    delivery requests" flow, not a fake queue.
+ *  - For pickup orders (no rider involved), ready_for_pickup → picked_up
+ *    stays time-derived, standing in for the customer physically
+ *    collecting their order.
  */
 
 interface StoredOrder extends CreateOrderPayload {
@@ -33,6 +39,15 @@ interface StoredOrder extends CreateOrderPayload {
   preparingAt?: string;
   readyAt?: string;
   cancelledAt?: string;
+  riderId?: string;
+  riderName?: string;
+  riderPhone?: string;
+  riderVehicleType?: VehicleType;
+  claimedAt?: string;
+  deliveredAt?: string;
+  /** Real GPS reported by the rider's browser, when available — see hooks/useGeolocationWatch.ts. */
+  manualRiderLocation?: LatLng;
+  proofNote?: string;
 }
 
 const ORDERS_STORAGE_KEY = "tummytime_mock_orders";
@@ -44,32 +59,11 @@ const ALLOWED_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus>> = {
   preparing: "ready_for_pickup",
 };
 
-const POST_READY_DELIVERY_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
-  { status: "ready_for_pickup", afterMs: 0 },
-  { status: "in_transit", afterMs: 20_000 },
-  { status: "delivered", afterMs: 50_000 },
-];
-
-const POST_READY_PICKUP_SCHEDULE: { status: OrderStatus; afterMs: number }[] = [
-  { status: "ready_for_pickup", afterMs: 0 },
-  { status: "picked_up", afterMs: 25_000 },
-];
+const PICKUP_COLLECTION_DELAY_MS = 25_000;
+/** How long a simulated (no real GPS yet) rider takes to cross town, for the progress bar fallback. */
+const SIMULATED_TRANSIT_DURATION_MS = 40_000;
 
 const TERMINAL_PAYMENT_STATUSES: OrderStatus[] = ["delivered", "picked_up"];
-
-const RIDER_ASSIGNED_STATUSES: OrderStatus[] = ["accepted", "preparing", "ready_for_pickup", "in_transit", "delivered"];
-
-const RIDER_POOL: Omit<RiderInfo, "location">[] = [
-  { id: "rider-1", name: "Ibrahim Musa", phone: "+234 803 111 2222", vehicleType: "bike", rating: 4.8 },
-  { id: "rider-2", name: "Chidinma Okafor", phone: "+234 805 333 4444", vehicleType: "bicycle", rating: 4.9 },
-  { id: "rider-3", name: "Tunde Bakare", phone: "+234 701 555 6666", vehicleType: "car", rating: 4.7 },
-];
-
-function hashToIndex(seed: string, length: number): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  return hash % length;
-}
 
 function vendorLocationFor(vendorId: string): LatLng {
   return VENDORS.find((v) => v.id === vendorId)?.location ?? DEFAULT_MAP_CENTER;
@@ -80,29 +74,6 @@ function interpolate(from: LatLng, to: LatLng, progress: number): LatLng {
     lat: from.lat + (to.lat - from.lat) * progress,
     lng: from.lng + (to.lng - from.lng) * progress,
   };
-}
-
-function deriveRider(
-  order: StoredOrder,
-  status: OrderStatus,
-  vendorLocation: LatLng,
-  deliveryLocation: LatLng | undefined
-): RiderInfo | undefined {
-  if (order.orderType !== "delivery" || !RIDER_ASSIGNED_STATUSES.includes(status)) return undefined;
-
-  const base = RIDER_POOL[hashToIndex(order.id, RIDER_POOL.length)];
-
-  if ((status === "in_transit" || status === "delivered") && deliveryLocation && order.readyAt) {
-    const readyMs = new Date(order.readyAt).getTime();
-    const elapsed = Date.now() - readyMs;
-    const transitStart = POST_READY_DELIVERY_SCHEDULE.find((s) => s.status === "in_transit")!.afterMs;
-    const transitEnd = POST_READY_DELIVERY_SCHEDULE.find((s) => s.status === "delivered")!.afterMs;
-    const progress = Math.min(1, Math.max(0, (elapsed - transitStart) / (transitEnd - transitStart)));
-    return { ...base, location: interpolate(vendorLocation, deliveryLocation, progress) };
-  }
-
-  // Assigned but hasn't set off yet — sitting at the vendor.
-  return { ...base, location: vendorLocation };
 }
 
 function loadOrders(): StoredOrder[] {
@@ -126,31 +97,31 @@ function deriveStatus(order: StoredOrder): { status: OrderStatus; history: Order
   if (order.cancelledAt) {
     return { status: "cancelled", history: [...history, { status: "cancelled", at: order.cancelledAt }] };
   }
-  if (!order.acceptedAt) {
-    return { status: "pending", history };
-  }
+  if (!order.acceptedAt) return { status: "pending", history };
   history.push({ status: "accepted", at: order.acceptedAt });
-  if (!order.preparingAt) {
-    return { status: "accepted", history };
-  }
+
+  if (!order.preparingAt) return { status: "accepted", history };
   history.push({ status: "preparing", at: order.preparingAt });
-  if (!order.readyAt) {
-    return { status: "preparing", history };
-  }
 
-  // Past "ready" — the rest is time-derived (standing in for the rider app).
-  const schedule = order.orderType === "pickup" ? POST_READY_PICKUP_SCHEDULE : POST_READY_DELIVERY_SCHEDULE;
-  const readyMs = new Date(order.readyAt).getTime();
-  const elapsed = Date.now() - readyMs;
+  if (!order.readyAt) return { status: "preparing", history };
+  history.push({ status: "ready_for_pickup", at: order.readyAt });
 
-  let status: OrderStatus = "ready_for_pickup";
-  for (const step of schedule) {
-    if (elapsed >= step.afterMs) {
-      status = step.status;
-      history.push({ status: step.status, at: new Date(readyMs + step.afterMs).toISOString() });
+  if (order.orderType === "pickup") {
+    const readyMs = new Date(order.readyAt).getTime();
+    if (Date.now() - readyMs >= PICKUP_COLLECTION_DELAY_MS) {
+      history.push({ status: "picked_up", at: new Date(readyMs + PICKUP_COLLECTION_DELAY_MS).toISOString() });
+      return { status: "picked_up", history };
     }
+    return { status: "ready_for_pickup", history };
   }
-  return { status, history };
+
+  // Delivery — the rest is rider-driven, not simulated.
+  if (!order.claimedAt) return { status: "ready_for_pickup", history };
+  history.push({ status: "in_transit", at: order.claimedAt });
+
+  if (!order.deliveredAt) return { status: "in_transit", history };
+  history.push({ status: "delivered", at: order.deliveredAt });
+  return { status: "delivered", history };
 }
 
 function derivePaymentStatus(order: StoredOrder, currentStatus: OrderStatus): PaymentStatus {
@@ -160,9 +131,46 @@ function derivePaymentStatus(order: StoredOrder, currentStatus: OrderStatus): Pa
     return TERMINAL_PAYMENT_STATUSES.includes(currentStatus) ? "paid" : "pending";
   }
 
+  // wallet — charged atomically at order creation (see mockCreateOrder), so it's paid the instant the order exists.
+  if (order.paymentMethod === "wallet") return "paid";
+
   // bank_transfer — simulate a webhook confirming payment ~4s after checkout.
   const elapsed = Date.now() - new Date(order.createdAt).getTime();
   return elapsed >= 4000 ? "paid" : "processing";
+}
+
+function deriveRider(
+  order: StoredOrder,
+  status: OrderStatus,
+  vendorLocation: LatLng,
+  deliveryLocation: LatLng | undefined
+): RiderInfo | undefined {
+  if (order.orderType !== "delivery" || !order.riderId) return undefined;
+
+  const base: Omit<RiderInfo, "location"> = {
+    id: order.riderId,
+    name: order.riderName ?? "Rider",
+    phone: order.riderPhone ?? "",
+    vehicleType: order.riderVehicleType ?? "bike",
+    rating: 4.8,
+  };
+
+  if (status === "delivered" && deliveryLocation) {
+    return { ...base, location: deliveryLocation };
+  }
+
+  if (status === "in_transit") {
+    if (order.manualRiderLocation) return { ...base, location: order.manualRiderLocation };
+
+    // No real GPS reported yet — simulate movement toward the customer.
+    if (deliveryLocation && order.claimedAt) {
+      const claimedMs = new Date(order.claimedAt).getTime();
+      const progress = Math.min(1, Math.max(0, (Date.now() - claimedMs) / SIMULATED_TRANSIT_DURATION_MS));
+      return { ...base, location: interpolate(vendorLocation, deliveryLocation, progress) };
+    }
+  }
+
+  return { ...base, location: vendorLocation };
 }
 
 function hydrate(order: StoredOrder): Order {
@@ -187,6 +195,9 @@ function hydrate(order: StoredOrder): Order {
     status,
     statusHistory: history,
     rider: deriveRider(order, status, vendorLocation, deliveryLocation),
+    proofNote: order.proofNote,
+    promoCode: order.promoCode,
+    discount: order.discount,
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
     total: order.total,
@@ -196,12 +207,34 @@ function hydrate(order: StoredOrder): Order {
 
 export async function mockCreateOrder(payload: CreateOrderPayload): Promise<Order> {
   await mockDelay(900);
+
+  // Wallet orders charge atomically here — insufficient funds aborts order
+  // creation entirely, so there's never an order left in a half-paid state.
+  if (payload.paymentMethod === "wallet") {
+    chargeWalletInternal(payload.customerId, payload.total, `Order at ${payload.vendorName}`);
+  }
+
   const stored: StoredOrder = {
     ...payload,
     id: `TT-${Date.now().toString(36).toUpperCase()}`,
     createdAt: new Date().toISOString(),
   };
   saveOrders([stored, ...loadOrders()]);
+
+  if (payload.promoCode) {
+    await mockRedeemPromoCode(payload.promoCode);
+  }
+
+  const vendorOwnerId = findVendorOwnerId(payload.vendorId);
+  if (vendorOwnerId) {
+    pushNotificationInternal(vendorOwnerId, {
+      type: "order",
+      title: "New order received",
+      message: `${payload.customerName} placed an order for ₦${payload.total.toLocaleString("en-NG")}.`,
+      link: `/vendor/orders/${stored.id}`,
+    });
+  }
+
   return hydrate(stored);
 }
 
@@ -217,6 +250,14 @@ export async function mockGetVendorOrders(vendorId: string): Promise<Order[]> {
   await mockDelay(400);
   return loadOrders()
     .filter((o) => o.vendorId === vendorId)
+    .map(hydrate)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Admin — every order on the platform. */
+export async function mockGetAllOrders(): Promise<Order[]> {
+  await mockDelay(400);
+  return loadOrders()
     .map(hydrate)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
@@ -241,8 +282,22 @@ export async function mockCancelOrder(id: string): Promise<Order> {
 
   orders[idx] = { ...orders[idx], cancelledAt: new Date().toISOString() };
   saveOrders(orders);
+
+  pushNotificationInternal(orders[idx].customerId, {
+    type: "order",
+    title: "Order cancelled",
+    message: `Your order from ${orders[idx].vendorName} was cancelled.`,
+    link: `/orders/${id}`,
+  });
+
   return hydrate(orders[idx]);
 }
+
+const STATUS_NOTIFICATION_MESSAGE: Partial<Record<OrderStatus, string>> = {
+  accepted: "has been accepted by the vendor.",
+  preparing: "is being prepared.",
+  ready_for_pickup: "is ready — waiting for a rider.",
+};
 
 const STATUS_TIMESTAMP_FIELD: Partial<Record<OrderStatus, keyof StoredOrder>> = {
   accepted: "acceptedAt",
@@ -266,6 +321,113 @@ export async function mockUpdateOrderStatus(id: string, nextStatus: OrderStatus)
   if (!field) throw { status: 422, message: "Unsupported status transition." };
 
   orders[idx] = { ...orders[idx], [field]: new Date().toISOString() };
+  saveOrders(orders);
+
+  const message = STATUS_NOTIFICATION_MESSAGE[nextStatus];
+  if (message) {
+    pushNotificationInternal(orders[idx].customerId, {
+      type: "order",
+      title: "Order update",
+      message: `Your order from ${orders[idx].vendorName} ${message}`,
+      link: `/orders/${id}`,
+    });
+  }
+
+  return hydrate(orders[idx]);
+}
+
+/** Every ready-for-pickup delivery not yet claimed by a rider — the rider dashboard's incoming feed. */
+export async function mockGetAvailableDeliveries(): Promise<Order[]> {
+  await mockDelay(400);
+  return loadOrders()
+    .filter((o) => o.orderType === "delivery" && !o.cancelledAt && o.readyAt && !o.riderId)
+    .map(hydrate)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** A specific rider's own deliveries (active + past). */
+export async function mockGetRiderOrders(riderId: string): Promise<Order[]> {
+  await mockDelay(400);
+  return loadOrders()
+    .filter((o) => o.riderId === riderId)
+    .map(hydrate)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export interface ClaimDeliveryInput {
+  riderId: string;
+  riderName: string;
+  riderPhone: string;
+  riderVehicleType: VehicleType;
+}
+
+export async function mockClaimDelivery(orderId: string, rider: ClaimDeliveryInput): Promise<Order> {
+  await mockDelay(500);
+  const orders = loadOrders();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) throw { status: 404, message: "We couldn't find this delivery." };
+
+  const current = hydrate(orders[idx]);
+  if (current.orderType !== "delivery" || current.status !== "ready_for_pickup") {
+    throw { status: 422, message: "This delivery is no longer available." };
+  }
+  if (orders[idx].riderId) {
+    throw { status: 409, message: "Another rider already claimed this delivery." };
+  }
+
+  orders[idx] = {
+    ...orders[idx],
+    riderId: rider.riderId,
+    riderName: rider.riderName,
+    riderPhone: rider.riderPhone,
+    riderVehicleType: rider.riderVehicleType,
+    claimedAt: new Date().toISOString(),
+  };
+  saveOrders(orders);
+
+  pushNotificationInternal(orders[idx].customerId, {
+    type: "order",
+    title: "Rider on the way",
+    message: `${rider.riderName} picked up your order from ${orders[idx].vendorName}.`,
+    link: `/orders/${orderId}`,
+  });
+
+  return hydrate(orders[idx]);
+}
+
+export async function mockMarkDelivered(orderId: string, riderId: string, proofNote: string): Promise<Order> {
+  await mockDelay(600);
+  const orders = loadOrders();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) throw { status: 404, message: "We couldn't find this delivery." };
+  if (orders[idx].riderId !== riderId) throw { status: 403, message: "This isn't your delivery." };
+
+  const current = hydrate(orders[idx]);
+  if (current.status !== "in_transit") {
+    throw { status: 422, message: "This delivery isn't in transit." };
+  }
+
+  orders[idx] = { ...orders[idx], deliveredAt: new Date().toISOString(), proofNote };
+  saveOrders(orders);
+
+  pushNotificationInternal(orders[idx].customerId, {
+    type: "order",
+    title: "Order delivered",
+    message: `Your order from ${orders[idx].vendorName} has been delivered. Enjoy!`,
+    link: `/orders/${orderId}`,
+  });
+
+  return hydrate(orders[idx]);
+}
+
+/** Fired frequently from the rider's geolocation watcher — no artificial delay. */
+export async function mockUpdateRiderLocation(orderId: string, riderId: string, location: LatLng): Promise<Order> {
+  const orders = loadOrders();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) throw { status: 404, message: "We couldn't find this delivery." };
+  if (orders[idx].riderId !== riderId) throw { status: 403, message: "This isn't your delivery." };
+
+  orders[idx] = { ...orders[idx], manualRiderLocation: location };
   saveOrders(orders);
   return hydrate(orders[idx]);
 }

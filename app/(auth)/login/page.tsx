@@ -10,6 +10,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { useLoginMutation } from "@/features/auth/authApi";
 import { setCredentials } from "@/features/auth/authSlice";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import { defaultRouteForRole } from "@/features/auth/roleHome";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { safeRedirectPath } from "@/lib/utils/safeRedirect";
 import { cn } from "@/lib/utils/cn";
@@ -41,7 +42,7 @@ function LoginForm() {
           router.push(`/verify?email=${encodeURIComponent(response.user.email)}`);
           return;
         }
-        router.push(safeRedirectPath(searchParams.get("redirect")));
+        router.push(safeRedirectPath(searchParams.get("redirect"), defaultRouteForRole(response.user.role)));
       }, 1000);
     } catch (err) {
       const { message } = normalizeApiError(err as never);

@@ -32,6 +32,7 @@ function formatNaira(n: number) {
 const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   cash_on_delivery: "Pay on delivery",
   bank_transfer: "Bank transfer",
+  wallet: "Wallet",
 };
 
 const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
@@ -141,7 +142,11 @@ function OrderDetailContent({ id }: { id: string }) {
               </a>
             </div>
           ) : (
-            <p className="p-4 text-small text-text-muted">A rider will be assigned once the vendor accepts your order.</p>
+            <p className="p-4 text-small text-text-muted">
+              {order.status === "ready_for_pickup"
+                ? "Waiting for a rider to accept this delivery…"
+                : "A rider will be assigned once your order is ready."}
+            </p>
           )}
         </section>
       )}
@@ -172,6 +177,12 @@ function OrderDetailContent({ id }: { id: string }) {
             <div className="flex justify-between text-text-muted">
               <span>Delivery fee</span>
               <span>{formatNaira(order.deliveryFee)}</span>
+            </div>
+          )}
+          {order.promoCode && order.discount && (
+            <div className="flex justify-between text-success">
+              <span>Promo ({order.promoCode})</span>
+              <span>− {formatNaira(order.discount)}</span>
             </div>
           )}
           <div className="flex justify-between font-display font-bold text-text">

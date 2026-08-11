@@ -37,6 +37,7 @@ export interface RestaurantData {
     tags: string[];
     categories: string[];
     location: { lat: number; lng: number };
+    approvalStatus: "pending" | "approved" | "suspended";
   };
   menuItems: MenuItem[];
 }
@@ -60,6 +61,7 @@ const GRACEHOUSE_BASE: RestaurantData = {
     tags: ["African", "Continental", "Rice dishes", "Proteins"],
     categories: ["Popular", "Rice & Swallows", "Proteins", "Sides", "Drinks"],
     location: { lat: 6.455, lng: 3.430 },
+    approvalStatus: "approved",
   },
   menuItems: [
     { id: 1,  name: "Jollof Rice + Chicken",   description: "Smoky party jollof with golden fried chicken, coleslaw & fried plantain",  price: 3500, image: "/images/jollof.png",     category: "Popular",          popular: true,  spicy: true,  available: true },
@@ -120,6 +122,7 @@ export function getRestaurantData(id: string): RestaurantData | null {
       tags: [vendor.cuisine.split(' · ')[0]],
       categories: ['Popular'],
       location: vendor.location,
+      approvalStatus: vendor.approvalStatus,
     },
     menuItems: GRACEHOUSE_BASE.menuItems,
   };

@@ -2,12 +2,14 @@ import { baseApi } from "@/store/api/baseApi";
 import { isDevMode } from "@/lib/dev/devMode";
 import { toQueryError } from "@/lib/utils/apiError";
 import {
+  mockGetAllUsers,
   mockGetSession,
   mockLogin,
   mockRegister,
   mockRequestPasswordReset,
   mockResendOtp,
   mockResetPassword,
+  mockSetUserActive,
   mockVerifyOtp,
 } from "@/lib/mocks/auth.mock";
 import type {
@@ -18,6 +20,7 @@ import type {
   RegisterPayload,
   ResendOtpPayload,
   ResetPasswordPayload,
+  User,
   VerifyOtpPayload,
 } from "./types";
 
@@ -119,6 +122,36 @@ export const authApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["Auth"],
     }),
+
+    /** Admin — every account on the platform. */
+    getAllUsers: builder.query<User[], void>({
+      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockGetAllUsers() };
+          const result = await fetchWithBQ("/admin/users");
+          if (result.error) return { error: result.error };
+          return { data: result.data as User[] };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      providesTags: ["Auth"],
+    }),
+
+    /** Admin — activate/deactivate an account. */
+    setUserActive: builder.mutation<User, { userId: string; active: boolean }>({
+      queryFn: async ({ userId, active }, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockSetUserActive(userId, active) };
+          const result = await fetchWithBQ({ url: `/admin/users/${userId}/active`, method: "PATCH", body: { active } });
+          if (result.error) return { error: result.error };
+          return { data: result.data as User };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      invalidatesTags: ["Auth"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -131,4 +164,6 @@ export const {
   useResendOtpMutation,
   useRequestPasswordResetMutation,
   useResetPasswordMutation,
+  useGetAllUsersQuery,
+  useSetUserActiveMutation,
 } = authApi;
