@@ -104,7 +104,9 @@ export default function AdminPromotionsPage() {
                   {promo.code} — {discountLabel(promo.discountType, promo.discountValue)}
                 </p>
                 <p className="text-caption text-text-subtle">
-                  {promo.description} · {promo.vendorId ? `Vendor: ${promo.vendorId}` : "Platform-wide"} · Used {promo.timesUsed}
+                  {promo.description} ·{" "}
+                  {promo.applicableVendorIds?.length ? `Vendor: ${promo.applicableVendorIds.join(", ")}` : "Platform-wide"} · Used{" "}
+                  {promo.timesUsed}
                   {promo.usageLimit ? `/${promo.usageLimit}` : ""} times
                 </p>
               </div>

@@ -9,8 +9,14 @@ import { env } from "@/config/env";
 import { sessionExpired } from "@/features/auth/authSlice";
 import type { RootState } from "../index";
 
+/**
+ * Backend Architecture doc §2/§12: "API versioning via URI prefix: /api/v1/...".
+ * Baked in here (not repeated in every endpoint's URL string) so every
+ * feature API slice can write clean relative paths like `/orders` or
+ * `/vendors/:id/products` and still hit the versioned route.
+ */
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: env.apiUrl,
+  baseUrl: env.apiUrl ? `${env.apiUrl.replace(/\/+$/, "")}/api/v1` : env.apiUrl,
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.session?.accessToken;
     if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -44,6 +50,25 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Auth", "Vendors", "Orders", "Products", "Wallet", "Payouts", "Promotions", "Notifications", "Support"],
+  tagTypes: [
+    "Auth",
+    "Vendors",
+    "Orders",
+    "Products",
+    "Wallet",
+    "Payouts",
+    "Promotions",
+    "Notifications",
+    "Support",
+    "Addresses",
+    "Reviews",
+    "Referrals",
+    "Banners",
+    "AuditLog",
+    "Favorites",
+    "Categories",
+    "RiderDocuments",
+    "Payments",
+  ],
   endpoints: () => ({}),
 });

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { Vendor } from "@/features/vendors/types";
 import Image from "next/image";
+import { FavoriteButton } from "@/features/favorites/components/FavoriteButton";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -85,6 +86,10 @@ export default function VendorCard({ vendor, skeleton }: Props) {
           {promoLabel && (
             <span className="vc-badge vc-badge--promo">{promoLabel}</span>
           )}
+        </div>
+
+        <div className="absolute right-2.5 top-2.5 z-[1]">
+          <FavoriteButton vendorId={id} />
         </div>
 
         {/* closed overlay */}

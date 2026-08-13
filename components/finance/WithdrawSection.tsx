@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { normalizeApiError } from "@/lib/utils/apiError";
+import { cn } from "@/lib/utils/cn";
+import type { WithdrawalStatus } from "@/features/payouts/types";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -15,6 +17,13 @@ function formatNaira(n: number) {
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("en-NG", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
+
+const STATUS_CLASSES: Record<WithdrawalStatus, string> = {
+  pending: "bg-warning-bg text-warning",
+  processing: "bg-info-bg text-info",
+  paid: "bg-success-bg text-success",
+  failed: "bg-error-bg text-error",
+};
 
 interface WithdrawSectionProps {
   actorId: string;
@@ -38,7 +47,7 @@ export function WithdrawSection({ actorId, availableBalance }: WithdrawSectionPr
     }
     try {
       await createWithdrawal({ actorId, amount: Number(amount), availableBalance }).unwrap();
-      toast.success(`${formatNaira(Number(amount))} withdrawn.`);
+      toast.success(`Withdrawal of ${formatNaira(Number(amount))} requested.`);
       setShowForm(false);
       setAmount("");
     } catch (err) {
@@ -94,7 +103,12 @@ export function WithdrawSection({ actorId, availableBalance }: WithdrawSectionPr
           withdrawals.map((w) => (
             <div key={w.id} className="flex items-center justify-between rounded-lg border border-border bg-surface p-4">
               <p className="text-caption text-text-subtle">{formatDate(w.createdAt)}</p>
-              <span className="text-small font-semibold text-text">−{formatNaira(w.amount)}</span>
+              <div className="flex items-center gap-2">
+                <span className={cn("rounded-full px-2 py-0.5 text-caption font-semibold capitalize", STATUS_CLASSES[w.status])}>
+                  {w.status}
+                </span>
+                <span className="text-small font-semibold text-text">−{formatNaira(w.amount)}</span>
+              </div>
             </div>
           ))
         )}

@@ -10,6 +10,7 @@ import { useOrderRealtime } from "@/features/orders/useOrderRealtime";
 import { useCancelOrderMutation } from "@/features/orders/ordersApi";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { OrderTimeline } from "@/features/orders/components/OrderTimeline";
+import { RateOrderSection } from "@/features/reviews/components/RateOrderSection";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { ConnectionStatusBadge } from "@/components/feedback/ConnectionStatusBadge";
@@ -33,6 +34,7 @@ const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   cash_on_delivery: "Pay on delivery",
   bank_transfer: "Bank transfer",
   wallet: "Wallet",
+  card: "Card",
 };
 
 const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
@@ -201,6 +203,12 @@ function OrderDetailContent({ id }: { id: string }) {
             {order.orderType === "delivery" ? order.deliveryAddress : order.vendorName}
           </p>
           {order.riderNote && <p className="mt-2 text-caption text-text-subtle">Note: {order.riderNote}</p>}
+          {order.scheduledFor && (
+            <p className="mt-2 text-caption text-text-subtle">
+              Scheduled for{" "}
+              {new Date(order.scheduledFor).toLocaleString("en-NG", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+            </p>
+          )}
         </div>
         <div className="rounded-lg border border-border bg-surface p-5">
           <h2 className="font-display text-small font-bold text-text">Payment</h2>
@@ -208,6 +216,8 @@ function OrderDetailContent({ id }: { id: string }) {
           <p className="mt-1 text-caption text-text-subtle">{PAYMENT_STATUS_LABEL[order.paymentStatus]}</p>
         </div>
       </section>
+
+      <RateOrderSection order={order} />
 
       {canCancel && (
         <div className="mt-6">

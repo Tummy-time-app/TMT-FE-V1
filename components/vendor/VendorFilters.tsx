@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { X } from "@/components/icons";
 import { useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
 
@@ -68,12 +69,17 @@ export function useVendorFilters() {
 /* ───────────────────────── PROVIDER ───────────────────────── */
 
 function VendorFilters({ children }: { children: ReactNode }) {
+  // Deep-link support: the homepage's category strip and "See all" carousel
+  // links pass ?category=, so browsing arrives pre-filtered — same as
+  // clicking a cuisine icon on Uber Eats' own homepage. Read once at mount
+  // (no effect needed — this is a plain synchronous URL read, not fetched data).
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(() => searchParams.get("category") ?? "all");
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [filteredCount, setFilteredCount] = useState(0);
 

@@ -10,7 +10,9 @@ import { normalizeApiError } from "@/lib/utils/apiError";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Map } from "@/components/maps/Map";
 import { VendorMarker } from "@/components/maps/VendorMarker";
-import { StarSolid, Bike, ClipboardList, MapPin, Heart, Share, X, Flame, Store, Check } from "@/components/icons";
+import { VendorReviews } from "@/features/reviews/components/VendorReviews";
+import { FavoriteButton } from "@/features/favorites/components/FavoriteButton";
+import { StarSolid, Bike, ClipboardList, MapPin, Share, X, Flame, Store, Check } from "@/components/icons";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -249,9 +251,11 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
 
             {/* actions */}
             <div className="rp-left__actions">
-              <button className="rp-action-btn"><Heart size={14} aria-hidden style={{ verticalAlign: -2 }} /> Save</button>
+              <FavoriteButton vendorId={restaurant.id} variant="inline" className="rp-action-btn" />
               <button className="rp-action-btn"><Share size={14} aria-hidden style={{ verticalAlign: -2 }} /> Share</button>
             </div>
+
+            <VendorReviews vendorId={restaurant.id} />
           </div>
         </aside>
 

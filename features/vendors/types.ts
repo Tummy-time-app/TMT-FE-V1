@@ -3,6 +3,13 @@ import type { IconComponent } from "@/components/icons";
 
 export type VendorApprovalStatus = "pending" | "approved" | "suspended";
 
+/** Maps to `vendors.type` — matches the schema's two supported business types. */
+export type VendorBusinessType = "restaurant" | "grocery";
+
+/** One day's open/close windows — `vendors.operating_hours` jsonb, e.g. `{ mon: [{open,close}], ... }`. */
+export type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type OperatingHours = Partial<Record<DayOfWeek, { open: string; close: string }[]>>;
+
 export type Vendor = {
   id: string;
   name: string;
@@ -21,6 +28,15 @@ export type Vendor = {
   promoLabel?: string;
   location: LatLng;
   approvalStatus: VendorApprovalStatus;
+  /** Maps to `vendors.type`. Optional — defaults to "restaurant" for existing seed data (see lib/vendordata.ts). */
+  businessType?: VendorBusinessType;
+  /** Maps to `vendors.is_temporarily_closed` — vendor-toggled, distinct from `isOpen` (which reflects operating hours). */
+  isTemporarilyClosed?: boolean;
+  /** Maps to `vendors.commission_rate` — per-vendor override of the platform default; surfaced read-only on the vendor dashboard. */
+  commissionRate?: number;
+  operatingHours?: OperatingHours;
+  /** Maps to `vendors.description`. */
+  description?: string;
 };
 
 export type VendorCategory = {
@@ -30,17 +46,31 @@ export type VendorCategory = {
   gradient: string;
 };
 
+/** Maps to `products.product_type` — grocery-specific handling isn't built (Shops/groceries are "Coming soon" everywhere else in the app), but the field is modeled for contract completeness. */
+export type ProductType = "menu_item" | "grocery_item";
+export type ProductUnitType = "each" | "weight";
+
 export interface MenuItem {
   id: number;
   name: string;
   description: string;
   price: number;
+  /** Maps to `products.compare_at_price` — a struck-through "was" price, shown when set and higher than `price`. */
+  compareAtPrice?: number;
   image: string;
   category: string;
   popular?: boolean;
   spicy?: boolean;
   vegetarian?: boolean;
   available: boolean;
+  productType?: ProductType;
+  unitType?: ProductUnitType;
+  weightUnit?: "g" | "kg";
+  /** Maps to `products.stock_quantity` — null/undefined for made-to-order menu items that don't track a count (the common case here; `available` alone gates ordering). */
+  stockQuantity?: number | null;
+  trackInventory?: boolean;
+  /** Grocery: allow a substitution if out of stock at fulfillment time. */
+  substitutionAllowed?: boolean;
 }
 
 export interface VendorSummary {
@@ -61,6 +91,10 @@ export interface VendorSummary {
   categories: string[];
   location: LatLng;
   approvalStatus: VendorApprovalStatus;
+  businessType?: VendorBusinessType;
+  isTemporarilyClosed?: boolean;
+  commissionRate?: number;
+  operatingHours?: OperatingHours;
 }
 
 export interface VendorDetail {
@@ -89,4 +123,15 @@ export interface VendorsResponse {
   vendors: Vendor[];
   /** Total non-featured vendors matching the query, for the "N restaurants" count + hasMore. */
   total: number;
+}
+
+/** Doc §5, VendorsModule: `POST /vendors` — "Vendor onboarding". */
+export interface CreateVendorPayload {
+  name: string;
+  cuisine: string;
+  category: string;
+  businessType: VendorBusinessType;
+  description: string;
+  image: string;
+  location: LatLng;
 }

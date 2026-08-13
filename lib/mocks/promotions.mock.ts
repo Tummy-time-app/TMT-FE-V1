@@ -67,7 +67,7 @@ export async function mockGetPromotions(): Promise<Promotion[]> {
 /** A vendor's own promos (platform-wide ones aren't vendor-editable, so excluded here). */
 export async function mockGetVendorPromotions(vendorId: string): Promise<Promotion[]> {
   await mockDelay(350);
-  return loadPromotions().filter((p) => p.vendorId === vendorId);
+  return loadPromotions().filter((p) => p.applicableVendorIds?.includes(vendorId));
 }
 
 /** Admin — every promotion on the platform, active or not. */
@@ -88,7 +88,7 @@ export async function mockValidatePromoCode({ code, vendorId, subtotal }: Valida
   if (promo.usageLimit !== undefined && promo.timesUsed >= promo.usageLimit) {
     throw { status: 422, message: "This promo code has reached its usage limit." };
   }
-  if (promo.vendorId && promo.vendorId !== vendorId) {
+  if (promo.applicableVendorIds?.length && (!vendorId || !promo.applicableVendorIds.includes(vendorId))) {
     throw { status: 422, message: "This promo code isn't valid for this vendor." };
   }
   if (promo.minOrderAmount && subtotal < promo.minOrderAmount) {
@@ -127,8 +127,11 @@ export async function mockCreatePromotion(payload: CreatePromotionPayload): Prom
     minOrderAmount: payload.minOrderAmount,
     expiresAt: payload.expiresAt,
     usageLimit: payload.usageLimit,
+    perUserLimit: payload.perUserLimit,
+    maxDiscount: payload.maxDiscount,
+    validFrom: new Date().toISOString(),
     timesUsed: 0,
-    vendorId: payload.vendorId,
+    applicableVendorIds: payload.applicableVendorIds,
     active: true,
   };
   savePromotions([promo, ...promotions]);

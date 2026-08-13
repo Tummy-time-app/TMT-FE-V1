@@ -49,6 +49,15 @@ export async function mockGetWalletTransactions(userId: string): Promise<WalletT
   return [...getOrInitWallet(store, userId).transactions].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Admin — every wallet transaction on the platform, across every user, for reconciliation. */
+export async function mockGetAllTransactions(): Promise<WalletTransaction[]> {
+  await mockDelay(450);
+  const store = loadStore();
+  return Object.entries(store)
+    .flatMap(([userId, wallet]) => wallet.transactions.map((t) => ({ ...t, userId })))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export async function mockTopUpWallet(userId: string, amount: number, method: TopUpMethod): Promise<WalletTransaction> {
   await mockDelay(900);
   if (amount <= 0) throw { status: 422, message: "Enter an amount greater than zero." };
@@ -57,9 +66,9 @@ export async function mockTopUpWallet(userId: string, amount: number, method: To
   const wallet = getOrInitWallet(store, userId);
   const transaction: WalletTransaction = {
     id: `WTX-${Date.now().toString(36).toUpperCase()}`,
-    type: "topup",
+    type: "wallet_topup",
     amount,
-    status: "completed",
+    status: "success",
     description: method === "card" ? "Top up via card" : "Top up via bank transfer",
     createdAt: new Date().toISOString(),
   };
@@ -86,13 +95,30 @@ export function chargeWalletInternal(userId: string, amount: number, description
   }
   const transaction: WalletTransaction = {
     id: `WTX-${Date.now().toString(36).toUpperCase()}`,
-    type: "payment",
+    type: "order_payment",
     amount: -amount,
-    status: "completed",
+    status: "success",
     description,
     createdAt: new Date().toISOString(),
   };
   wallet.balance -= amount;
+  wallet.transactions = [transaction, ...wallet.transactions];
+  saveStore(store);
+}
+
+/** Used internally by other mocks (e.g. referrals) to credit a wallet without going through top-up's card/bank flow. */
+export function creditWalletInternal(userId: string, amount: number, description: string): void {
+  const store = loadStore();
+  const wallet = getOrInitWallet(store, userId);
+  const transaction: WalletTransaction = {
+    id: `WTX-${Date.now().toString(36).toUpperCase()}`,
+    type: "refund",
+    amount,
+    status: "success",
+    description,
+    createdAt: new Date().toISOString(),
+  };
+  wallet.balance += amount;
   wallet.transactions = [transaction, ...wallet.transactions];
   saveStore(store);
 }

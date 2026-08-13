@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, ClipboardList, Wallet, History, LifeBuoy } from "@/components/icons";
+import { LayoutDashboard, ClipboardList, Wallet, History, UserCircle, LifeBuoy } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { RoleShell } from "@/components/layout/RoleShell";
 import { useRiderOnline } from "@/hooks/useRiderAvailability";
@@ -11,6 +11,7 @@ const RIDER_NAV_ITEMS = [
   { href: "/rider/orders", label: "Deliveries", icon: ClipboardList },
   { href: "/rider/earnings", label: "Earnings", icon: Wallet },
   { href: "/rider/history", label: "History", icon: History },
+  { href: "/rider/profile", label: "Profile", icon: UserCircle },
   { href: "/support", label: "Support", icon: LifeBuoy },
 ];
 

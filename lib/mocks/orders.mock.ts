@@ -134,7 +134,7 @@ function derivePaymentStatus(order: StoredOrder, currentStatus: OrderStatus): Pa
   // wallet — charged atomically at order creation (see mockCreateOrder), so it's paid the instant the order exists.
   if (order.paymentMethod === "wallet") return "paid";
 
-  // bank_transfer — simulate a webhook confirming payment ~4s after checkout.
+  // bank_transfer and card — simulate a provider webhook confirming payment ~4s after checkout (doc §8: never trust the client's word, only a webhook/verify call marks an order paid).
   const elapsed = Date.now() - new Date(order.createdAt).getTime();
   return elapsed >= 4000 ? "paid" : "processing";
 }
@@ -176,7 +176,8 @@ function deriveRider(
 function hydrate(order: StoredOrder): Order {
   const { status, history } = deriveStatus(order);
   const vendorLocation = vendorLocationFor(order.vendorId);
-  const deliveryLocation = order.orderType === "delivery" ? MOCK_DELIVERY_LOCATION : undefined;
+  // Prefer the customer's actual selected address (features/addresses) over the fixed mock point, when one was recorded.
+  const deliveryLocation = order.orderType === "delivery" ? order.deliveryLocation ?? MOCK_DELIVERY_LOCATION : undefined;
 
   return {
     id: order.id,

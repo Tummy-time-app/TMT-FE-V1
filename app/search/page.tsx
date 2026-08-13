@@ -17,9 +17,10 @@ function SearchContent() {
   const debounced = useDebouncedValue(inputValue, 300);
   const hasSyncedInitial = useRef(false);
 
-  const { data: results, isFetching, error, refetch } = useSearchQuery(debounced, {
-    skip: !debounced.trim(),
-  });
+  const { data: results, isFetching, error, refetch } = useSearchQuery(
+    { q: debounced },
+    { skip: !debounced.trim() }
+  );
 
   // Keep the URL shareable/refreshable without spamming browser history.
   useEffect(() => {

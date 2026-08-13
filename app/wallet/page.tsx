@@ -7,6 +7,7 @@ import { useAuth } from "@/features/auth/hooks";
 import { useGetWalletQuery, useGetWalletTransactionsQuery, useTopUpWalletMutation } from "@/features/wallet/walletApi";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
+import { WithdrawSection } from "@/components/finance/WithdrawSection";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
@@ -126,6 +127,12 @@ function WalletContent() {
             {isToppingUp ? "Processing…" : "Confirm top up"}
           </button>
         </section>
+      )}
+
+      {userId && (
+        <div className="mt-8">
+          <WithdrawSection actorId={userId} availableBalance={wallet?.balance ?? 0} />
+        </div>
       )}
 
       <h2 className="mt-8 font-display text-h3 font-bold text-text">Transaction history</h2>

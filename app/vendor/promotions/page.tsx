@@ -37,7 +37,7 @@ export default function VendorPromotionsPage() {
   const handleSubmit = async (values: PromotionFormValues) => {
     setSubmitError("");
     try {
-      await createPromotion({ ...values, vendorId }).unwrap();
+      await createPromotion({ ...values, applicableVendorIds: [vendorId] }).unwrap();
       toast.success(`${values.code.toUpperCase()} created.`);
       setShowForm(false);
     } catch (err) {

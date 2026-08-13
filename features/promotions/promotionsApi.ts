@@ -28,11 +28,12 @@ export const promotionsApi = baseApi.injectEndpoints({
       providesTags: ["Promotions"],
     }),
 
+    /** JWT-scoped in real mode (see ordersApi.ts's getVendorOrders note) — `vendorId` only drives dev-mode's mock filter. */
     getVendorPromotions: builder.query<Promotion[], string>({
       queryFn: async (vendorId, _api, _extra, fetchWithBQ) => {
         try {
           if (isDevMode) return { data: await mockGetVendorPromotions(vendorId) };
-          const result = await fetchWithBQ({ url: "/vendor/promotions", params: { vendorId } });
+          const result = await fetchWithBQ("/vendor/promotions");
           if (result.error) return { error: result.error };
           return { data: result.data as Promotion[] };
         } catch (error) {

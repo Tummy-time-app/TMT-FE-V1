@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
-import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
+import { useGetCategoriesQuery } from "@/features/categories/categoriesApi";
 import { useCreateProductMutation } from "@/features/products/productsApi";
 import { ProductForm } from "@/components/vendor/ProductForm";
 import { useToast } from "@/components/feedback/ToastProvider";
@@ -16,7 +16,7 @@ export default function NewProductPage() {
   const router = useRouter();
   const { user } = useAuth();
   const vendorId = user?.vendorId ?? "";
-  const { data: vendorDetail } = useGetVendorDetailQuery(vendorId, { skip: !vendorId });
+  const { data: categories } = useGetCategoriesQuery(vendorId, { skip: !vendorId });
   const [createProduct, { isLoading }] = useCreateProductMutation();
   const [submitError, setSubmitError] = useState("");
   const toast = useToast();
@@ -44,7 +44,7 @@ export default function NewProductPage() {
 
       <div className="mt-6">
         <ProductForm
-          categories={vendorDetail?.restaurant.categories ?? []}
+          categories={categories?.map((c) => c.name) ?? []}
           submitLabel="Add product"
           isSubmitting={isLoading}
           submitError={submitError}

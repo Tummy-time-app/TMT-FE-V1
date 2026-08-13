@@ -9,17 +9,25 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useCreateOrderMutation } from "@/features/orders/ordersApi";
 import { useGetWalletQuery } from "@/features/wallet/walletApi";
+import { useGetAddressesQuery } from "@/features/addresses/addressesApi";
+import { formatAddressLine } from "@/features/addresses/types";
 import type { PaymentMethod } from "@/features/orders/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { useToast } from "@/components/feedback/ToastProvider";
-import { Pencil, CreditCard, Bank, Wallet as WalletIcon } from "@/components/icons";
+import { Pencil, CreditCard, Cash, Bank, Wallet as WalletIcon, MapPin, Plus, Clock, CalendarDays } from "@/components/icons";
 
 const DELIVERY_FEE = 500;
 const PICKUP_ADDRESS_NOTE = "Pre-assigned for delivery";
-const DELIVERY_ADDRESS = "23 Awolowo Road, Ikoyi Lagos";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
+}
+
+/** Earliest a scheduled order can be set for — 30 min out, formatted for a `datetime-local` input's `min` attribute. */
+function minScheduleValue() {
+  const d = new Date(Date.now() + 30 * 60 * 1000);
+  d.setSeconds(0, 0);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60 * 1000).toISOString().slice(0, 16);
 }
 
 /* ── Main checkout content ─────────────────────────────── */
@@ -32,12 +40,20 @@ function CheckoutContent() {
   const { items, clearCart, appliedPromo } = useCart();
   const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialType);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash_on_delivery");
+  const [when, setWhen] = useState<"now" | "scheduled">("now");
+  const [scheduledFor, setScheduledFor] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [addressPickerOpen, setAddressPickerOpen] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const router = useRouter();
   const toast = useToast();
   const { user } = useAuth();
   const [createOrder, { isLoading }] = useCreateOrderMutation();
   const { data: wallet } = useGetWalletQuery(user?.id ?? "", { skip: !user });
+  const { data: addresses } = useGetAddressesQuery(user?.id ?? "", { skip: !user });
+
+  const selectedAddress =
+    addresses?.find((a) => a.id === selectedAddressId) ?? addresses?.find((a) => a.isDefault) ?? addresses?.[0] ?? null;
 
   /* Group cart items by vendor — an order can only include one vendor. */
   const vendorIds = useMemo(() => Array.from(new Set(items.map((i) => i.vendorId))), [items]);
@@ -55,6 +71,14 @@ function CheckoutContent() {
 
   const handlePlaceOrder = async () => {
     if (!user) return;
+    if (orderType === "delivery" && !selectedAddress) {
+      setSubmitError("Add a delivery address before placing this order.");
+      return;
+    }
+    if (when === "scheduled" && !scheduledFor) {
+      setSubmitError("Choose a date and time for your scheduled order.");
+      return;
+    }
     setSubmitError("");
     try {
       const order = await createOrder({
@@ -71,9 +95,12 @@ function CheckoutContent() {
           note: i.note,
         })),
         orderType,
-        deliveryAddress: orderType === "delivery" ? DELIVERY_ADDRESS : undefined,
+        deliveryAddress: orderType === "delivery" && selectedAddress ? formatAddressLine(selectedAddress) : undefined,
+        deliveryLocation:
+          orderType === "delivery" && selectedAddress ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : undefined,
         riderNote: riderNote || undefined,
         paymentMethod,
+        scheduledFor: when === "scheduled" && scheduledFor ? new Date(scheduledFor).toISOString() : undefined,
         promoCode: appliedPromo?.code,
         discount: discount || undefined,
         subtotal,
@@ -138,23 +165,128 @@ function CheckoutContent() {
             </button>
           </div>
 
+          {/* Now / Schedule toggle */}
+          <div className="co-toggle" style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className={`co-toggle__btn ${when === "now" ? "co-toggle__btn--active" : ""}`}
+              onClick={() => setWhen("now")}
+            >
+              <Clock size={13} aria-hidden style={{ verticalAlign: -2, marginRight: 4 }} />
+              Now
+            </button>
+            <button
+              type="button"
+              className={`co-toggle__btn ${when === "scheduled" ? "co-toggle__btn--active" : ""}`}
+              onClick={() => setWhen("scheduled")}
+            >
+              <CalendarDays size={13} aria-hidden style={{ verticalAlign: -2, marginRight: 4 }} />
+              Schedule
+            </button>
+          </div>
+
+          {when === "scheduled" && (
+            <input
+              type="datetime-local"
+              value={scheduledFor}
+              min={minScheduleValue()}
+              onChange={(e) => setScheduledFor(e.target.value)}
+              className="co-schedule-input"
+              style={{
+                marginTop: 8,
+                width: "100%",
+                borderRadius: 10,
+                border: "1.5px solid var(--neutral-line, rgba(0,0,0,0.12))",
+                background: "#fff",
+                padding: "10px 14px",
+                fontSize: "0.85rem",
+                color: "var(--text-dark)",
+              }}
+            />
+          )}
+
           {/* Delivery address / Pickup info */}
           {orderType === "delivery" ? (
-            <div className="co-address">
+            <div className="co-address" style={{ position: "relative" }}>
               <div className="co-address__badge">{PICKUP_ADDRESS_NOTE}</div>
               <div className="co-address__row">
                 <span className="co-address__icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--crimson)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
+                  <MapPin size={16} aria-hidden style={{ color: "var(--crimson)" }} />
                 </span>
                 <div>
                   <p className="co-address__label">Delivery address</p>
-                  <p className="co-address__value">{DELIVERY_ADDRESS}</p>
+                  <p className="co-address__value">
+                    {selectedAddress ? `${selectedAddress.label} — ${formatAddressLine(selectedAddress)}` : "No address saved yet"}
+                  </p>
                 </div>
-                <button className="co-address__change">Change</button>
+                <button type="button" className="co-address__change" onClick={() => setAddressPickerOpen((v) => !v)}>
+                  Change
+                </button>
               </div>
+
+              {addressPickerOpen && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    borderRadius: 12,
+                    border: "1px solid var(--neutral-line, rgba(0,0,0,0.1))",
+                    background: "#fff",
+                    boxShadow: "var(--shadow-md, 0 8px 24px rgba(0,0,0,0.1))",
+                    overflow: "hidden",
+                  }}
+                >
+                  {addresses && addresses.length > 0 ? (
+                    addresses.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddressId(a.id);
+                          setAddressPickerOpen(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          width: "100%",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "10px 14px",
+                          border: "none",
+                          borderBottom: "1px solid rgba(0,0,0,0.06)",
+                          background: a.id === selectedAddress?.id ? "rgba(172,0,0,0.05)" : "transparent",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <MapPin size={14} aria-hidden style={{ color: "var(--crimson)", flexShrink: 0 }} />
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ display: "block", fontWeight: 700, fontSize: "0.85rem", color: "var(--text-dark)" }}>
+                            {a.label}
+                          </span>
+                          <span style={{ display: "block", fontSize: "0.75rem", color: "#888" }}>{formatAddressLine(a)}</span>
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p style={{ padding: "12px 14px", fontSize: "0.8rem", color: "#888" }}>No saved addresses yet.</p>
+                  )}
+                  <Link
+                    href="/addresses"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "10px 14px",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      color: "var(--crimson)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Plus size={13} aria-hidden />
+                    Add new address
+                  </Link>
+                </div>
+              )}
 
               {riderNote && (
                 <div className="co-address__note">
@@ -205,6 +337,17 @@ function CheckoutContent() {
           <div className="co-payment">
             <h2 className="co-payment__title">Payment method</h2>
             <div className="co-payment__options">
+              <label className={`co-payment__option ${paymentMethod === "card" ? "co-payment__option--active" : ""}`}>
+                <input
+                  type="radio"
+                  name="payment"
+                  className="co-payment__radio"
+                  checked={paymentMethod === "card"}
+                  onChange={() => setPaymentMethod("card")}
+                />
+                <span className="co-payment__option-icon"><CreditCard size={18} aria-hidden /></span>
+                <span>Card</span>
+              </label>
               <label className={`co-payment__option ${paymentMethod === "cash_on_delivery" ? "co-payment__option--active" : ""}`}>
                 <input
                   type="radio"
@@ -213,7 +356,7 @@ function CheckoutContent() {
                   checked={paymentMethod === "cash_on_delivery"}
                   onChange={() => setPaymentMethod("cash_on_delivery")}
                 />
-                <span className="co-payment__option-icon"><CreditCard size={18} aria-hidden /></span>
+                <span className="co-payment__option-icon"><Cash size={18} aria-hidden /></span>
                 <span>Pay on delivery</span>
               </label>
               <label className={`co-payment__option ${paymentMethod === "bank_transfer" ? "co-payment__option--active" : ""}`}>
@@ -299,7 +442,11 @@ function CheckoutContent() {
           {submitError && <p className="co-summary__error">{submitError}</p>}
 
           <p className="co-summary__note">
-            By placing this order, you agree to our terms & conditions.
+            By placing this order, you agree to our{" "}
+            <Link href="/terms" style={{ color: "var(--crimson)", fontWeight: 600 }}>
+              terms &amp; conditions
+            </Link>
+            .
           </p>
         </aside>
       </div>

@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, ListChecks, Star, Wallet } from "@/components/icons";
+import { ClipboardList, ListChecks, Power, Star, Wallet } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
 import { useGetVendorOrdersQuery } from "@/features/orders/ordersApi";
-import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
+import { useGetVendorDetailQuery, useSetVendorTemporarilyClosedMutation } from "@/features/vendors/vendorsApi";
 import { StatCard } from "@/components/data-display/StatCard";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
+import { useToast } from "@/components/feedback/ToastProvider";
+import { normalizeApiError } from "@/lib/utils/apiError";
+import { cn } from "@/lib/utils/cn";
 import type { OrderStatus } from "@/features/orders/types";
 
 const ACTIVE_STATUSES: OrderStatus[] = ["accepted", "preparing", "ready_for_pickup", "in_transit"];
@@ -26,9 +29,20 @@ function isToday(iso: string) {
 export default function VendorDashboardPage() {
   const { user } = useAuth();
   const vendorId = user?.vendorId ?? "";
+  const toast = useToast();
 
   const { data: orders, isLoading: ordersLoading, error, refetch } = useGetVendorOrdersQuery(vendorId, { skip: !vendorId });
   const { data: vendorDetail } = useGetVendorDetailQuery(vendorId, { skip: !vendorId });
+  const [setTemporarilyClosed, { isLoading: isTogglingClosed }] = useSetVendorTemporarilyClosedMutation();
+
+  const handleToggleClosed = async (closed: boolean) => {
+    try {
+      await setTemporarilyClosed({ vendorId, closed }).unwrap();
+      toast.success(closed ? "Store marked closed for today." : "Store reopened.");
+    } catch (err) {
+      toast.error(normalizeApiError(err as never).message);
+    }
+  };
 
   if (!vendorId) {
     return (
@@ -47,10 +61,32 @@ export default function VendorDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-h1 font-bold text-text">Dashboard</h1>
-      <p className="mt-1 text-small text-text-muted">
-        Here&apos;s how {restaurant?.name ?? "your store"} is doing today.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-h1 font-bold text-text">Dashboard</h1>
+          <p className="mt-1 text-small text-text-muted">
+            Here&apos;s how {restaurant?.name ?? "your store"} is doing today.
+            {restaurant?.commissionRate != null && (
+              <> Platform commission: <span className="font-semibold text-text">{Math.round(restaurant.commissionRate * 100)}%</span>.</>
+            )}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleToggleClosed(!restaurant?.isTemporarilyClosed)}
+          disabled={isTogglingClosed || !restaurant}
+          className={cn(
+            "flex items-center gap-2 rounded-full border px-4 py-2 text-small font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+            restaurant?.isTemporarilyClosed
+              ? "border-error/30 bg-error-bg text-error"
+              : "border-success/30 bg-success-bg text-success"
+          )}
+        >
+          <Power size={15} aria-hidden />
+          {restaurant?.isTemporarilyClosed ? "Closed for today — Reopen" : "Open — Close for today"}
+        </button>
+      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard

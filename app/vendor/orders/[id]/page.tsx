@@ -22,6 +22,7 @@ const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   cash_on_delivery: "Pay on delivery",
   bank_transfer: "Bank transfer",
   wallet: "Wallet",
+  card: "Card",
 };
 
 const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {

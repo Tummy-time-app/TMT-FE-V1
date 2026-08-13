@@ -5,7 +5,7 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
-import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
+import { useGetCategoriesQuery } from "@/features/categories/categoriesApi";
 import { useGetVendorProductsQuery, useUpdateProductMutation } from "@/features/products/productsApi";
 import { ProductForm } from "@/components/vendor/ProductForm";
 import { ErrorState } from "@/components/feedback/ErrorState";
@@ -20,7 +20,7 @@ export default function EditProductPage() {
   const { user } = useAuth();
   const vendorId = user?.vendorId ?? "";
 
-  const { data: vendorDetail } = useGetVendorDetailQuery(vendorId, { skip: !vendorId });
+  const { data: categories } = useGetCategoriesQuery(vendorId, { skip: !vendorId });
   const { data: products, isLoading, error, refetch } = useGetVendorProductsQuery(vendorId, { skip: !vendorId });
   const [updateProduct, { isLoading: isSaving }] = useUpdateProductMutation();
   const [submitError, setSubmitError] = useState("");
@@ -69,7 +69,7 @@ export default function EditProductPage() {
             spicy: !!product.spicy,
             vegetarian: !!product.vegetarian,
           }}
-          categories={vendorDetail?.restaurant.categories ?? []}
+          categories={categories?.map((c) => c.name) ?? []}
           submitLabel="Save changes"
           isSubmitting={isSaving}
           submitError={submitError}

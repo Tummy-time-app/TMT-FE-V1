@@ -1,7 +1,7 @@
 import { baseApi } from "@/store/api/baseApi";
 import { isDevMode } from "@/lib/dev/devMode";
 import { toQueryError } from "@/lib/utils/apiError";
-import { mockGetWallet, mockGetWalletTransactions, mockTopUpWallet } from "@/lib/mocks/wallet.mock";
+import { mockGetAllTransactions, mockGetWallet, mockGetWalletTransactions, mockTopUpWallet } from "@/lib/mocks/wallet.mock";
 import type { TopUpMethod, WalletTransaction } from "./types";
 
 export const walletApi = baseApi.injectEndpoints({
@@ -47,8 +47,28 @@ export const walletApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ["Wallet"],
     }),
+
+    /** Admin — every wallet transaction on the platform, for reconciliation against payment provider records. */
+    getAllTransactions: builder.query<WalletTransaction[], void>({
+      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockGetAllTransactions() };
+          const result = await fetchWithBQ("/admin/transactions");
+          if (result.error) return { error: result.error };
+          return { data: result.data as WalletTransaction[] };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
+      providesTags: ["Payments"],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetWalletQuery, useGetWalletTransactionsQuery, useTopUpWalletMutation } = walletApi;
+export const {
+  useGetWalletQuery,
+  useGetWalletTransactionsQuery,
+  useTopUpWalletMutation,
+  useGetAllTransactionsQuery,
+} = walletApi;

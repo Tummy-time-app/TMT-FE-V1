@@ -5,6 +5,7 @@ import type {
   LoginCredentials,
   MessageResponse,
   RegisterPayload,
+  RegisterResponse,
   ResendOtpPayload,
   ResetPasswordPayload,
   User,
@@ -42,6 +43,7 @@ function seedUsers(): MockUserRecord[] {
       emailVerified: true,
       active: true,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       password: "password123",
     },
     {
@@ -54,6 +56,7 @@ function seedUsers(): MockUserRecord[] {
       emailVerified: true,
       active: true,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       password: "password123",
     },
     {
@@ -67,6 +70,7 @@ function seedUsers(): MockUserRecord[] {
       emailVerified: true,
       active: true,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       password: "password123",
     },
     {
@@ -78,6 +82,7 @@ function seedUsers(): MockUserRecord[] {
       emailVerified: true,
       active: true,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       password: "password123",
     },
   ];
@@ -120,6 +125,7 @@ function toPublicUser(record: MockUserRecord): User {
     avatarUrl: record.avatarUrl,
     emailVerified: record.emailVerified,
     createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
     vendorId: record.vendorId,
     vehicleType: record.vehicleType,
     active: record.active,
@@ -139,12 +145,13 @@ export async function mockLogin({ email, password }: LoginCredentials): Promise<
   return { user: toPublicUser(record), session: issueSession(record.id) };
 }
 
-export async function mockRegister(payload: RegisterPayload): Promise<AuthResponse> {
+export async function mockRegister(payload: RegisterPayload): Promise<RegisterResponse> {
   await mockDelay();
   const users = loadUsers();
   if (users.some((u) => u.email.toLowerCase() === payload.email.trim().toLowerCase())) {
     throw { status: 422, message: "An account with this email already exists." };
   }
+  const now = new Date().toISOString();
   const record: MockUserRecord = {
     id: `dev-${payload.role ?? "customer"}-${Date.now()}`,
     email: payload.email.trim(),
@@ -154,14 +161,19 @@ export async function mockRegister(payload: RegisterPayload): Promise<AuthRespon
     avatarUrl: null,
     emailVerified: false,
     active: true,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
     password: payload.password,
   };
   saveUsers([...users, record]);
   if (typeof window !== "undefined") {
     console.info(`[dev mock] Verification code for ${record.email}: ${MOCK_OTP}`);
   }
-  return { user: toPublicUser(record), session: issueSession(record.id) };
+  // Dev mode doesn't model Supabase's optional email-confirmation gate — it
+  // always issues a session immediately — but `requiresVerification` stays
+  // true so the register page's routing to /verify behaves the same as it
+  // will against the real backend (see authApi.ts's real-mode branch).
+  return { user: toPublicUser(record), session: issueSession(record.id), requiresVerification: true };
 }
 
 export async function mockVerifyOtp({ email, code }: VerifyOtpPayload): Promise<AuthResponse> {
@@ -174,7 +186,7 @@ export async function mockVerifyOtp({ email, code }: VerifyOtpPayload): Promise<
   if (idx === -1) {
     throw { status: 404, message: "No account found for this email." };
   }
-  users[idx] = { ...users[idx], emailVerified: true };
+  users[idx] = { ...users[idx], emailVerified: true, updatedAt: new Date().toISOString() };
   saveUsers(users);
   return { user: toPublicUser(users[idx]), session: issueSession(users[idx].id) };
 }
@@ -263,6 +275,31 @@ export function findVendorOwnerId(vendorId: string): string | null {
   return record?.id ?? null;
 }
 
+/** Called by vendors.mock.ts once a "vendor"-role account finishes onboarding (creates their store) — links the two records. */
+export function setUserVendorIdInternal(userId: string, vendorId: string): void {
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return;
+  users[idx] = { ...users[idx], vendorId, updatedAt: new Date().toISOString() };
+  saveUsers(users);
+}
+
+/**
+ * Every account's shareable referral code — deterministically derived from
+ * its id rather than stored, since the schema doesn't dedicate a column to
+ * it (see features/referrals). Exported so referrals.mock.ts can both
+ * display "your code" and resolve a code back to a referrer id.
+ */
+export function referralCodeForUserId(userId: string): string {
+  return userId.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
+}
+
+export function findUserByReferralCode(code: string): User | null {
+  const normalized = code.trim().toUpperCase();
+  const record = loadUsers().find((u) => referralCodeForUserId(u.id) === normalized);
+  return record ? toPublicUser(record) : null;
+}
+
 /** Admin — every account on the platform. */
 export async function mockGetAllUsers(): Promise<User[]> {
   await mockDelay(400);
@@ -277,7 +314,18 @@ export async function mockSetUserActive(userId: string, active: boolean): Promis
   const users = loadUsers();
   const idx = users.findIndex((u) => u.id === userId);
   if (idx === -1) throw { status: 404, message: "User not found." };
-  users[idx] = { ...users[idx], active };
+  users[idx] = { ...users[idx], active, updatedAt: new Date().toISOString() };
+  saveUsers(users);
+  return toPublicUser(users[idx]);
+}
+
+/** Doc §5, UsersModule: `PATCH /users/me` — the account owner editing their own name/phone/avatar. */
+export async function mockUpdateProfile(userId: string, patch: { name?: string; phone?: string; avatarUrl?: string | null }): Promise<User> {
+  await mockDelay(500);
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) throw { status: 404, message: "User not found." };
+  users[idx] = { ...users[idx], ...patch, updatedAt: new Date().toISOString() };
   saveUsers(users);
   return toPublicUser(users[idx]);
 }

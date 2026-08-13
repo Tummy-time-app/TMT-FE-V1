@@ -1,112 +1,120 @@
+"use client";
+
 import Image from "next/image";
-import React from "react";
-import LottieIcon from "./LottieIcon";
-import bicycleAnimation from "../app/assets/lottie/bicicleta delivery.json";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import {
+  MapPin,
+  Check,
+  ArrowRight,
+  Bike,
+  StarSolid,
+  RiceBowl,
+  Burger,
+  Pizza,
+  type IconComponent,
+} from "@/components/icons";
+
+const QUICK_CATEGORIES: { label: string; image: string; icon: IconComponent; href: string }[] = [
+  { label: "Rice & Grills", image: "/images/jollof.png", icon: RiceBowl, href: "/vendors/restaurants" },
+  { label: "Burgers", image: "/images/hamburger.png", icon: Burger, href: "/vendors/restaurants" },
+  { label: "Pizza", image: "/images/pizza.png", icon: Pizza, href: "/vendors/restaurants" },
+];
 
 const Hero = () => {
+  const [address, setAddress] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push("/vendors/restaurants");
+  };
+
   return (
     <section className="hero">
 
       {/* ── LEFT: Content ──────────────────────────── */}
       <div className="hero__content">
+        <button type="button" className="hero__location">
+          <MapPin size={14} aria-hidden />
+          Ikoyi, Lagos
+        </button>
 
-        {/* Heading */}
         <h1 className="hero__heading">
-          Fastest
+          Discover restaurants
           <br />
-          <em>Delivery</em> &amp;
-          <br />
-          Easy <em>Pickup</em>
+          that deliver near you.
         </h1>
 
-        {/* Sub-copy */}
-        <p className="hero__sub">
-          Order food from restaurants, shops, and local markets —
-          delivered fast or ready for easy pickup.
-        </p>
+        <form className="hero__search" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="hero__search-input"
+            placeholder="Enter your delivery address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            aria-label="Delivery address"
+          />
+          <button type="submit" className="hero__search-btn">
+            <Check size={14} aria-hidden />
+            <span>Find food</span>
+          </button>
+        </form>
 
-        {/* CTAs */}
-        <div className="hero__cta">
-          <button className="hero__cta-primary">Order Now</button>
-          <button className="hero__cta-secondary">See Menu →</button>
+        <div className="hero__quick-categories">
+          {QUICK_CATEGORIES.map((cat) => (
+            <Link key={cat.label} href={cat.href} className="hero__quick-card">
+              <span className="hero__quick-card-img">
+                <Image src={cat.image} alt="" fill sizes="140px" className="hero__quick-card-photo" />
+              </span>
+              <span className="hero__quick-card-label">
+                <cat.icon size={13} aria-hidden />
+                {cat.label}
+                <ArrowRight size={11} aria-hidden className="hero__quick-card-arrow" />
+              </span>
+            </Link>
+          ))}
         </div>
-
-        {/* Trust strip */}
-        {/* <div className="hero__trust">
-          <div className="hero__trust-item">
-            <span className="hero__trust-icon">⚡</span>
-            <span>30-min delivery</span>
-          </div>
-          <div className="hero__trust-divider" />
-          <div className="hero__trust-item">
-            <span className="hero__trust-icon">🏪</span>
-            <span>200+ vendors</span>
-          </div>
-          <div className="hero__trust-divider" />
-          <div className="hero__trust-item">
-            <span className="hero__trust-icon">⭐</span>
-            <span>4.8 rated</span>
-          </div>
-        </div> */}
       </div>
 
       {/* ── RIGHT: Visual ──────────────────────────── */}
       <div className="hero__visual">
-
-        {/* Plate 1 — Jollof Rice */}
-        <div className="hero__plate hero__plate--1">
-          <Image
-            src="/images/jollof.png"
-            width={300}
-            height={300}
-            alt="Jollof Rice"
-            className="hero__plate-img"
-          />
-          <span className="hero__plate-label">Jollof Rice</span>
-        </div>
-
-        {/* Plate 2 — Burger */}
-        <div className="hero__plate hero__plate--2">
-          <Image
-            src="/images/hamburger.png"
-            width={300}
-            height={300}
-            alt="Burger"
-            className="hero__plate-img"
-          />
-          <span className="hero__plate-label">Burgers</span>
-        </div>
-
-        {/* Plate 3 — Fried Rice */}
-        <div className="hero__plate hero__plate--3">
-          <Image
-            src="/images/friedrice.png"
-            width={300}
-            height={300}
-            alt="Fried Rice"
-            className="hero__plate-img"
-          />
-          <span className="hero__plate-label">Fried Rice</span>
-        </div>
-
-        {/* Speed lines — behind the bike */}
-        <div className="hero__speed-lines">
-          <div className="hero__speed-line" />
-          <div className="hero__speed-line" />
-          <div className="hero__speed-line" />
-        </div>
-
-        {/* Animated Bicycle */}
-        <div className="hero__bike-wrapper">
-          <LottieIcon
-            animationData={bicycleAnimation}
-            className="flip-horizontal"
-            loop
-          />
-        </div>
-
         {/* Decorative background blob */}
         <div className="hero__blob" aria-hidden />
+
+        {/* Big rounded food photo */}
+        <div className="hero__photo-card">
+          <Image
+            src="/images/jollof-spaghetti.jpg"
+            alt="Jollof spaghetti with grilled chicken, ready for delivery"
+            fill
+            priority
+            sizes="(max-width: 640px) 80vw, 40vw"
+            className="hero__photo-img"
+          />
+        </div>
+
+        {/* Floating stat chips */}
+        <div className="hero__floating-badge hero__floating-badge--time">
+          <span className="hero__floating-badge-icon">
+            <Bike size={16} aria-hidden />
+          </span>
+          <span>
+            <span className="hero__floating-badge-value">25–35 min</span>
+            <span className="hero__floating-badge-label">Avg. delivery</span>
+          </span>
+        </div>
+
+        <div className="hero__floating-badge hero__floating-badge--rating">
+          <span className="hero__floating-badge-icon hero__floating-badge-icon--amber">
+            <StarSolid size={16} aria-hidden />
+          </span>
+          <span>
+            <span className="hero__floating-badge-value">4.8 rating</span>
+            <span className="hero__floating-badge-label">2,300+ orders</span>
+          </span>
+        </div>
       </div>
     </section>
   );

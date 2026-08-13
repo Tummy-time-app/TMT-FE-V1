@@ -15,6 +15,10 @@ import {
   Store,
   ShoppingCart,
   Leaf,
+  Bag,
+  Users,
+  Heart,
+  UserCircle,
   type IconComponent,
 } from "@/components/icons";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
@@ -206,7 +210,7 @@ const Navigation: React.FC = () => {
           {/* RIGHT — cart + auth */}
           <div className="navbar__actions">
             <Link href="/cart" className="navbar__cart" aria-label={`Cart, ${cartCount} items`}>
-              <Image src="/images/cart.png" width={20} height={20} alt="" aria-hidden />
+              <Bag size={20} aria-hidden />
               {cartCount > 0 && (
                 <span className="nav-cart-badge" aria-hidden>{cartCount}</span>
               )}
@@ -234,6 +238,15 @@ const Navigation: React.FC = () => {
                 {userMenuOpen && (
                   <div className="nav-user-dropdown" role="menu">
                     <Link
+                      href="/account"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <UserCircle size={15} aria-hidden />
+                      Account
+                    </Link>
+                    <Link
                       href="/orders"
                       className="nav-user-dropdown__item"
                       role="menuitem"
@@ -241,6 +254,15 @@ const Navigation: React.FC = () => {
                     >
                       <PackageSearch size={15} aria-hidden />
                       My orders
+                    </Link>
+                    <Link
+                      href="/favorites"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Heart size={15} aria-hidden />
+                      Favorites
                     </Link>
                     <Link
                       href="/wallet"
@@ -252,6 +274,15 @@ const Navigation: React.FC = () => {
                       Wallet
                     </Link>
                     <Link
+                      href="/addresses"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <MapPin size={15} aria-hidden />
+                      Addresses
+                    </Link>
+                    <Link
                       href="/promotions"
                       className="nav-user-dropdown__item"
                       role="menuitem"
@@ -259,6 +290,15 @@ const Navigation: React.FC = () => {
                     >
                       <Tag size={15} aria-hidden />
                       Promotions
+                    </Link>
+                    <Link
+                      href="/referrals"
+                      className="nav-user-dropdown__item"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Users size={15} aria-hidden />
+                      Refer & earn
                     </Link>
                     <Link
                       href="/support"

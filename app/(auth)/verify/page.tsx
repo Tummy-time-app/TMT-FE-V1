@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { useResendOtpMutation, useVerifyOtpMutation } from "@/features/auth/authApi";
 import { setCredentials } from "@/features/auth/authSlice";
+import { defaultRouteForRole } from "@/features/auth/roleHome";
 import { otpSchema } from "@/features/auth/schemas";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
@@ -93,7 +94,7 @@ function VerifyEmailForm() {
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        router.push("/");
+        router.push(defaultRouteForRole(response.user.role));
       }, 1200);
     } catch (err) {
       setError(normalizeApiError(err as never).message);

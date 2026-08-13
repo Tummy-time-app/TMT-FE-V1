@@ -12,9 +12,16 @@ import { setCredentials } from "@/features/auth/authSlice";
 import { resetPasswordSchema, type ResetPasswordFormValues } from "@/features/auth/schemas";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
+import { isDevMode } from "@/lib/dev/devMode";
 
 function ResetPasswordForm() {
   const token = useSearchParams().get("token") ?? "";
+  // Dev mode's mock flow needs an explicit `?token=` from the emailed link.
+  // Against the real backend, Supabase's client already turned the emailed
+  // link's URL fragment into an active recovery session before this page
+  // rendered (see lib/supabase/client.ts's `detectSessionInUrl`), so no
+  // token param is expected or required there.
+  const hasResetContext = isDevMode ? !!token : true;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -43,7 +50,7 @@ function ResetPasswordForm() {
     }
   };
 
-  if (!token) {
+  if (!hasResetContext) {
     return (
       <div className="auth-root">
         <div className="auth-bg" />

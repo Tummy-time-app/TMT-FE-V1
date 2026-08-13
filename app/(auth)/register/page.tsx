@@ -2,20 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegisterMutation } from "@/features/auth/authApi";
+import { useRedeemReferralCodeMutation } from "@/features/referrals/referralsApi";
 import { registerSchema, type RegisterFormValues } from "@/features/auth/schemas";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const referralCode = useSearchParams().get("ref");
   const [registerUser, { isLoading }] = useRegisterMutation();
+  const [redeemReferralCode] = useRedeemReferralCodeMutation();
 
   const {
     register,
@@ -32,6 +35,12 @@ export default function RegisterPage() {
         phone: values.phone,
         password: values.password,
       }).unwrap();
+
+      if (referralCode) {
+        // Best-effort — an invalid/self-referral code shouldn't block account creation.
+        redeemReferralCode({ code: referralCode, referredId: response.user.id, referredName: response.user.name }).catch(() => {});
+      }
+
       router.push(`/verify?email=${encodeURIComponent(response.user.email)}`);
     } catch (err) {
       const { message, fieldErrors } = normalizeApiError(err as never);
@@ -207,5 +216,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="auth-root" />}>
+      <RegisterForm />
+    </Suspense>
   );
 }
