@@ -17,7 +17,7 @@ function seedBanners(): Banner[] {
     {
       id: "banner-launch",
       title: "20% off your first 3 orders",
-      imageUrl: "/images/jollof-spaghetti.jpg",
+      imageUrl: "/images/restaurant.jpg",
       linkUrl: "/promotions",
       placement: "home",
       isActive: true,

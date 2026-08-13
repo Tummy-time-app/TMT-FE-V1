@@ -15,9 +15,16 @@ import type { PaymentMethod } from "@/features/orders/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { Pencil, CreditCard, Cash, Bank, Wallet as WalletIcon, MapPin, Plus, Clock, CalendarDays } from "@/components/icons";
+import { formatCartQty } from "@/lib/utils/quantity";
+import type { VendorBusinessType } from "@/features/vendors/types";
 
 const DELIVERY_FEE = 500;
 const PICKUP_ADDRESS_NOTE = "Pre-assigned for delivery";
+const LISTING_ROUTE: Record<VendorBusinessType, string> = {
+  restaurant: "/vendors/restaurants",
+  shop: "/vendors/shops",
+  market: "/vendors/markets",
+};
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -35,7 +42,14 @@ function CheckoutContent() {
   const params = useSearchParams();
   const vendorIdParam = params.get("vendor") ?? "";
   const initialType = (params.get("type") as "delivery" | "pickup") ?? "delivery";
-  const riderNote = params.get("note") ?? "";
+  // Grocery orders (shop/market) carry a substitutions preference from the store
+  // page's cart drawer — folded straight into the existing rider-note plumbing
+  // rather than adding a parallel field end-to-end.
+  const substitutesParam = params.get("substitutes");
+  const substituteText =
+    substitutesParam === "0" ? "Do not substitute unavailable items." :
+    substitutesParam === "1" ? "Substitutions OK if an item is unavailable." : "";
+  const riderNote = [params.get("note") ?? "", substituteText].filter(Boolean).join(" ");
 
   const { items, clearCart, appliedPromo } = useCart();
   const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialType);
@@ -62,7 +76,8 @@ function CheckoutContent() {
   const hasOtherVendorItems = !vendorIdParam && vendorIds.length > 1;
 
   const vendorName = checkoutItems.length > 0 ? checkoutItems[0].vendor : "vendor";
-  const backHref = resolvedVendorId ? `/vendors/restaurants/${resolvedVendorId}` : "/cart";
+  const vendorBusinessType = checkoutItems[0]?.vendorBusinessType ?? "restaurant";
+  const backHref = resolvedVendorId ? `${LISTING_ROUTE[vendorBusinessType]}/${resolvedVendorId}` : "/cart";
 
   const subtotal = checkoutItems.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = orderType === "delivery" ? DELIVERY_FEE : 0;
@@ -93,6 +108,8 @@ function CheckoutContent() {
           price: i.price,
           qty: i.qty,
           note: i.note,
+          unitType: i.unitType,
+          weightUnit: i.weightUnit,
         })),
         orderType,
         deliveryAddress: orderType === "delivery" && selectedAddress ? formatAddressLine(selectedAddress) : undefined,
@@ -326,7 +343,7 @@ function CheckoutContent() {
                   <p className="co-item__desc">{item.description}</p>
                 </div>
                 <div className="co-item__meta">
-                  <span className="co-item__qty">x{item.qty}</span>
+                  <span className="co-item__qty">{formatCartQty(item)}</span>
                   <span className="co-item__price">{formatNaira(item.price * item.qty)}</span>
                 </div>
               </div>

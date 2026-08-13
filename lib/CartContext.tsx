@@ -9,10 +9,17 @@ export interface CartItem {
   description: string;
   vendor: string;
   vendorId: string;
+  /** Which of the three storefronts this came from — lets checkout/cart link back to the right listing page. */
+  vendorBusinessType?: "restaurant" | "shop" | "market";
   price: number;
   qty: number;
   image: string;
   note?: string;
+  /** Grocery items (shops/markets) only — "each" (default) or "weight" (sold per kg). Drives display formatting and the cart stepper's increment size — see lib/utils/quantity.ts. */
+  unitType?: "each" | "weight";
+  weightUnit?: "g" | "kg";
+  /** Whether a rider may substitute this item if it's unavailable at fulfillment — perishables mostly. */
+  substitutionAllowed?: boolean;
 }
 
 /* ── Applied promo code ──────────────────────────────── */

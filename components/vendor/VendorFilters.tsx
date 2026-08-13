@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { X } from "@/components/icons";
 import { useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
+import type { VendorBusinessType } from "@/features/vendors/types";
 
 /* ───────────────────────── TYPES ───────────────────────── */
 
@@ -29,6 +30,7 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 type ContextType = {
+  businessType: VendorBusinessType;
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   filterOpen: boolean;
@@ -68,7 +70,7 @@ export function useVendorFilters() {
 
 /* ───────────────────────── PROVIDER ───────────────────────── */
 
-function VendorFilters({ children }: { children: ReactNode }) {
+function VendorFilters({ children, businessType = "restaurant" }: { children: ReactNode; businessType?: VendorBusinessType }) {
   // Deep-link support: the homepage's category strip and "See all" carousel
   // links pass ?category=, so browsing arrives pre-filtered — same as
   // clicking a cuisine icon on Uber Eats' own homepage. Read once at mount
@@ -97,6 +99,7 @@ function VendorFilters({ children }: { children: ReactNode }) {
   return (
     <VendorFiltersContext.Provider
       value={{
+        businessType,
         filters,
         setFilters,
         page,
@@ -122,8 +125,14 @@ function VendorFilters({ children }: { children: ReactNode }) {
 
 /* ───────────────────────── SEARCH ───────────────────────── */
 
+const SEARCH_PLACEHOLDER: Record<VendorBusinessType, string> = {
+  restaurant: "Search restaurants or cuisines…",
+  shop: "Search shops or products…",
+  market: "Search markets or produce…",
+};
+
 VendorFilters.Search = function Search() {
-  const { search, setSearch, setPage } = useVendorFilters();
+  const { search, setSearch, setPage, businessType } = useVendorFilters();
 
   return (
     <div className="vp-search-wrap">
@@ -144,7 +153,7 @@ VendorFilters.Search = function Search() {
       <input
         type="text"
         className="vp-search-input"
-        placeholder="Search restaurants or cuisines…"
+        placeholder={SEARCH_PLACEHOLDER[businessType]}
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
@@ -285,8 +294,8 @@ VendorFilters.Drawer = function Drawer() {
 /* ───────────────────────── CATEGORIES ───────────────────────── */
 
 VendorFilters.Categories = function Categories() {
-  const { activeCategory, setActiveCategory, setPage } = useVendorFilters();
-  const { data: categories, isLoading } = useGetVendorCategoriesQuery();
+  const { activeCategory, setActiveCategory, setPage, businessType } = useVendorFilters();
+  const { data: categories, isLoading } = useGetVendorCategoriesQuery(businessType);
 
   return (
     <section className="vp-section">

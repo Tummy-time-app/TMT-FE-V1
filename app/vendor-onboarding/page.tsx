@@ -6,12 +6,17 @@ import { Store } from "@/components/icons";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/features/auth/hooks";
 import { useCreateVendorMutation } from "@/features/vendors/vendorsApi";
-import { CATEGORIES } from "@/lib/vendordata";
+import { CATEGORIES_BY_TYPE } from "@/lib/vendordata";
 import { DEFAULT_MAP_CENTER } from "@/lib/maps/config";
 import { useToast } from "@/components/feedback/ToastProvider";
 import { normalizeApiError } from "@/lib/utils/apiError";
+import type { VendorBusinessType } from "@/features/vendors/types";
 
-const CATEGORY_OPTIONS = CATEGORIES.filter((c) => c.id !== "all");
+const BUSINESS_TYPE_OPTIONS: { id: VendorBusinessType; label: string; desc: string }[] = [
+  { id: "restaurant", label: "Restaurant", desc: "Cooked meals, made to order" },
+  { id: "shop", label: "Shop", desc: "Packaged goods, pharmacy, household" },
+  { id: "market", label: "Local Market", desc: "Fresh produce, meat & staples" },
+];
 
 function jitteredCenterCoords() {
   return {
@@ -26,12 +31,22 @@ function OnboardingForm() {
   const toast = useToast();
   const [createVendor, { isLoading }] = useCreateVendorMutation();
 
+  const [businessType, setBusinessType] = useState<VendorBusinessType>("restaurant");
+  const categoryOptions = CATEGORIES_BY_TYPE[businessType].filter((c) => c.id !== "all");
+
   const [name, setName] = useState("");
   const [cuisine, setCuisine] = useState("");
-  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]?.id ?? "");
+  const [category, setCategory] = useState(categoryOptions[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [error, setError] = useState("");
+
+  // Plain user-driven handler, not an effect syncing fetched data — picking a
+  // different business type resets category to that type's own first option.
+  const handleBusinessTypeChange = (type: VendorBusinessType) => {
+    setBusinessType(type);
+    setCategory(CATEGORIES_BY_TYPE[type].filter((c) => c.id !== "all")[0]?.id ?? "");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +63,7 @@ function OnboardingForm() {
           name: name.trim(),
           cuisine: cuisine.trim(),
           category,
-          businessType: "restaurant",
+          businessType,
           description: description.trim(),
           image: image.trim() || "/images/restaurant.jpg",
           location: jitteredCenterCoords(),
@@ -75,6 +90,27 @@ function OnboardingForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-lg border border-border bg-surface p-6">
         <div>
+          <label className="text-caption font-semibold text-text-muted">Business type</label>
+          <div className="mt-1.5 grid grid-cols-3 gap-2">
+            {BUSINESS_TYPE_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleBusinessTypeChange(opt.id)}
+                className={`rounded-md border px-2.5 py-2.5 text-left transition-colors ${
+                  businessType === opt.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                <span className="block text-caption font-bold text-text">{opt.label}</span>
+                <span className="mt-0.5 block text-[0.68rem] leading-tight text-text-subtle">{opt.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <label className="text-caption font-semibold text-text-muted">Store name</label>
           <input
             value={name}
@@ -85,11 +121,13 @@ function OnboardingForm() {
         </div>
 
         <div>
-          <label className="text-caption font-semibold text-text-muted">Cuisine</label>
+          <label className="text-caption font-semibold text-text-muted">
+            {businessType === "restaurant" ? "Cuisine" : "What you sell"}
+          </label>
           <input
             value={cuisine}
             onChange={(e) => setCuisine(e.target.value)}
-            placeholder="Nigerian, Continental…"
+            placeholder={businessType === "restaurant" ? "Nigerian, Continental…" : businessType === "shop" ? "Snacks, pharmacy, household…" : "Fresh produce, meat, grains…"}
             className="mt-1 w-full rounded-md border border-border bg-background px-3.5 py-2.5 text-small text-text outline-none transition-colors focus:border-primary"
           />
         </div>
@@ -101,7 +139,7 @@ function OnboardingForm() {
             onChange={(e) => setCategory(e.target.value)}
             className="mt-1 w-full rounded-md border border-border bg-background px-3.5 py-2.5 text-small text-text outline-none transition-colors focus:border-primary"
           >
-            {CATEGORY_OPTIONS.map((c) => (
+            {categoryOptions.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>

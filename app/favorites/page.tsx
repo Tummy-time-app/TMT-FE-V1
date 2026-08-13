@@ -27,7 +27,7 @@ function FavoritesContent() {
         <div>
           <h1 className="vp-title">Favorites</h1>
           <p className="vp-subtitle">
-            {favoriteVendors.length} saved restaurant{favoriteVendors.length !== 1 ? "s" : ""}
+            {favoriteVendors.length} saved place{favoriteVendors.length !== 1 ? "s" : ""}
           </p>
         </div>
       </header>
@@ -42,7 +42,7 @@ function FavoritesContent() {
         <EmptyState
           icon={Heart}
           title="No favorites yet"
-          description="Tap the heart on any restaurant to save it here."
+          description="Tap the heart on any restaurant, shop, or market to save it here."
         />
       ) : (
         <div className="vp-grid">

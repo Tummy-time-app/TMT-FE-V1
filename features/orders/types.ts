@@ -29,6 +29,9 @@ export interface OrderItem {
   price: number;
   qty: number;
   note?: string;
+  /** Carried through from the cart item for grocery orders — see lib/utils/quantity.ts. */
+  unitType?: "each" | "weight";
+  weightUnit?: "g" | "kg";
 }
 
 export interface OrderStatusEvent {

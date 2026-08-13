@@ -1,8 +1,14 @@
 "use client";
 import Link from "next/link";
-import type { Vendor } from "@/features/vendors/types";
+import type { Vendor, VendorBusinessType } from "@/features/vendors/types";
 import Image from "next/image";
 import { FavoriteButton } from "@/features/favorites/components/FavoriteButton";
+
+const LISTING_ROUTE: Record<VendorBusinessType, string> = {
+  restaurant: "/vendors/restaurants",
+  shop: "/vendors/shops",
+  market: "/vendors/markets",
+};
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -57,13 +63,15 @@ export default function VendorCard({ vendor, skeleton }: Props) {
     isNew,
     promoLabel,
     image,
+    businessType,
   } = vendor!;
 
   const priceStr = Array.from({ length: priceRange }, () => "₦").join("");
+  const href = `${LISTING_ROUTE[businessType ?? "restaurant"]}/${id}`;
 
   return (
     <Link
-      href={`/vendors/restaurants/${id}`}
+      href={href}
       className={`vc-card ${!isOpen ? "vc-card--closed" : ""}`}
     >
       {/* ── image area ── */}

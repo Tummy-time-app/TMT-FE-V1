@@ -18,6 +18,7 @@ import type {
   OperatingHours,
   Vendor,
   VendorApprovalStatus,
+  VendorBusinessType,
   VendorCategory,
   VendorDetail,
   VendorQueryParams,
@@ -41,11 +42,11 @@ export const vendorsApi = baseApi.injectEndpoints({
       providesTags: ["Vendors"],
     }),
 
-    getVendorCategories: builder.query<VendorCategory[], void>({
-      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+    getVendorCategories: builder.query<VendorCategory[], VendorBusinessType | undefined>({
+      queryFn: async (businessType, _api, _extra, fetchWithBQ) => {
         try {
-          if (isDevMode) return { data: await mockGetVendorCategories() };
-          const result = await fetchWithBQ("/vendors/categories");
+          if (isDevMode) return { data: await mockGetVendorCategories(businessType) };
+          const result = await fetchWithBQ({ url: "/vendors/categories", params: { businessType } });
           if (result.error) return { error: result.error };
           return { data: result.data as VendorCategory[] };
         } catch (error) {

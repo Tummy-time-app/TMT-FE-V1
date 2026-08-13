@@ -3,15 +3,20 @@ import { useVendorFilters } from "./VendorFilters";
 import { useGetVendorsQuery } from "@/features/vendors/vendorsApi";
 import VendorCard from "../VendorCard";
 import { ErrorState } from "@/components/feedback/ErrorState";
-import { UtensilsCrossed, Heart } from "@/components/icons";
+import { UtensilsCrossed, ShoppingBasket, AppleFruit, Heart, type IconComponent } from "@/components/icons";
+import type { VendorBusinessType } from "@/features/vendors/types";
 
 const PAGE_SIZE = 6;
 
+const NOUN: Record<VendorBusinessType, string> = { restaurant: "restaurants", shop: "shops", market: "markets" };
+const EMPTY_ICON: Record<VendorBusinessType, IconComponent> = { restaurant: UtensilsCrossed, shop: ShoppingBasket, market: AppleFruit };
+
 const VendorsGrid = () => {
-  const { activeCategory, sortKey, filters, search, page, setPage, resetFilters, setFilteredCount } =
+  const { businessType, activeCategory, sortKey, filters, search, page, setPage, resetFilters, setFilteredCount } =
     useVendorFilters();
 
   const { data, isLoading, isFetching, error, refetch } = useGetVendorsQuery({
+    businessType,
     category: activeCategory,
     search,
     sort: sortKey,
@@ -48,11 +53,14 @@ const VendorsGrid = () => {
     return <ErrorState error={error} onRetry={refetch} />;
   }
 
+  const noun = NOUN[businessType];
+  const EmptyIcon = EMPTY_ICON[businessType];
+
   if (featured.length === 0 && visibleAll.length === 0) {
     return (
       <div className="vp-empty">
-        <div className="vp-empty-icon"><UtensilsCrossed size={32} aria-hidden /></div>
-        <p className="vp-empty-title">No restaurants found</p>
+        <div className="vp-empty-icon"><EmptyIcon size={32} aria-hidden /></div>
+        <p className="vp-empty-title">No {noun} found</p>
         <p className="vp-empty-sub">Try a different search term or clear your filters.</p>
         <button className="vp-empty-cta" onClick={resetFilters}>
           Clear filters
@@ -80,8 +88,8 @@ const VendorsGrid = () => {
       {visibleAll.length > 0 && (
         <section className="vp-section">
           <div className="vp-section-row">
-            <h2 className="vp-section-title">All restaurants</h2>
-            <span className="vp-count">{total} restaurants</span>
+            <h2 className="vp-section-title">All {noun}</h2>
+            <span className="vp-count">{total} {noun}</span>
           </div>
 
           <div className="vp-grid">
@@ -97,7 +105,7 @@ const VendorsGrid = () => {
                 onClick={() => setPage((p) => p + 1)}
                 disabled={isPaginating}
               >
-                {isPaginating ? "Loading…" : "View more restaurants"}
+                {isPaginating ? "Loading…" : `View more ${noun}`}
               </button>
             </div>
           )}

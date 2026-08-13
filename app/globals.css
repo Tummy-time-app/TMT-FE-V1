@@ -94,6 +94,16 @@
   --motion-normal: 250ms;
   --motion-emphasis: 400ms;
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Section-identity washes — additive to the token system above. Used to
+     color-code the homepage's three verticals and give the hero actual
+     color presence instead of hairline accents. Translucent by design so
+     they read as "confidently minimal," not loud. */
+  --crimson-wash: rgba(172, 0, 0, 0.05);
+  --crimson-wash-strong: rgba(172, 0, 0, 0.12);
+  --amber-wash: rgba(255, 183, 3, 0.10);
+  --amber-wash-strong: rgba(255, 183, 3, 0.22);
+  --crimson-dark-wash: rgba(107, 19, 0, 0.05);
 }
 
 /* ── Accessibility: respect the OS-level "reduce motion" preference ──
@@ -1120,6 +1130,9 @@ body {
   align-items: center;
   gap: 48px;
   position: relative;
+  background:
+    radial-gradient(ellipse 720px 480px at 8% 15%, var(--crimson-wash) 0%, transparent 65%),
+    radial-gradient(ellipse 640px 460px at 96% 88%, var(--amber-wash) 0%, transparent 60%);
 }
 
 /* ── Content (left column) ──────────────────────────────── */
@@ -1136,15 +1149,16 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 0;
+  background: var(--crimson-wash);
+  border: 1.5px solid var(--crimson-wash-strong);
+  border-radius: var(--radius-full);
+  padding: 7px 16px 7px 12px;
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--text-dark);
   cursor: pointer;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .hero__location svg {
@@ -1155,13 +1169,20 @@ body {
 /* Heading — fluid type scale */
 .hero__heading {
   font-family: var(--font-display);
-  font-size: clamp(2.25rem, 4.2vw, 3.75rem);
-  line-height: 1.08;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: clamp(2.5rem, 4.8vw, 4.5rem);
+  line-height: 1.04;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   color: var(--text-dark);
   margin-bottom: 28px;
-  max-width: 15ch;
+  max-width: 16ch;
+}
+
+.hero__heading-accent {
+  color: var(--crimson);
+  background-image: linear-gradient(180deg, transparent 68%, var(--amber-wash-strong) 68%);
+  background-repeat: no-repeat;
+  padding: 0 2px;
 }
 
 /* Delivery-address search pill */
@@ -1240,17 +1261,19 @@ body {
   background: var(--color-surface);
   border: 1.5px solid var(--neutral-line-strong);
   text-decoration: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .hero__quick-card:hover {
-  border-color: var(--text-dark);
+  border-color: var(--crimson);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 .hero__quick-card-img {
   position: relative;
   width: 100%;
-  height: 84px;
+  height: 96px;
   background: var(--off-white);
 }
 
@@ -1302,9 +1325,20 @@ body {
   width: 420px;
   height: 420px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(172, 0, 0, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(172, 0, 0, 0.10) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* Offset color panel behind the photo — the hero's centerpiece gets real
+   depth from pure CSS, no second image asset needed. */
+.hero__visual-panel {
+  position: absolute;
+  inset: 16px 32px;
+  transform: translate(16px, 16px);
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 55%, var(--amber) 130%);
+  z-index: 1;
 }
 
 /* The big rounded food photo */
@@ -1315,11 +1349,31 @@ body {
   overflow: hidden;
   border: 1.5px solid var(--neutral-line-strong);
   box-shadow: var(--shadow-lg);
-  z-index: 1;
+  z-index: 2;
 }
 
 .hero__photo-img {
   object-fit: cover;
+}
+
+/* Delivery rider badge — reuses the previously-unused riderBob keyframe */
+.hero__rider-badge {
+  position: absolute;
+  left: -22px;
+  bottom: -18px;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1.5px solid var(--neutral-line-strong);
+  box-shadow: var(--shadow-md);
+  padding: 10px;
+  z-index: 3;
+  animation: riderBob 3.2s ease-in-out infinite;
+}
+
+.hero__rider-img {
+  object-fit: contain;
 }
 
 /* Floating stat chips over the photo */
@@ -1331,9 +1385,14 @@ body {
   background: var(--color-surface);
   border-radius: var(--radius-md);
   border: 1.5px solid var(--neutral-line-strong);
+  border-left: 3px solid var(--crimson);
   padding: 10px 16px;
   box-shadow: var(--shadow-md);
-  z-index: 2;
+  z-index: 3;
+}
+
+.hero__floating-badge--rating {
+  border-left-color: var(--amber);
 }
 
 .hero__floating-badge--time {
@@ -1395,45 +1454,43 @@ body {
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   padding: 8px 5vw 0;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hf-tile {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   background: var(--color-surface);
   border: 1.5px solid var(--neutral-line-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   text-decoration: none;
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .hf-tile:hover {
-  border-color: var(--text-dark);
-  transform: translateY(-2px);
-}
-
-.hf-tile--soon {
-  cursor: default;
-}
-
-.hf-tile--soon:hover {
-  border-color: var(--neutral-line-strong);
-  transform: none;
+  border-color: var(--crimson);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 .hf-tile-icon {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: var(--radius-md);
-  background: rgba(172, 0, 0, 0.08);
-  color: var(--crimson);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+.hf-tile--crimson .hf-tile-icon { background: var(--crimson); }
+.hf-tile--amber .hf-tile-icon   { background: var(--amber); color: var(--crimson-dark); }
+.hf-tile--dark .hf-tile-icon    { background: var(--crimson-dark); }
 
 .hf-tile-body {
   display: flex;
@@ -1450,18 +1507,6 @@ body {
   font-weight: 800;
   font-size: 0.95rem;
   color: var(--text-dark);
-}
-
-.hf-tile-badge {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: var(--off-white);
-  color: var(--crimson);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
 }
 
 .hf-tile-desc {
@@ -1510,13 +1555,14 @@ body {
 }
 
 .hf-catstrip-icon {
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.10);
   transition: transform 0.2s;
 }
 
@@ -1540,6 +1586,87 @@ body {
   border-radius: 4px;
   background: var(--off-white);
 }
+
+/* ── Vertical sections (Restaurants / Shops / Local Markets, homepage) ──
+   Each vertical carries a persistent color identity — icon tile (above)
+   → header icon badge → background wash (below) — so the repeated
+   category-strip+feed pattern reads as intentional, not copy-pasted. */
+.hf-vertical { position: relative; }
+.hf-vertical--restaurant { background: linear-gradient(180deg, var(--crimson-wash) 0%, transparent 340px); }
+.hf-vertical--shop       { background: linear-gradient(180deg, var(--amber-wash) 0%, transparent 340px); }
+.hf-vertical--market     { background: linear-gradient(180deg, var(--crimson-dark-wash) 0%, transparent 340px); }
+
+.hf-vertical-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 40px 5vw 0;
+  margin-top: 24px;
+  border-top: 1px solid var(--neutral-line);
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hf-vertical-header--first {
+  border-top: none;
+  margin-top: 4px;
+  padding-top: 12px;
+}
+
+.hf-vertical-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hf-vertical-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.hf-vertical-header--restaurant .hf-vertical-icon { background: var(--crimson); }
+.hf-vertical-header--shop .hf-vertical-icon       { background: var(--amber); color: var(--crimson-dark); }
+.hf-vertical-header--market .hf-vertical-icon     { background: var(--crimson-dark); }
+
+.hf-vertical-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  margin-bottom: 2px;
+}
+
+.hf-vertical-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-dark);
+}
+
+.hf-vertical-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--crimson);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hf-vertical-link:hover { text-decoration: underline; }
 
 /* ── Discovery feed — carousel rows ──────────────────────────── */
 .hf-feed {
@@ -1625,7 +1752,7 @@ body {
 }
 
 .hf-carousel-nav:hover {
-  border-color: var(--text-dark);
+  border-color: var(--crimson);
   background: var(--off-white);
 }
 
@@ -1654,6 +1781,11 @@ body {
     white-space: normal;
   }
 
+  .hf-vertical-header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
   .hf-carousel-card {
     width: 78vw;
   }
@@ -1670,6 +1802,7 @@ body {
 }
 
 .app-store__inner {
+  position: relative;
   background: var(--off-white);
   border: 2px solid rgba(139, 26, 0, 0.15);
   border-radius: 20px;
@@ -1680,9 +1813,20 @@ body {
   gap: clamp(12px, 3vw, 28px);
   flex-wrap: nowrap;
   background-image: url("/images/bc0860fede126186923df504b95b4baf1a7adaed.jpg");
+  overflow: hidden;
+}
+
+.app-store__inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(107, 19, 0, 0.55), rgba(172, 0, 0, 0.35));
+  z-index: 0;
 }
 
 .app-store__badge {
+  position: relative;
+  z-index: 1;
   flex: 1 1 260px;
   min-width: 0;        /* important: allows shrinking */
   max-width: 420px;
@@ -2127,19 +2271,20 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--color-surface);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1.5px solid var(--neutral-line-strong);
   text-decoration: none;
   color: inherit;
   transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.22s ease;
+              border-color 0.22s ease, box-shadow 0.22s ease;
   cursor: pointer;
 }
 
 .vc-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--text-dark);
+  transform: translateY(-4px);
+  border-color: var(--crimson);
+  box-shadow: var(--shadow-md);
 }
 
 .vc-card--closed {
@@ -2148,6 +2293,11 @@ body {
 
 .vc-img {
   object-fit: cover;
+  transition: transform 0.35s var(--ease-standard);
+}
+
+.vc-card:hover .vc-img {
+  transform: scale(1.05);
 }
 
 /* Image area */
@@ -2591,6 +2741,11 @@ body {
     order: -1;
   }
 
+  .hero__visual-panel {
+    inset: 0 12%;
+    transform: translate(10px, 10px);
+  }
+
   .hero__photo-card {
     inset: 0 12%;
     border-radius: 24px;
@@ -2648,6 +2803,10 @@ body {
 
   .hero__quick-card {
     width: 104px;
+  }
+
+  .hero__rider-badge {
+    display: none; /* too cramped alongside the photo + 2 floating badges at this width */
   }
 }
 
@@ -4452,6 +4611,48 @@ body {
   transition: color 0.15s;
 }
 
+/* Grocery items (shops/markets): once qty > 0, the "+" circle becomes this
+   inline stepper instead of opening a modal — Instacart/Uber-Eats-grocery's
+   direct-add pattern, distinct from the restaurant customize-modal flow. */
+.rp-list-item__stepper {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--crimson);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  z-index: 2;
+}
+
+.rp-list-item__stepper-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.rp-list-item__stepper-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.rp-list-item__stepper-btn--plus { background: rgba(255, 255, 255, 0.12); }
+.rp-list-item__stepper-btn--plus:hover { background: rgba(255, 255, 255, 0.28); }
+
+.rp-list-item__stepper-val {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: #fff;
+}
+
 .rp-list-item__badge {
   position: absolute;
   top: 5px;
@@ -4876,6 +5077,25 @@ body {
 .rp-cart-drawer__toggle-btn--active {
   background:var(--crimson); color:#fff;
   border-color:var(--crimson);
+}
+
+/* ── Cart drawer: substitutions toggle (grocery orders only) ── */
+.rp-cart-drawer__substitute {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--neutral-line);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+.rp-cart-drawer__substitute-icon {
+  display: flex;
+  color: var(--color-success);
+  flex-shrink: 0;
 }
 
 /* ── Cart drawer: rider note ─────────────────────────── */

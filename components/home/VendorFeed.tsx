@@ -4,25 +4,40 @@ import { useMemo } from "react";
 import { useGetVendorsQuery, useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
 import { VendorCarousel } from "./VendorCarousel";
 import VendorCard from "@/components/VendorCard";
+import type { VendorBusinessType } from "@/features/vendors/types";
 
 // Large enough to pull the whole approved-vendor set in one request in
 // dev/mock mode; against the real API this is just the first feed page.
 const FEED_PAGE_SIZE = 30;
 
+const LISTING_ROUTE: Record<VendorBusinessType, string> = {
+  restaurant: "/vendors/restaurants",
+  shop: "/vendors/shops",
+  market: "/vendors/markets",
+};
+
+interface Props {
+  businessType?: VendorBusinessType;
+  /** Heading for the featured row, e.g. "Popular near you" / "Shops near you". */
+  popularLabel?: string;
+}
+
 /**
- * The homepage discovery feed — Uber Eats' actual homepage isn't a static
- * marketing layout, it's this: a "Popular near you" row up top, then one
- * horizontally-scrolling row per cuisine. Replaces the old static
- * "Restaurants / Shops / Local Markets" feature-card grid, which never
- * showed a single real vendor.
+ * A discovery feed for one business type — Uber Eats' actual homepage isn't
+ * a static marketing layout, it's this: a "Popular near you" row up top,
+ * then one horizontally-scrolling row per category. Used three times on
+ * the homepage (restaurants, shops, markets) and reused unmodified since
+ * the grouping logic is identical for any of the three verticals.
  */
-export function VendorFeed() {
+export function VendorFeed({ businessType = "restaurant", popularLabel = "Popular near you" }: Props) {
   const { data, isLoading, error } = useGetVendorsQuery({
+    businessType,
     category: "all",
     sort: "recommended",
     pageSize: FEED_PAGE_SIZE,
   });
-  const { data: categories } = useGetVendorCategoriesQuery();
+  const { data: categories } = useGetVendorCategoriesQuery(businessType);
+  const listingRoute = LISTING_ROUTE[businessType];
 
   const grouped = useMemo(() => {
     if (!data) return [];
@@ -69,14 +84,14 @@ export function VendorFeed() {
   return (
     <div className="hf-feed">
       {featured.length > 0 && (
-        <VendorCarousel title="Popular near you" vendors={featured} seeAllHref="/vendors/restaurants" />
+        <VendorCarousel title={popularLabel} vendors={featured} seeAllHref={listingRoute} />
       )}
       {grouped.map((g) => (
         <VendorCarousel
           key={g.id}
           title={`${g.label} near you`}
           vendors={g.vendors}
-          seeAllHref={`/vendors/restaurants?category=${g.id}`}
+          seeAllHref={`${listingRoute}?category=${g.id}`}
         />
       ))}
     </div>

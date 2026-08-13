@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   MapPin,
-  Check,
+  Search,
   ArrowRight,
   Bike,
   StarSolid,
@@ -42,7 +42,7 @@ const Hero = () => {
         </button>
 
         <h1 className="hero__heading">
-          Discover restaurants
+          Discover <span className="hero__heading-accent">restaurants</span>
           <br />
           that deliver near you.
         </h1>
@@ -57,7 +57,7 @@ const Hero = () => {
             aria-label="Delivery address"
           />
           <button type="submit" className="hero__search-btn">
-            <Check size={14} aria-hidden />
+            <Search size={14} aria-hidden />
             <span>Find food</span>
           </button>
         </form>
@@ -83,6 +83,9 @@ const Hero = () => {
         {/* Decorative background blob */}
         <div className="hero__blob" aria-hidden />
 
+        {/* Offset color panel behind the photo — gives the hero's centerpiece real depth with no new image asset */}
+        <div className="hero__visual-panel" aria-hidden />
+
         {/* Big rounded food photo */}
         <div className="hero__photo-card">
           <Image
@@ -93,6 +96,11 @@ const Hero = () => {
             sizes="(max-width: 640px) 80vw, 40vw"
             className="hero__photo-img"
           />
+        </div>
+
+        {/* Delivery rider badge */}
+        <div className="hero__rider-badge" aria-hidden>
+          <Image src="/images/rider.png" alt="" fill sizes="112px" className="hero__rider-img" />
         </div>
 
         {/* Floating stat chips */}

@@ -48,14 +48,14 @@ const vendorCategories: {
     label: "Shops",
     desc: "Groceries & daily household essentials",
     href: "/vendors/shops",
-    badge: "Coming soon",
+    badge: null,
   },
   {
     icon: Leaf,
     label: "Local Markets",
     desc: "Fresh produce directly from local markets",
     href: "/vendors/markets",
-    badge: "Coming soon",
+    badge: null,
   },
 ];
 

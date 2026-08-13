@@ -1,5 +1,5 @@
 import { mockDelay } from "@/lib/dev/devMode";
-import { CATEGORIES, VENDORS } from "@/lib/vendordata";
+import { CATEGORIES_BY_TYPE, VENDORS, SHOP_VENDORS, MARKET_VENDORS } from "@/lib/vendordata";
 import { getRestaurantData } from "@/lib/restaurantData";
 import { getVendorProductsInternal } from "./products.mock";
 import { deriveVendorRatingInternal } from "./reviews.mock";
@@ -8,6 +8,7 @@ import type {
   CreateVendorPayload,
   Vendor,
   VendorApprovalStatus,
+  VendorBusinessType,
   VendorCategory,
   VendorDetail,
   VendorQueryParams,
@@ -68,12 +69,15 @@ function saveDynamicVendors(store: DynamicVendorStore) {
   window.localStorage.setItem(DYNAMIC_VENDORS_STORAGE_KEY, JSON.stringify(store));
 }
 
+/** Every static seed vendor across all three business types, plus dynamically-onboarded ones. */
+const STATIC_VENDORS: Vendor[] = [...VENDORS, ...SHOP_VENDORS, ...MARKET_VENDORS];
+
 function allVendors(): Vendor[] {
-  return [...VENDORS, ...Object.values(loadDynamicVendors())];
+  return [...STATIC_VENDORS, ...Object.values(loadDynamicVendors())];
 }
 
 function findVendorRaw(id: string): Vendor | undefined {
-  return loadDynamicVendors()[id] ?? VENDORS.find((v) => v.id === id);
+  return loadDynamicVendors()[id] ?? STATIC_VENDORS.find((v) => v.id === id);
 }
 
 function resolveApprovalStatus(vendorId: string, overrides: StatusOverrides): VendorApprovalStatus {
@@ -139,7 +143,7 @@ function withResolvedStatus(vendor: Vendor, overrides: StatusOverrides): Vendor 
 }
 
 export async function mockGetVendors(params: VendorQueryParams): Promise<VendorsResponse> {
-  const { category, search, sort, freeDelivery, openNow, maxDeliveryTime, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params;
+  const { businessType, category, search, sort, freeDelivery, openNow, maxDeliveryTime, page = 1, pageSize = DEFAULT_PAGE_SIZE } = params;
 
   // Pagination round-trips feel snappier than the initial load.
   await mockDelay(page > 1 ? 350 : 500);
@@ -147,6 +151,12 @@ export async function mockGetVendors(params: VendorQueryParams): Promise<Vendors
   const overrides = loadStatusOverrides();
   // Customers only ever see approved vendors — a suspended (or still-pending onboarding) vendor disappears from browse/search immediately.
   let list = allVendors().map((v) => withResolvedStatus(v, overrides)).filter((v) => v.approvalStatus === "approved");
+
+  // Omitted entirely (e.g. Favorites, which spans every vendor type) means "don't filter" — every
+  // real browse surface (restaurant/shop/market listings + the homepage feed) passes this explicitly.
+  if (businessType) {
+    list = list.filter((v) => v.businessType === businessType);
+  }
 
   if (category && category !== "all") {
     list = list.filter((v) => v.category === category);
@@ -178,9 +188,9 @@ export async function mockGetVendors(params: VendorQueryParams): Promise<Vendors
   };
 }
 
-export async function mockGetVendorCategories(): Promise<VendorCategory[]> {
+export async function mockGetVendorCategories(businessType: VendorBusinessType = "restaurant"): Promise<VendorCategory[]> {
   await mockDelay(150);
-  return CATEGORIES;
+  return CATEGORIES_BY_TYPE[businessType];
 }
 
 /** Builds a full `VendorSummary` for a dynamically-created (onboarded) vendor — `lib/restaurantData.ts` only has entries for the static seed vendors. */
@@ -247,7 +257,10 @@ export async function mockGetVendorDetail(id: string): Promise<VendorDetail> {
       isTemporarilyClosed,
       isOpen: isTemporarilyClosed ? false : data.restaurant.isOpen,
       commissionRate: DEFAULT_COMMISSION_RATE,
-      businessType: "restaurant" as const,
+      // Read from the actual seed record, not hardcoded — this used to always
+      // say "restaurant" regardless of vendor, which 404'd every shop/market
+      // detail page's business-type-specific UI into thinking it was a restaurant.
+      businessType: findVendorRaw(id)?.businessType ?? "restaurant",
       operatingHours: loadHoursOverrides()[id],
     },
     menuItems: getVendorProductsInternal(id),

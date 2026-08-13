@@ -21,6 +21,7 @@ import { RiderMarker } from "@/components/maps/RiderMarker";
 import { DeliveryRoute } from "@/components/maps/DeliveryRoute";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { useToast } from "@/components/feedback/ToastProvider";
+import { formatCartQty } from "@/lib/utils/quantity";
 import type { PaymentMethod, PaymentStatus, VehicleType } from "@/features/orders/types";
 
 const VEHICLE_LABEL: Record<VehicleType, string> = { bike: "Motorbike", bicycle: "Bicycle", car: "Car" };
@@ -165,7 +166,7 @@ function OrderDetailContent({ id }: { id: string }) {
                 <p className="truncate text-small font-semibold text-text">{item.name}</p>
                 {item.note && <p className="text-caption text-text-muted">{item.note}</p>}
               </div>
-              <span className="text-small text-text-muted">x{item.qty}</span>
+              <span className="text-small text-text-muted">{formatCartQty(item)}</span>
               <span className="text-small font-semibold text-text">{formatNaira(item.price * item.qty)}</span>
             </li>
           ))}

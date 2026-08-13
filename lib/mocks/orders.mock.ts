@@ -1,5 +1,8 @@
 import { mockDelay } from "@/lib/dev/devMode";
-import { VENDORS } from "@/lib/vendordata";
+import { VENDORS, SHOP_VENDORS, MARKET_VENDORS } from "@/lib/vendordata";
+
+/** Every static seed vendor across all three business types. */
+const ALL_STATIC_VENDORS = [...VENDORS, ...SHOP_VENDORS, ...MARKET_VENDORS];
 import { DEFAULT_MAP_CENTER, MOCK_DELIVERY_LOCATION } from "@/lib/maps/config";
 import { chargeWalletInternal } from "@/lib/mocks/wallet.mock";
 import { mockRedeemPromoCode } from "@/lib/mocks/promotions.mock";
@@ -66,7 +69,7 @@ const SIMULATED_TRANSIT_DURATION_MS = 40_000;
 const TERMINAL_PAYMENT_STATUSES: OrderStatus[] = ["delivered", "picked_up"];
 
 function vendorLocationFor(vendorId: string): LatLng {
-  return VENDORS.find((v) => v.id === vendorId)?.location ?? DEFAULT_MAP_CENTER;
+  return ALL_STATIC_VENDORS.find((v) => v.id === vendorId)?.location ?? DEFAULT_MAP_CENTER;
 }
 
 function interpolate(from: LatLng, to: LatLng, progress: number): LatLng {

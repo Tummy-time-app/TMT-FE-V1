@@ -114,3 +114,15 @@ export const Log = streamline("log");
 export const UserCircle = streamline("interface-user-circle-circle-geometric-human-person-single-user");
 export const Cherries = streamline("cherries");
 export const Bag = streamline("bag");
+
+/* ── Shops & Local Markets category icons ────────────────── */
+export const Baguette = streamline("food-baguette-cook-bread-gluten-drink-cooking-nutrition-baguette-food");
+export const Milk = streamline("food-drinks-milk-canister-milk-dairy-canister-drink");
+export const Pharmacy = streamline("pharmacy");
+export const Broom = streamline("hotel-laundry");
+export const Popcorn = streamline("food-popcorn-cook-corn-movie-snack-cooking-nutrition-bake");
+export const Fish = streamline("food-fish-cook-cooking-fish-seafood-nutrition-food");
+export const Wheat = streamline("food-wheat-cook-plant-bread-gluten-grain-cooking-nutrition-food-wheat");
+export const Seasoning = streamline("lemon-fruit-seasoning");
+export const AppleFruit = streamline("apple");
+export const ShoppingBasket = streamline("shopping-basket-1");

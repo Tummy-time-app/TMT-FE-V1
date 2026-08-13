@@ -3,8 +3,8 @@ import type { IconComponent } from "@/components/icons";
 
 export type VendorApprovalStatus = "pending" | "approved" | "suspended";
 
-/** Maps to `vendors.type` — matches the schema's two supported business types. */
-export type VendorBusinessType = "restaurant" | "grocery";
+/** Maps to `vendors.type` — the three storefront kinds the app connects to consumers. */
+export type VendorBusinessType = "restaurant" | "shop" | "market";
 
 /** One day's open/close windows — `vendors.operating_hours` jsonb, e.g. `{ mon: [{open,close}], ... }`. */
 export type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -105,6 +105,7 @@ export interface VendorDetail {
 export type VendorSortKey = "recommended" | "rating" | "delivery_time" | "delivery_fee";
 
 export interface VendorQueryParams {
+  businessType?: VendorBusinessType;
   category?: string;
   search?: string;
   sort?: VendorSortKey;

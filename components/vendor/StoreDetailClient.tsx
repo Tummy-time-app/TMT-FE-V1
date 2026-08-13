@@ -5,20 +5,21 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
-import type { MenuItem, VendorDetail } from "@/features/vendors/types";
+import type { MenuItem, VendorDetail, VendorBusinessType } from "@/features/vendors/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
+import { formatCartQty, qtyStep } from "@/lib/utils/quantity";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Map } from "@/components/maps/Map";
 import { VendorMarker } from "@/components/maps/VendorMarker";
 import { VendorReviews } from "@/features/reviews/components/VendorReviews";
 import { FavoriteButton } from "@/features/favorites/components/FavoriteButton";
-import { StarSolid, Bike, ClipboardList, MapPin, Share, X, Flame, Store, Check } from "@/components/icons";
+import { StarSolid, Bike, ClipboardList, MapPin, Share, X, Flame, Store, Check, Minus, Plus, CheckCircle2 } from "@/components/icons";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
 }
 
-/* ── Item modal types ────────────────────────────────────── */
+/** Restaurant items get pack-size options in the detail modal; grocery items don't. */
 interface PackOption {
   id: string;
   label: string;
@@ -31,12 +32,17 @@ interface ModalState {
   selectedPack: string | null;
 }
 
-/* Mock pack options — replace with real data per item */
 const PACK_OPTIONS: PackOption[] = [
   { id: "big",     label: "Big pack",      price: 400 },
   { id: "regular", label: "Pack",          price: 400 },
   { id: "branded", label: "Branded pack",  price: 400 },
 ];
+
+const BREADCRUMB: Record<VendorBusinessType, { label: string; href: string }> = {
+  restaurant: { label: "← Restaurants", href: "/vendors/restaurants" },
+  shop: { label: "← Shops", href: "/vendors/shops" },
+  market: { label: "← Local Markets", href: "/vendors/markets" },
+};
 
 interface Props {
   id: string;
@@ -61,7 +67,7 @@ function VendorDetailSkeleton() {
   );
 }
 
-export function RestaurantClient({ id }: Props) {
+export function StoreDetailClient({ id }: Props) {
   const { data, isLoading, error, refetch } = useGetVendorDetailQuery(id);
 
   if (isLoading) return <VendorDetailSkeleton />;
@@ -73,11 +79,18 @@ export function RestaurantClient({ id }: Props) {
 
   if (!data) return null;
 
-  return <RestaurantDetail data={data} />;
+  return <StoreDetail data={data} />;
 }
 
-function RestaurantDetail({ data }: { data: VendorDetail }) {
+function StoreDetail({ data }: { data: VendorDetail }) {
   const { restaurant, menuItems: allItems } = data;
+  const businessType: VendorBusinessType = restaurant.businessType ?? "restaurant";
+  // Restaurants use the "tap to customize in a modal" pattern; shops/markets use
+  // Instacart/Uber-Eats-grocery's pattern instead — tap "+" to add 1 straight to
+  // cart, then an inline stepper on the card itself. No pack-options modal.
+  const isGrocery = businessType !== "restaurant";
+  const breadcrumb = BREADCRUMB[businessType];
+
   const { items: cartItems, addItem, changeQty, getItemQty } = useCart();
 
   const [activeCategory, setActiveCategory] = useState(restaurant.categories[0] ?? "");
@@ -87,6 +100,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
   const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
   const [riderNote, setRiderNote] = useState("");
   const [showRiderNote, setShowRiderNote] = useState(false);
+  const [allowSubstitutes, setAllowSubstitutes] = useState(true);
 
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
   const rightPanelRef = useRef<HTMLDivElement>(null);
@@ -94,6 +108,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
   /* ── Cart items for this vendor ────────────────────────── */
   const vendorCart = cartItems.filter(i => i.vendorId === restaurant.id);
   const vendorTotal = vendorCart.reduce((s, i) => s + i.price * i.qty, 0);
+  const hasSubstitutableItems = isGrocery && vendorCart.some(i => i.substitutionAllowed);
 
   const addToCart = (item: MenuItem, qty: number) => {
     addItem({
@@ -102,12 +117,26 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
       description: item.description,
       vendor: restaurant.name,
       vendorId: restaurant.id,
+      vendorBusinessType: businessType,
       price: item.price,
       image: item.image,
+      unitType: item.unitType,
+      weightUnit: item.weightUnit,
+      substitutionAllowed: item.substitutionAllowed,
     }, qty);
   };
 
-  /* ── Modal helpers ─────────────────────────────────────── */
+  /* ── Grocery direct-add (no modal) ──────────────────────── */
+  const handleDirectAdd = (e: React.MouseEvent, item: MenuItem) => {
+    e.stopPropagation();
+    addToCart(item, qtyStep(item.unitType));
+  };
+  const handleStepperChange = (e: React.MouseEvent, item: MenuItem, delta: number) => {
+    e.stopPropagation();
+    changeQty(item.id, delta);
+  };
+
+  /* ── Modal helpers (restaurant items only) ──────────────── */
   const openModal = (item: MenuItem) => {
     setModal({ item, qty: 1, selectedPack: null });
   };
@@ -125,6 +154,12 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
     if (!modal) return;
     addToCart(modal.item, modal.qty);
     closeModal();
+  };
+
+  const handleItemClick = (item: MenuItem) => {
+    if (!item.available) return;
+    if (isGrocery) return; // direct-add buttons/stepper handle grocery items, no modal
+    openModal(item);
   };
 
   /* ── Category scroll spy (right panel) ─────────────────── */
@@ -174,13 +209,17 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
     return () => { document.body.style.overflow = ""; };
   }, [modal]);
 
+  const checkoutHref = `/checkout?vendor=${restaurant.id}&type=${orderType}${
+    riderNote ? `&note=${encodeURIComponent(riderNote)}` : ""
+  }${isGrocery ? `&substitutes=${allowSubstitutes ? "1" : "0"}` : ""}`;
+
   return (
     <>
       <div className="rp-shell">
         <aside className="rp-left">
           {/* breadcrumb */}
-          <Link href="/vendors/restaurants" className="rp-breadcrumb__link">
-            ← Restaurants
+          <Link href={breadcrumb.href} className="rp-breadcrumb__link">
+            {breadcrumb.label}
           </Link>
 
           {/* hero image */}
@@ -312,25 +351,28 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                   <div className="rp-list">
                     {items.map(item => {
                       const qty = getItemQty(item.id);
+                      const priceLabel = item.unitType === "weight"
+                        ? `${formatNaira(item.price)}/${item.weightUnit ?? "kg"}`
+                        : formatNaira(item.price);
                       return (
                         <div
                           key={item.id}
                           className={`rp-list-item ${!item.available ? "rp-list-item--unavailable" : ""}`}
-                          onClick={() => item.available && openModal(item)}
+                          onClick={() => handleItemClick(item)}
                         >
                           {/* text side */}
                           <div className="rp-list-item__body">
                             <p className="rp-list-item__name">{item.name}</p>
                             <p className="rp-list-item__desc">{item.description}</p>
-                            <p className="rp-list-item__price">{formatNaira(item.price)}</p>
+                            <p className="rp-list-item__price">{priceLabel}</p>
 
                             {/* in-cart badge */}
                             {qty > 0 && (
-                              <span className="rp-list-item__in-cart">{qty} in cart</span>
+                              <span className="rp-list-item__in-cart">{formatCartQty({ qty, unitType: item.unitType, weightUnit: item.weightUnit })} in cart</span>
                             )}
                           </div>
 
-                          {/* image + add button */}
+                          {/* image + add button / stepper */}
                           <div className="rp-list-item__img-wrap">
                             <Image
                               src={item.image}
@@ -341,7 +383,7 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                             {!item.available && (
                               <div className="rp-list-item__sold-out">Sold out</div>
                             )}
-                            {item.available && (
+                            {item.available && !isGrocery && (
                               <button
                                 className="rp-list-item__add"
                                 onClick={e => { e.stopPropagation(); openModal(item); }}
@@ -349,6 +391,30 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                               >
                                 <span className="rp-list-item__add-icon">+</span>
                               </button>
+                            )}
+                            {item.available && isGrocery && qty === 0 && (
+                              <button
+                                className="rp-list-item__add"
+                                onClick={e => handleDirectAdd(e, item)}
+                                aria-label={`Add ${item.name}`}
+                              >
+                                <span className="rp-list-item__add-icon">+</span>
+                              </button>
+                            )}
+                            {item.available && isGrocery && qty > 0 && (
+                              <div className="rp-list-item__stepper" onClick={e => e.stopPropagation()}>
+                                <button
+                                  className="rp-list-item__stepper-btn"
+                                  onClick={e => handleStepperChange(e, item, -qtyStep(item.unitType))}
+                                  aria-label={`Decrease ${item.name}`}
+                                ><Minus size={11} aria-hidden /></button>
+                                <span className="rp-list-item__stepper-val">{qty}</span>
+                                <button
+                                  className="rp-list-item__stepper-btn rp-list-item__stepper-btn--plus"
+                                  onClick={e => handleStepperChange(e, item, qtyStep(item.unitType))}
+                                  aria-label={`Increase ${item.name}`}
+                                ><Plus size={11} aria-hidden /></button>
+                              </div>
                             )}
                             {/* badges */}
                             {item.popular && (
@@ -417,13 +483,27 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
                 <p className="rp-cart-entry__price">{formatNaira(entry.price * entry.qty)}</p>
               </div>
               <div className="rp-stepper rp-stepper--sm">
-                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -1)} aria-label={`Decrease ${entry.name} quantity`}>−</button>
-                <span className="rp-stepper__val">{entry.qty}</span>
-                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, 1)} aria-label={`Increase ${entry.name} quantity`}>+</button>
+                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -qtyStep(entry.unitType))} aria-label={`Decrease ${entry.name} quantity`}>−</button>
+                <span className="rp-stepper__val">{formatCartQty(entry)}</span>
+                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, qtyStep(entry.unitType))} aria-label={`Increase ${entry.name} quantity`}>+</button>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Substitutions — grocery orders only */}
+        {hasSubstitutableItems && (
+          <label className="rp-cart-drawer__substitute">
+            <input
+              type="checkbox"
+              checked={allowSubstitutes}
+              onChange={() => setAllowSubstitutes(v => !v)}
+              className="rp-cart-drawer__note-check"
+            />
+            <span className="rp-cart-drawer__substitute-icon"><CheckCircle2 size={14} aria-hidden /></span>
+            <span>Allow substitutions if an item is unavailable</span>
+          </label>
+        )}
 
         {/* Rider note */}
         <div className="rp-cart-drawer__note-section">
@@ -463,17 +543,14 @@ function RestaurantDetail({ data }: { data: VendorDetail }) {
         </div>
 
         <div className="rp-cart-drawer__actions">
-          <Link
-            href={`/checkout?vendor=${restaurant.id}&type=${orderType}${riderNote ? `&note=${encodeURIComponent(riderNote)}` : ""}`}
-            className="rp-cart-drawer__cta"
-          >
+          <Link href={checkoutHref} className="rp-cart-drawer__cta">
             Checkout to {orderType}
           </Link>
         </div>
       </aside>
 
       {/* ══════════════════════════════════════════════════════
-          ITEM MODAL
+          ITEM MODAL — restaurant items only
       ══════════════════════════════════════════════════════ */}
       {modal && (
         <>
