@@ -2,6 +2,7 @@ import { baseApi } from "@/store/api/baseApi";
 import { isDevMode } from "@/lib/dev/devMode";
 import { toQueryError } from "@/lib/utils/apiError";
 import { mockGetRiderProfile, mockUpdateRiderProfile, mockUploadRiderDocument } from "@/lib/mocks/riderProfile.mock";
+import { patchProfile } from "@/features/auth/authSlice";
 import type { RiderProfile, UpdateRiderProfilePayload } from "./types";
 
 export const ridersApi = baseApi.injectEndpoints({
@@ -29,6 +30,17 @@ export const ridersApi = baseApi.injectEndpoints({
           return { data: result.data as RiderProfile };
         } catch (error) {
           return { error: toQueryError(error) };
+        }
+      },
+      onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          // Patch the Redux-cached user immediately — RiderLayout's onboarding gate
+          // reads user.vehicleType synchronously and shouldn't need a re-login to
+          // clear once a rider saves their vehicle info for the first time.
+          dispatch(patchProfile({ vehicleType: data.vehicleType }));
+        } catch {
+          // mutation failed — nothing to patch
         }
       },
       invalidatesTags: ["RiderDocuments"],

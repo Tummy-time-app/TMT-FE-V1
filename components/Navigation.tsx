@@ -60,9 +60,8 @@ const vendorCategories: {
 ];
 
 const navLinks = [
-  { label: "Foods",    href: "/foods"    },
-  { label: "Services", href: "/services" },
-  { label: "Offers",   href: "/offers",  highlight: true },
+  { label: "Foods",  href: "/vendors/restaurants" },
+  { label: "Offers", href: "/promotions", highlight: true },
 ];
 
 const Navigation: React.FC = () => {
@@ -376,7 +375,7 @@ const Navigation: React.FC = () => {
                   </div>
 
                   <div className="nav-dropdown__footer">
-                    <Link href="/vendors" onClick={() => setVendorsOpen(false)}
+                    <Link href="/vendors/restaurants" onClick={() => setVendorsOpen(false)}
                       className="nav-dropdown__footer-link">
                       Browse all vendors &rarr;
                     </Link>
