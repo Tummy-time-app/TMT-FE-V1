@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TummyTime — Food delivery near you",
-  description: "Order food delivery near you with TummyTime.",
+  title: "TummyTime — Everything You Need",
+  description: "Everything You Need, Right On Time.",
 };
 
 export default function RootLayout({

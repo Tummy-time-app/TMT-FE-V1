@@ -1,11 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ChevronDownIcon,
-  ClockIcon,
-  ExternalLinkIcon,
-  MapPinIcon,
-} from "@/components/icons";
+import { ChevronDownIcon, ClockIcon, MapPinIcon } from "@/components/icons";
+import { HeroAuthNav } from "./HeroAuthNav";
+import { HeroSignInPrompt } from "./HeroSignInPrompt";
 import { SideNavTrigger } from "@/components/nav/SideNavTrigger";
 
 export function HeroSection() {
@@ -41,27 +38,7 @@ export function HeroSection() {
           </Link>
         </div>
 
-        <nav className="flex items-center gap-2 sm:gap-5">
-          <Link
-            href="/riders"
-            className="hidden items-center gap-1.5 text-sm font-medium text-neutral-900 hover:underline sm:flex"
-          >
-            Become a rider
-            <ExternalLinkIcon className="size-3.5" />
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full bg-white px-4 py-2 text-sm font-semibold whitespace-nowrap text-neutral-900 shadow-sm shadow-black/5 transition-colors hover:bg-neutral-100 sm:px-5 sm:py-2.5"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white transition-colors hover:bg-neutral-800 sm:px-5 sm:py-2.5"
-          >
-            Sign up
-          </Link>
-        </nav>
+        <HeroAuthNav />
       </header>
 
       {/* hero content */}
@@ -99,15 +76,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          <p className="mt-5 text-sm text-neutral-800">
-            Or{" "}
-            <Link
-              href="/login"
-              className="font-semibold underline underline-offset-2"
-            >
-              Sign In
-            </Link>
-          </p>
+          <HeroSignInPrompt />
         </div>
       </div>
     </section>
