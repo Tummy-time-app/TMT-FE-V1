@@ -31,7 +31,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Restaurants & riders",
     links: [
-      { label: "Add your restaurant", href: "/vendors/apply" },
+      { label: "Add your restaurant", href: "/vendor/signup" },
       { label: "Become a rider", href: "/riders" },
       { label: "Partner Help Center", href: "/help/partners" },
     ],

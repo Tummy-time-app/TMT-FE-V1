@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/features/auth/hooks";
 import { useProfile } from "@/lib/ProfileContext";
+import { VENDOR_ROLES } from "@/components/vendor-portal/useVendorGuard";
 import {
   ReceiptIcon,
   ShoppingBagIcon,
@@ -110,6 +111,11 @@ export function Navigation() {
 
   const showAuthActions = !isSessionLoading && !isAuthenticated;
   const showProfileChip = !isSessionLoading && isAuthenticated && user;
+  // A vendor account's "own account" page is the store dashboard, not the
+  // customer profile (onboarding data — address/dietary prefs — doesn't
+  // apply to them). Without this, clicking their own name chip always
+  // sent a vendor to /profile with no way back to /vendor from the nav.
+  const accountHref = user && VENDOR_ROLES.includes(user.role) ? "/vendor" : "/profile";
 
   return (
     <>
@@ -201,7 +207,7 @@ export function Navigation() {
             </Link>
 
             {showProfileChip && (
-              <Link href="/profile" className="navbar__login" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Link href={accountHref} className="navbar__login" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {profile.avatarDataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, not a served asset
                   <img
@@ -392,7 +398,7 @@ export function Navigation() {
 
         <div className="nav-drawer__footer">
           {showProfileChip ? (
-            <Link href="/profile" className="navbar__login nav-drawer__btn-full" onClick={closeAll}>
+            <Link href={accountHref} className="navbar__login nav-drawer__btn-full" onClick={closeAll}>
               {user.name || "Your profile"}
             </Link>
           ) : (

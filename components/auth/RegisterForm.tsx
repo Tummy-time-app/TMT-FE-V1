@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { setCredentials } from "@/features/auth/authSlice";
 import { useRegisterMutation } from "@/features/auth/authApi";
+import { defaultRouteForRole } from "@/features/auth/roleHome";
 import { registerSchema, type RegisterFormValues } from "@/features/auth/schemas";
+import type { RegisterPayload } from "@/features/auth/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
 import { useAppDispatch } from "@/store/hooks";
@@ -16,7 +18,17 @@ const fieldClass =
   "w-full rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-3.5 text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 focus:outline-none";
 const fieldInvalidClass = "border-red-400 focus:border-red-500 focus:ring-red-500";
 
-export function RegisterForm() {
+export function RegisterForm({
+  role = "customer",
+  redirectTo,
+  heading = "Create your account",
+}: {
+  /** Defaults to "customer" — pass "restaurant_owner" from the vendor signup page. */
+  role?: RegisterPayload["role"];
+  /** Defaults to "/onboarding" for customers, defaultRouteForRole(role) for everyone else. */
+  redirectTo?: string;
+  heading?: string;
+}) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [registerUser, { isLoading }] = useRegisterMutation();
@@ -30,12 +42,16 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      const { confirmPassword: _confirmPassword, ...payload } = values;
-      const response = await registerUser(payload).unwrap();
+      const { confirmPassword: _confirmPassword, ...rest } = values;
+      const response = await registerUser({ ...rest, role }).unwrap();
       dispatch(setCredentials(response));
       // TMT-BE-V1 has no email verification/OTP step at all — register
-      // returns a full session immediately, so straight into onboarding.
-      router.push("/onboarding");
+      // returns a full session immediately, so straight into onboarding
+      // (customers, who still need that step) or the vendor dashboard
+      // (restaurant owners, for whom food-preference onboarding makes no sense).
+      router.push(
+        redirectTo ?? (response.user.role === "customer" ? "/onboarding" : defaultRouteForRole(response.user.role)),
+      );
     } catch (err) {
       setError("root", { message: normalizeApiError(err as never).message });
     }
@@ -43,9 +59,7 @@ export function RegisterForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <h1 className="text-2xl font-medium text-neutral-900">
-        Create your account
-      </h1>
+      <h1 className="text-2xl font-medium text-neutral-900">{heading}</h1>
 
       <form
         className="mt-6 space-y-4"
