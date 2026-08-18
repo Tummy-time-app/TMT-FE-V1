@@ -1,5 +1,6 @@
 import { mockDelay } from "@/lib/dev/devMode";
 import type { MenuItem, Restaurant } from "@/features/restaurants/types";
+import { getVendorMenuItemsForRestaurant } from "./vendorMenu.mock";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -161,5 +162,8 @@ export async function mockGetRestaurant(id: string): Promise<Restaurant> {
 
 export async function mockGetMenu(restaurantId: string): Promise<MenuItem[]> {
   await mockDelay();
-  return menuItemsByRestaurant[restaurantId] ?? [];
+  // Merge in items a vendor added via the vendor portal (lib/mocks/
+  // vendorMenu.mock.ts) — so a customer browsing that store in mock mode
+  // actually sees them, not just the vendor's own view.
+  return [...(menuItemsByRestaurant[restaurantId] ?? []), ...getVendorMenuItemsForRestaurant(restaurantId)];
 }

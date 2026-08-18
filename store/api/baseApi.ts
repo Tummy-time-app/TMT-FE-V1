@@ -57,6 +57,6 @@ export const baseApi = createApi({
   // comments) rather than the speculative full domain list the `frontend`
   // branch's ported code assumed (Wallet/Payouts/Referrals/... don't exist
   // as endpoints anywhere in this backend).
-  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications"],
+  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications", "VendorStores", "Categories"],
   endpoints: () => ({}),
 });

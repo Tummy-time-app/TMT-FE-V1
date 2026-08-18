@@ -1,0 +1,353 @@
+/**
+ * New UI, not ported from `frontend` (it has no orders/tracking page at
+ * all) — hand-written to match the established visual language elsewhere
+ * in this branch's ported pages: the --crimson/--amber/--off-white/
+ * --font-display/--font-body tokens from app/landing.css, and the same
+ * card/badge/button shapes as the vp-, cart-, and rp- prefixed classes.
+ */
+
+.op-root {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 5vw 80px;
+}
+
+.op-header {
+  margin-bottom: 28px;
+}
+
+.op-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.op-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* ── Status badge ─────────────────────────────────────── */
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.op-badge--pending { background: rgba(255, 183, 3, 0.18); color: #a86a00; }
+.op-badge--active { background: rgba(172, 0, 0, 0.09); color: var(--crimson); }
+.op-badge--success { background: rgba(34, 139, 34, 0.12); color: #1e7a1e; }
+.op-badge--stopped { background: rgba(0, 0, 0, 0.08); color: #666; }
+
+/* ── Order list ───────────────────────────────────────── */
+.op-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.op-card {
+  display: block;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 20px 22px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.op-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.op-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.op-card__vendor {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.op-card__date {
+  font-size: 0.78rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+.op-card__items {
+  font-size: 0.85rem;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.op-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.op-card__total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--crimson);
+}
+
+.op-card__arrow {
+  color: #bbb;
+  font-size: 1.1rem;
+}
+
+/* ── Detail page ──────────────────────────────────────── */
+.op-detail {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 36px 5vw 80px;
+}
+
+.op-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--crimson);
+  text-decoration: none;
+  margin-bottom: 20px;
+}
+
+.op-back-link:hover {
+  text-decoration: underline;
+}
+
+.op-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.op-detail__vendor {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.op-detail__id {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 28px;
+}
+
+/* ── Journey / progress list ──────────────────────────── */
+.op-journey {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.op-journey--stopped {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.op-journey__stopped-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #666;
+}
+
+.op-journey__step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  position: relative;
+}
+
+.op-journey__dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  background: #fff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: transparent;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.op-journey__step--done .op-journey__dot {
+  background: var(--crimson);
+  border-color: var(--crimson);
+  color: #fff;
+}
+
+.op-journey__step--current .op-journey__dot {
+  border-color: var(--crimson);
+}
+
+.op-journey__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #999;
+}
+
+.op-journey__step--done .op-journey__label,
+.op-journey__step--current .op-journey__label {
+  color: var(--text-dark);
+}
+
+.op-journey__line {
+  position: absolute;
+  left: 9px;
+  top: 28px;
+  width: 2px;
+  height: calc(100% - 8px);
+  background: #eee;
+}
+
+.op-journey__step--done .op-journey__line {
+  background: var(--crimson);
+}
+
+/* ── Items + summary ──────────────────────────────────── */
+.op-section-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.op-items {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 6px 22px;
+  margin-bottom: 20px;
+}
+
+.op-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.op-item-row:last-child {
+  border-bottom: none;
+}
+
+.op-item-row__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.op-item-row__qty {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.op-item-row__price {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  flex-shrink: 0;
+}
+
+.op-summary {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.op-summary__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #777;
+  padding: 4px 0;
+}
+
+.op-summary__row--total {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.op-address {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* ── Cancel action ────────────────────────────────────── */
+.op-cancel-btn {
+  width: 100%;
+  background: transparent;
+  color: var(--crimson);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 13px;
+  border: 2px solid rgba(172, 0, 0, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.op-cancel-btn:hover {
+  background: var(--crimson);
+  color: #fff;
+}
+
+.op-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.op-error {
+  font-size: 0.82rem;
+  color: var(--crimson);
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .op-root,
+  .op-detail {
+    padding: 24px 4vw 60px;
+  }
+}

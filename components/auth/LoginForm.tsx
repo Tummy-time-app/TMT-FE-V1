@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { setCredentials } from "@/features/auth/authSlice";
 import { useLoginMutation } from "@/features/auth/authApi";
+import { defaultRouteForRole } from "@/features/auth/roleHome";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
@@ -34,10 +35,12 @@ export function LoginForm() {
     try {
       const response = await login(values).unwrap();
       dispatch(setCredentials(response));
-      // No role-specific areas (/vendor, /rider, /admin) exist in this
-      // branch yet — every role lands on "/" for now regardless of
-      // frontend's defaultRouteForRole.
-      router.push(safeRedirectPath(searchParams.get("redirect"), "/"));
+      // /vendor now exists (see features/auth/roleHome.ts) — a restaurant
+      // owner lands there by default; everyone else still goes home. An
+      // explicit ?redirect= (e.g. from a route guard) always wins.
+      router.push(
+        safeRedirectPath(searchParams.get("redirect"), defaultRouteForRole(response.user.role)),
+      );
     } catch (err) {
       setError("root", { message: normalizeApiError(err as never).message });
     }
