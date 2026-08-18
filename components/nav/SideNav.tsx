@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  AndroidIcon,
-  AppleIcon,
-  CloseIcon,
-} from "@/components/icons";
+import { AndroidIcon, AppleIcon } from "@/components/icons";
+import LottieIcon from "@/components/LottieIcon";
+import closeXAnimation from "@/app/assets/lottie/close-x.json";
+import { useProfile } from "@/lib/ProfileContext";
 
 const links = [
   { href: "/business", label: "Create a business account" },
@@ -26,6 +25,9 @@ export function SideNav({
   // Portal target isn't available during SSR/first render — mount after hydration.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const { profile } = useProfile();
+  const fullName = `${profile.firstName} ${profile.lastName}`.trim();
 
   useEffect(() => {
     if (!open) return;
@@ -77,24 +79,59 @@ export function SideNav({
           aria-label="Close menu"
           className="absolute top-5 right-5 text-neutral-500 transition-colors hover:text-neutral-900"
         >
-          <CloseIcon className="size-6" />
+          <LottieIcon
+            animationData={closeXAnimation}
+            className="size-12"
+            loop
+          />
         </button>
 
         <div className="mt-12 flex flex-col gap-3">
-          <Link
-            href="/signup"
-            onClick={onClose}
-            className="rounded-full bg-neutral-900 py-3.5 text-center text-base font-semibold text-white transition-colors hover:bg-neutral-800"
-          >
-            Sign up
-          </Link>
-          <Link
-            href="/login"
-            onClick={onClose}
-            className="rounded-full bg-neutral-100 py-3.5 text-center text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-200"
-          >
-            Log in
-          </Link>
+          {profile.onboardingCompleted ? (
+            <Link
+              href="/profile"
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-xl bg-neutral-100 p-3 transition-colors hover:bg-neutral-200"
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-900 text-white">
+                {profile.avatarDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, not a served asset
+                  <img
+                    src={profile.avatarDataUrl}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold">
+                    {profile.firstName.trim().charAt(0).toUpperCase() || "?"}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-neutral-900">
+                  {fullName || "Your profile"}
+                </p>
+                <p className="text-xs text-neutral-500">View profile</p>
+              </div>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/signup"
+                onClick={onClose}
+                className="rounded-full bg-neutral-900 py-3.5 text-center text-base font-semibold text-white transition-colors hover:bg-neutral-800"
+              >
+                Sign up
+              </Link>
+              <Link
+                href="/login"
+                onClick={onClose}
+                className="rounded-full bg-neutral-100 py-3.5 text-center text-base font-semibold text-neutral-900 transition-colors hover:bg-neutral-200"
+              >
+                Log in
+              </Link>
+            </>
+          )}
         </div>
 
         <nav className="mt-8 flex flex-col gap-6">

@@ -1,4 +1,7 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import type { FormEvent, ReactNode } from "react";
 import { AppleIcon, GoogleIcon, QrCodeIcon } from "@/components/icons";
 
 function Divider({ label }: { label: string }) {
@@ -32,15 +35,27 @@ function SocialButton({
 export function AuthCard({
   heading,
   footer,
+  redirectTo,
 }: {
   heading: string;
   footer: ReactNode;
+  /** Where to send the user once the (currently mocked) submit "succeeds". */
+  redirectTo?: string;
 }) {
+  const router = useRouter();
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // No auth backend wired up yet — treat every submit as a success and
+    // move on. Swap this for the real request/OTP step once auth lands.
+    if (redirectTo) router.push(redirectTo);
+  };
+
   return (
     <div className="w-full max-w-sm">
       <h1 className="text-2xl font-medium text-neutral-900">{heading}</h1>
 
-      <form className="mt-6">
+      <form className="mt-6" onSubmit={handleSubmit}>
         <label htmlFor="identifier" className="sr-only">
           Phone number or email
         </label>

@@ -13,6 +13,7 @@ export default function LoginPage() {
     <AuthShell>
       <AuthCard
         heading="What's your phone number or email?"
+        redirectTo="/"
         footer={
           <>
             New to TummyTime?{" "}
