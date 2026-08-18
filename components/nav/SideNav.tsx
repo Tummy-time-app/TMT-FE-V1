@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { AndroidIcon, AppleIcon } from "@/components/icons";
 import LottieIcon from "@/components/LottieIcon";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
+import { useAuth } from "@/features/auth/hooks";
 import { useProfile } from "@/lib/ProfileContext";
 
 const links = [
@@ -26,8 +27,10 @@ export function SideNav({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  const { user, isAuthenticated } = useAuth();
+  // TMT-BE-V1's User has no avatarUrl (see features/auth/types.ts) — the
+  // only photo this app has is the one collected during onboarding.
   const { profile } = useProfile();
-  const fullName = `${profile.firstName} ${profile.lastName}`.trim();
 
   useEffect(() => {
     if (!open) return;
@@ -87,7 +90,7 @@ export function SideNav({
         </button>
 
         <div className="mt-12 flex flex-col gap-3">
-          {profile.onboardingCompleted ? (
+          {isAuthenticated && user ? (
             <Link
               href="/profile"
               onClick={onClose}
@@ -103,13 +106,13 @@ export function SideNav({
                   />
                 ) : (
                   <span className="text-sm font-semibold">
-                    {profile.firstName.trim().charAt(0).toUpperCase() || "?"}
+                    {user.name.trim().charAt(0).toUpperCase() || "?"}
                   </span>
                 )}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-neutral-900">
-                  {fullName || "Your profile"}
+                  {user.name || "Your profile"}
                 </p>
                 <p className="text-xs text-neutral-500">View profile</p>
               </div>

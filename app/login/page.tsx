@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { AuthCard } from "@/components/auth/AuthCard";
+import { Suspense } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
   title: "Log in — TummyTime",
@@ -11,21 +11,9 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <AuthShell>
-      <AuthCard
-        heading="What's your phone number or email?"
-        redirectTo="/"
-        footer={
-          <>
-            New to TummyTime?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-neutral-900 underline underline-offset-2"
-            >
-              Sign up
-            </Link>
-          </>
-        }
-      />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </AuthShell>
   );
 }

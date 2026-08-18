@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { CameraIcon, LogOutIcon, MapPinIcon, PencilIcon } from "@/components/icons";
+import { useAuth } from "@/features/auth/hooks";
 import { Chip } from "@/components/ui/Chip";
 import { cuisineOptions, dietaryOptions } from "@/lib/foodPreferences";
 import {
@@ -47,8 +48,28 @@ function EmptyState() {
   );
 }
 
+function LoggedOutState() {
+  return (
+    <div className="flex flex-col items-center py-20 text-center">
+      <h1 className="text-2xl font-medium text-neutral-900">
+        Log in to view your profile
+      </h1>
+      <p className="mt-2 max-w-xs text-sm text-neutral-500">
+        Your profile is tied to your TummyTime account.
+      </p>
+      <Link
+        href="/login?redirect=/profile"
+        className="mt-6 rounded-lg bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+      >
+        Log in
+      </Link>
+    </div>
+  );
+}
+
 export function ProfileView() {
   const router = useRouter();
+  const { user, logout, isAuthenticated, isSessionLoading } = useAuth();
   const { profile, isHydrated, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<UserProfile>(profile);
@@ -60,12 +81,16 @@ export function ProfileView() {
     if (!isEditing) setDraft(profile);
   }, [profile, isEditing]);
 
-  if (!isHydrated) {
+  if (!isHydrated || isSessionLoading) {
     return (
       <p className="py-20 text-center text-sm text-neutral-400">
         Loading your profile…
       </p>
     );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <LoggedOutState />;
   }
 
   if (!profile.onboardingCompleted) {
@@ -229,6 +254,7 @@ export function ProfileView() {
           ) : (
             <div className="divide-y divide-neutral-100">
               <Row label="Name" value={fullName || "—"} />
+              <Row label="Email" value={user.email} />
               <Row label="Date of birth" value={profile.dateOfBirth || "—"} />
               <Row label="Phone" value={profile.phone || "—"} />
             </div>
@@ -339,7 +365,10 @@ export function ProfileView() {
       <section className="mt-8 border-t border-neutral-200 pt-6">
         <button
           type="button"
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            logout();
+            router.push("/login");
+          }}
           className="flex items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700"
         >
           <LogOutIcon className="size-4" />

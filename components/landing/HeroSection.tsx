@@ -68,7 +68,7 @@ export function HeroSection() {
       <div className="relative z-10 flex flex-1 flex-col justify-center px-4 pb-24 sm:px-10 lg:px-16">
         <div className="max-w-2xl">
           <h1 className="text-4xl leading-tight font-extrabold tracking-tight text-neutral-900 sm:text-5xl xl:text-6xl">
-            Order delivery near you
+            Everything You Need, Right On Time. <br className="hidden sm:inline" />
           </h1>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
