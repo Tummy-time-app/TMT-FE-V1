@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AndroidIcon, AppleIcon } from "@/components/icons";
+import {
+  AndroidIcon,
+  AppleIcon,
+  ReceiptIcon,
+  ShoppingBagIcon,
+  StoreIcon,
+  UtensilsIcon,
+  type IconComponent,
+} from "@/components/icons";
 import LottieIcon from "@/components/LottieIcon";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
 import { useAuth } from "@/features/auth/hooks";
@@ -14,6 +22,14 @@ const links = [
   { href: "/vendors/apply", label: "Add your restaurant" },
   { href: "/riders", label: "Become a rider" },
   { href: "/help", label: "Help Center" },
+];
+
+/** Only shown once signed in — app pages a logged-out visitor has no use for yet. */
+const customerLinks: { href: string; label: string; icon: IconComponent }[] = [
+  { href: "/orders", label: "Orders", icon: ReceiptIcon },
+  { href: "/shop", label: "Shop", icon: ShoppingBagIcon },
+  { href: "/food", label: "Food", icon: UtensilsIcon },
+  { href: "/restaurants", label: "Restaurants", icon: StoreIcon },
 ];
 
 export function SideNav({
@@ -136,6 +152,22 @@ export function SideNav({
             </>
           )}
         </div>
+
+        {isAuthenticated && (
+          <nav className="mt-6 grid grid-cols-2 gap-2 border-t border-neutral-100 pt-6">
+            {customerLinks.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-100"
+              >
+                <Icon className="size-5 shrink-0 text-neutral-500" />
+                {label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <nav className="mt-8 flex flex-col gap-6">
           {links.map((link) => (

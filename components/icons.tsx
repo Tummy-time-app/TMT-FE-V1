@@ -1,4 +1,6 @@
-import type { SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react";
+
+export type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
 export function MenuIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -282,6 +284,76 @@ export function LogOutIcon(props: SVGProps<SVGSVGElement>) {
     >
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="m16 17 5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+
+export function ReceiptIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M6 2h12a1 1 0 0 1 1 1v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21V3a1 1 0 0 1 1-1Z" />
+      <path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
+    </svg>
+  );
+}
+
+export function ShoppingBagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M6 8h12l1 13H5L6 8Z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+    </svg>
+  );
+}
+
+export function UtensilsIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M6 2v8M4 2v5a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2M6 12v10" />
+      <path d="M17 2c-1.7 0-3 2.2-3 5s1.3 5 3 5v9" />
+    </svg>
+  );
+}
+
+export function StoreIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M3 9.5 4.5 3h15L21 9.5" />
+      <path d="M3 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 3-.2" />
+      <path d="M5 10v10h14V10" />
+      <path d="M10 20v-6h4v6" />
     </svg>
   );
 }
