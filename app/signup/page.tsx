@@ -13,6 +13,7 @@ export default function SignupPage() {
     <AuthShell>
       <AuthCard
         heading="What's your phone number or email?"
+        redirectTo="/onboarding"
         footer={
           <>
             Already have an account?{" "}

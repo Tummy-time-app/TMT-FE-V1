@@ -12,7 +12,7 @@ export function HeroSection() {
   return (
     <section className="relative isolate flex min-h-screen flex-col overflow-hidden">
       {/* background photo */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#f7d597] via-[#eeab52] to-[#c97a2b]">
+      <div className="absolute inset-0 -z-10">
         <Image
           src="/hero-food.jpg"
           alt=""

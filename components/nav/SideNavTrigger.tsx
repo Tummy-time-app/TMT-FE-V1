@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MenuIcon } from "@/components/icons";
+import LottieIcon from "@/components/LottieIcon";
+import hamburgerMenuAnimation from "@/app/assets/lottie/hamburger-menu.json";
 import { SideNav } from "./SideNav";
 
 export function SideNavTrigger({ className }: { className?: string }) {
@@ -15,7 +16,11 @@ export function SideNavTrigger({ className }: { className?: string }) {
         onClick={() => setOpen(true)}
         className={className}
       >
-        <MenuIcon className="size-5 sm:size-6" />
+        <LottieIcon
+          animationData={hamburgerMenuAnimation}
+          className="size-10 sm:size-16"
+          loop
+        />
       </button>
       <SideNav open={open} onClose={() => setOpen(false)} />
     </>
