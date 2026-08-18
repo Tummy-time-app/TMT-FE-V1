@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { AndroidIcon, AppleIcon } from "@/components/icons";
 import LottieIcon from "@/components/LottieIcon";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
-import { useProfile } from "@/lib/ProfileContext";
+import { useAuth } from "@/features/auth/hooks";
 
 const links = [
   { href: "/business", label: "Create a business account" },
@@ -26,8 +26,7 @@ export function SideNav({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const { profile } = useProfile();
-  const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!open) return;
@@ -87,29 +86,29 @@ export function SideNav({
         </button>
 
         <div className="mt-12 flex flex-col gap-3">
-          {profile.onboardingCompleted ? (
+          {isAuthenticated && user ? (
             <Link
               href="/profile"
               onClick={onClose}
               className="flex items-center gap-3 rounded-xl bg-neutral-100 p-3 transition-colors hover:bg-neutral-200"
             >
               <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-900 text-white">
-                {profile.avatarDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, not a served asset
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- may be a remote/data URL, not always a local static asset
                   <img
-                    src={profile.avatarDataUrl}
+                    src={user.avatarUrl}
                     alt=""
                     className="size-full object-cover"
                   />
                 ) : (
                   <span className="text-sm font-semibold">
-                    {profile.firstName.trim().charAt(0).toUpperCase() || "?"}
+                    {user.name.trim().charAt(0).toUpperCase() || "?"}
                   </span>
                 )}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-neutral-900">
-                  {fullName || "Your profile"}
+                  {user.name || "Your profile"}
                 </p>
                 <p className="text-xs text-neutral-500">View profile</p>
               </div>
