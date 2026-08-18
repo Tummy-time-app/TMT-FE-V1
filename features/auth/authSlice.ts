@@ -45,17 +45,18 @@ const authSlice = createSlice({
       state.session = null;
       state.status = "unauthenticated";
     },
-    /** Patches the cached user's vendorId right after onboarding creates their store — see vendorsApi.ts's createVendor. */
-    linkVendor(state, action: PayloadAction<string>) {
-      if (state.user) state.user.vendorId = action.payload;
-    },
-    /** Patches the cached user's own profile fields after a successful `PATCH /users/me` — see usersApi.ts's updateProfile. */
+    /**
+     * Patches the cached user's own profile fields after a successful
+     * profile update. Not wired to a real endpoint yet — TMT-BE-V1's
+     * user-service has no PATCH /users/me (see authApi.ts's doc comment) —
+     * kept ready for when that endpoint exists.
+     */
     patchProfile(state, action: PayloadAction<Partial<User>>) {
       if (state.user) Object.assign(state.user, action.payload);
     },
   },
 });
 
-export const { restoring, restorationFailed, setCredentials, sessionExpired, loggedOut, linkVendor, patchProfile } =
+export const { restoring, restorationFailed, setCredentials, sessionExpired, loggedOut, patchProfile } =
   authSlice.actions;
 export default authSlice.reducer;

@@ -7,6 +7,7 @@ import { AndroidIcon, AppleIcon } from "@/components/icons";
 import LottieIcon from "@/components/LottieIcon";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
 import { useAuth } from "@/features/auth/hooks";
+import { useProfile } from "@/lib/ProfileContext";
 
 const links = [
   { href: "/business", label: "Create a business account" },
@@ -27,6 +28,9 @@ export function SideNav({
   useEffect(() => setMounted(true), []);
 
   const { user, isAuthenticated } = useAuth();
+  // TMT-BE-V1's User has no avatarUrl (see features/auth/types.ts) — the
+  // only photo this app has is the one collected during onboarding.
+  const { profile } = useProfile();
 
   useEffect(() => {
     if (!open) return;
@@ -93,10 +97,10 @@ export function SideNav({
               className="flex items-center gap-3 rounded-xl bg-neutral-100 p-3 transition-colors hover:bg-neutral-200"
             >
               <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-900 text-white">
-                {user.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- may be a remote/data URL, not always a local static asset
+                {profile.avatarDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, not a served asset
                   <img
-                    src={user.avatarUrl}
+                    src={profile.avatarDataUrl}
                     alt=""
                     className="size-full object-cover"
                   />

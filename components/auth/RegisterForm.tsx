@@ -32,12 +32,9 @@ export function RegisterForm() {
     try {
       const { confirmPassword: _confirmPassword, ...payload } = values;
       const response = await registerUser(payload).unwrap();
-      if (response.session) dispatch(setCredentials({ user: response.user, session: response.session }));
-      // Real/dev-mode mock both set `requiresVerification` when the backend
-      // would gate on an emailed OTP (see authApi.ts's register endpoint) —
-      // frontend routes to a /verify screen at that point. This branch
-      // doesn't have that screen yet, so every signup goes straight into
-      // onboarding regardless; add the OTP step back here once /verify exists.
+      dispatch(setCredentials(response));
+      // TMT-BE-V1 has no email verification/OTP step at all — register
+      // returns a full session immediately, so straight into onboarding.
       router.push("/onboarding");
     } catch (err) {
       setError("root", { message: normalizeApiError(err as never).message });

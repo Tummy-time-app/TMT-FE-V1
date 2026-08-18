@@ -1,36 +1,24 @@
 import { mockDelay } from "@/lib/dev/devMode";
-import type {
-  AuthResponse,
-  ForgotPasswordPayload,
-  LoginCredentials,
-  MessageResponse,
-  RegisterPayload,
-  RegisterResponse,
-  ResendOtpPayload,
-  ResetPasswordPayload,
-  User,
-  VerifyOtpPayload,
-} from "@/features/auth/types";
+import type { AuthResponse, AuthSession, LoginCredentials, RegisterPayload, User } from "@/features/auth/types";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
  * DEVELOPMENT MOCK — not a production code path.
  *
- * Only lib/dev/devMode.ts-gated branches inside features/*Api.ts import
- * from here. Backed by localStorage so login/register/OTP feel real across
- * a session without a backend. Swap to the real backend by wiring the
- * `query` branch in the relevant api slice and deleting the mock import —
- * see features/auth/authApi.ts.
+ * Mirrors TMT-BE-V1's user-service response shapes and quirks (status
+ * codes, error field names, the "GET /me loses `phone`" gap) as closely as
+ * possible, so dev-mode behavior doesn't diverge from what you'll actually
+ * see once NEXT_PUBLIC_API_URL points at the real backend. Only
+ * lib/dev/devMode.ts-gated branches inside authApi.ts import from here.
  * ═══════════════════════════════════════════════════════════════════════
  */
 
 interface MockUserRecord extends User {
+  phone: string;
   password: string;
 }
 
 const USERS_STORAGE_KEY = "tummytime_mock_users";
-/** The OTP every mock verification accepts — printed to the console so it's discoverable. */
-const MOCK_OTP = "123456";
 
 function seedUsers(): MockUserRecord[] {
   return [
@@ -39,38 +27,15 @@ function seedUsers(): MockUserRecord[] {
       email: "demo@tummytime.dev",
       name: "Demo Customer",
       role: "customer",
-      avatarUrl: null,
-      emailVerified: true,
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      phone: "+2348030000001",
       password: "password123",
     },
     {
-      id: "dev-vendor-1",
+      id: "dev-owner-1",
       email: "vendor@tummytime.dev",
       name: "Gracehouse Kitchen",
-      role: "vendor",
-      vendorId: "gracehouse",
-      avatarUrl: null,
-      emailVerified: true,
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      password: "password123",
-    },
-    {
-      id: "dev-rider-1",
-      email: "rider@tummytime.dev",
-      name: "Ibrahim Musa",
-      phone: "+234 803 111 2222",
-      role: "rider",
-      vehicleType: "bike",
-      avatarUrl: null,
-      emailVerified: true,
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      role: "restaurant_owner",
+      phone: "+2348030000002",
       password: "password123",
     },
     {
@@ -78,11 +43,7 @@ function seedUsers(): MockUserRecord[] {
       email: "admin@tummytime.dev",
       name: "TummyTime Admin",
       role: "admin",
-      avatarUrl: null,
-      emailVerified: true,
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      phone: "+2348030000003",
       password: "password123",
     },
   ];
@@ -108,28 +69,17 @@ function saveUsers(users: MockUserRecord[]) {
   window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 }
 
-function issueSession(userId: string) {
+/** Mirrors user-service's generateTokens() access-token lifetime (15m). */
+function issueSession(userId: string): AuthSession {
   return {
     accessToken: `mock.${userId}.${Date.now()}`,
-    expiresAt: Date.now() + 1000 * 60 * 60 * 12, // 12h
+    refreshToken: `mock-refresh.${userId}.${Date.now()}`,
+    expiresAt: Date.now() + 1000 * 60 * 15,
   };
 }
 
 function toPublicUser(record: MockUserRecord): User {
-  return {
-    id: record.id,
-    email: record.email,
-    name: record.name,
-    phone: record.phone,
-    role: record.role,
-    avatarUrl: record.avatarUrl,
-    emailVerified: record.emailVerified,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-    vendorId: record.vendorId,
-    vehicleType: record.vehicleType,
-    active: record.active,
-  };
+  return { id: record.id, email: record.email, name: record.name, role: record.role, phone: record.phone };
 }
 
 export async function mockLogin({ email, password }: LoginCredentials): Promise<AuthResponse> {
@@ -137,195 +87,43 @@ export async function mockLogin({ email, password }: LoginCredentials): Promise<
   const users = loadUsers();
   const record = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
   if (!record || record.password !== password) {
-    throw { status: 401, message: "Invalid email or password." };
-  }
-  if (!record.active) {
-    throw { status: 403, message: "Your account has been deactivated. Contact support for help." };
+    // Matches user-service/src/routes/auth.ts's exact status + message.
+    throw { status: 401, message: "Invalid credentials" };
   }
   return { user: toPublicUser(record), session: issueSession(record.id) };
 }
 
-export async function mockRegister(payload: RegisterPayload): Promise<RegisterResponse> {
+export async function mockRegister(payload: RegisterPayload): Promise<AuthResponse> {
   await mockDelay();
   const users = loadUsers();
   if (users.some((u) => u.email.toLowerCase() === payload.email.trim().toLowerCase())) {
-    throw { status: 422, message: "An account with this email already exists." };
+    // Matches user-service's exact status + message (409, "User already exists").
+    throw { status: 409, message: "User already exists" };
   }
-  const now = new Date().toISOString();
   const record: MockUserRecord = {
     id: `dev-${payload.role ?? "customer"}-${Date.now()}`,
     email: payload.email.trim(),
     name: payload.name,
     phone: payload.phone,
     role: payload.role ?? "customer",
-    avatarUrl: null,
-    emailVerified: false,
-    active: true,
-    createdAt: now,
-    updatedAt: now,
     password: payload.password,
   };
   saveUsers([...users, record]);
-  if (typeof window !== "undefined") {
-    console.info(`[dev mock] Verification code for ${record.email}: ${MOCK_OTP}`);
-  }
-  // Dev mode doesn't model Supabase's optional email-confirmation gate — it
-  // always issues a session immediately — but `requiresVerification` stays
-  // true so the register page's routing to /verify behaves the same as it
-  // will against the real backend (see authApi.ts's real-mode branch).
-  return { user: toPublicUser(record), session: issueSession(record.id), requiresVerification: true };
-}
-
-export async function mockVerifyOtp({ email, code }: VerifyOtpPayload): Promise<AuthResponse> {
-  await mockDelay(600);
-  if (code !== MOCK_OTP) {
-    throw { status: 422, message: "Invalid verification code.", errors: { code: ["Invalid verification code."] } };
-  }
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-  if (idx === -1) {
-    throw { status: 404, message: "No account found for this email." };
-  }
-  users[idx] = { ...users[idx], emailVerified: true, updatedAt: new Date().toISOString() };
-  saveUsers(users);
-  return { user: toPublicUser(users[idx]), session: issueSession(users[idx].id) };
-}
-
-export async function mockGetSession(token: string): Promise<AuthResponse> {
-  await mockDelay(250);
-  const userId = token.split(".")[1];
-  const users = loadUsers();
-  const record = users.find((u) => u.id === userId);
-  if (!record || !record.active) {
-    throw { status: 401, message: "Session expired." };
-  }
   return { user: toPublicUser(record), session: issueSession(record.id) };
 }
 
-export async function mockResendOtp({ email }: ResendOtpPayload): Promise<MessageResponse> {
-  await mockDelay(400);
+export async function mockGetSession(accessToken: string): Promise<AuthResponse> {
+  await mockDelay(250);
+  const userId = accessToken.split(".")[1];
   const users = loadUsers();
-  if (!users.some((u) => u.email.toLowerCase() === email.trim().toLowerCase())) {
-    throw { status: 404, message: "No account found for this email." };
+  const record = users.find((u) => u.id === userId);
+  if (!record) {
+    // Matches GET /users/me's exact status + message.
+    throw { status: 401, message: "Invalid or expired access token" };
   }
-  if (typeof window !== "undefined") {
-    console.info(`[dev mock] Verification code for ${email}: ${MOCK_OTP}`);
-  }
-  return { message: "Verification code resent." };
-}
-
-const RESET_TOKENS_STORAGE_KEY = "tummytime_mock_reset_tokens";
-
-function loadResetTokens(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(window.localStorage.getItem(RESET_TOKENS_STORAGE_KEY) ?? "{}");
-  } catch {
-    return {};
-  }
-}
-
-function saveResetTokens(tokens: Record<string, string>) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(RESET_TOKENS_STORAGE_KEY, JSON.stringify(tokens));
-}
-
-export async function mockRequestPasswordReset({ email }: ForgotPasswordPayload): Promise<MessageResponse> {
-  await mockDelay(500);
-  const users = loadUsers();
-  const record = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-  // Always report success even if the account doesn't exist, so the UI
-  // can't be used to enumerate registered emails.
-  if (record) {
-    const token = `reset.${record.id}.${Date.now()}`;
-    const tokens = loadResetTokens();
-    tokens[token] = record.id;
-    saveResetTokens(tokens);
-    if (typeof window !== "undefined") {
-      console.info(
-        `[dev mock] Password reset link for ${email}: /reset-password?token=${token}`
-      );
-    }
-  }
-  return { message: "If an account exists for that email, a reset link has been sent." };
-}
-
-export async function mockResetPassword({ token, password }: ResetPasswordPayload): Promise<AuthResponse> {
-  await mockDelay(500);
-  const tokens = loadResetTokens();
-  const userId = tokens[token];
-  if (!userId) {
-    throw { status: 422, message: "This reset link is invalid or has expired." };
-  }
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.id === userId);
-  if (idx === -1) {
-    throw { status: 404, message: "No account found for this reset link." };
-  }
-  users[idx] = { ...users[idx], password };
-  saveUsers(users);
-  delete tokens[token];
-  saveResetTokens(tokens);
-  return { user: toPublicUser(users[idx]), session: issueSession(users[idx].id) };
-}
-
-/** Looks up which user account owns a given vendor — used by orders.mock.ts to notify the vendor of new orders. */
-export function findVendorOwnerId(vendorId: string): string | null {
-  const record = loadUsers().find((u) => u.role === "vendor" && u.vendorId === vendorId);
-  return record?.id ?? null;
-}
-
-/** Called by vendors.mock.ts once a "vendor"-role account finishes onboarding (creates their store) — links the two records. */
-export function setUserVendorIdInternal(userId: string, vendorId: string): void {
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.id === userId);
-  if (idx === -1) return;
-  users[idx] = { ...users[idx], vendorId, updatedAt: new Date().toISOString() };
-  saveUsers(users);
-}
-
-/**
- * Every account's shareable referral code — deterministically derived from
- * its id rather than stored, since the schema doesn't dedicate a column to
- * it (see features/referrals). Exported so referrals.mock.ts can both
- * display "your code" and resolve a code back to a referrer id.
- */
-export function referralCodeForUserId(userId: string): string {
-  return userId.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase();
-}
-
-export function findUserByReferralCode(code: string): User | null {
-  const normalized = code.trim().toUpperCase();
-  const record = loadUsers().find((u) => referralCodeForUserId(u.id) === normalized);
-  return record ? toPublicUser(record) : null;
-}
-
-/** Admin — every account on the platform. */
-export async function mockGetAllUsers(): Promise<User[]> {
-  await mockDelay(400);
-  return loadUsers()
-    .map(toPublicUser)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-/** Admin — activate/deactivate an account. Deactivated accounts can't log in (see mockLogin/mockGetSession). */
-export async function mockSetUserActive(userId: string, active: boolean): Promise<User> {
-  await mockDelay(400);
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.id === userId);
-  if (idx === -1) throw { status: 404, message: "User not found." };
-  users[idx] = { ...users[idx], active, updatedAt: new Date().toISOString() };
-  saveUsers(users);
-  return toPublicUser(users[idx]);
-}
-
-/** Doc §5, UsersModule: `PATCH /users/me` — the account owner editing their own name/phone/avatar. */
-export async function mockUpdateProfile(userId: string, patch: { name?: string; phone?: string; avatarUrl?: string | null }): Promise<User> {
-  await mockDelay(500);
-  const users = loadUsers();
-  const idx = users.findIndex((u) => u.id === userId);
-  if (idx === -1) throw { status: 404, message: "User not found." };
-  users[idx] = { ...users[idx], ...patch, updatedAt: new Date().toISOString() };
-  saveUsers(users);
-  return toPublicUser(users[idx]);
+  // Real GET /users/me only decodes the JWT payload (id/email/name/role) —
+  // it never carried `phone`, so a session restore loses it. Mirrored here
+  // on purpose so dev mode doesn't hide that gap until you're on the real API.
+  const { phone: _phone, ...userWithoutPhone } = toPublicUser(record);
+  return { user: userWithoutPhone, session: issueSession(record.id) };
 }

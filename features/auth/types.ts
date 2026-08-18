@@ -1,63 +1,63 @@
+/**
+ * Mirrors TMT-BE-V1's user-service exactly — see services/user-service/src/
+ * db/schema.ts (the `user_role` pgEnum) and routes/auth.ts (the wired-up
+ * router; routes/auth.route.ts is a dead, unmounted stub — don't trust it).
+ *
+ * This is NOT the richer role/profile model the `frontend` branch's ported
+ * code assumed (that one talked to Supabase Auth + a NestJS profiles table).
+ * There is no "rider" role, no "super_admin", no "support" — vendor staff
+ * roles cover restaurant-side accounts instead.
+ */
 export type UserRole =
   | "customer"
-  | "vendor"
-  | "rider"
+  | "restaurant_owner"
   | "admin"
-  | "super_admin"
-  | "support";
+  | "vendor_owner"
+  | "vendor_manager"
+  | "vendor_kitchen"
+  | "vendor_accountant";
 
 /**
- * Mirrors the backend's `profiles` table (1:1 with Supabase `auth.users`,
- * see Backend Architecture doc §4 "Core identity"). Field names stay
- * camelCase — idiomatic for a NestJS DTO layer / this codebase's existing
- * convention — rather than the DB's literal snake_case columns; each
- * doc-comment below notes the backend column it maps to where it isn't a
- * mechanical camelCase of the same name.
+ * The user object the backend actually sends back. Deliberately thin —
+ * there's no avatarUrl, emailVerified, active, vendorId, or timestamp
+ * fields anywhere in user-service's auth responses.
  */
 export interface User {
   id: string;
   email: string;
-  /** Maps to `profiles.full_name`. */
   name: string;
-  phone?: string;
   role: UserRole;
-  avatarUrl: string | null;
-  /** Maps to `profiles.is_verified`. */
-  emailVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-  /** Only set for role "vendor" — which vendor record (features/vendors) this account manages. */
-  vendorId?: string;
-  /** Only set for role "rider". */
-  vehicleType?: "bike" | "bicycle" | "car";
-  /** Deactivated accounts (admin action) can't log in. Maps to `profiles.is_active`. */
-  active: boolean;
+  /**
+   * Present right after login/register (returned straight from the DB row).
+   * Absent after a session restore via GET /users/me — that endpoint only
+   * decodes the JWT payload (id/email/name/role), which never carried
+   * phone. A real gap in the backend, not a frontend bug — surfaced here
+   * via the optional type rather than silently defaulting to "".
+   */
+  phone?: string;
 }
 
 export interface AuthSession {
   accessToken: string;
-  refreshToken?: string;
-  /** Epoch ms */
+  refreshToken: string;
+  /**
+   * Epoch ms. The backend doesn't return an explicit expiry — it just
+   * issues a JWT with a fixed lifetime (see authApi.ts's
+   * ACCESS_TOKEN_TTL_MS, mirroring user-service's generateTokens()) — so
+   * this is computed client-side at the moment the token is issued.
+   */
   expiresAt: number;
 }
 
+/**
+ * Both /register and /login return a full session immediately — there's
+ * no email-confirmation gate (no verification flow exists on this backend
+ * at all, see authApi.ts's doc comment), so register and login share this
+ * one response shape.
+ */
 export interface AuthResponse {
   user: User;
   session: AuthSession;
-}
-
-/**
- * Real-backend `register` can't always return an active session inline —
- * if the Supabase project requires email confirmation, `signUp()` returns
- * no session until the OTP is verified (see `authApi.ts`). Dev mode always
- * returns a real session (mocks don't model email confirmation), but the
- * type stays honest about the real-world possibility.
- */
-export interface RegisterResponse {
-  user: User;
-  session: AuthSession | null;
-  /** True when the account exists but still needs OTP verification before it can be used. */
-  requiresVerification: boolean;
 }
 
 export interface LoginCredentials {
@@ -68,29 +68,8 @@ export interface LoginCredentials {
 export interface RegisterPayload {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   password: string;
-  role?: Extract<UserRole, "customer" | "vendor" | "rider">;
-}
-
-export interface VerifyOtpPayload {
-  email: string;
-  code: string;
-}
-
-export interface ResendOtpPayload {
-  email: string;
-}
-
-export interface ForgotPasswordPayload {
-  email: string;
-}
-
-export interface ResetPasswordPayload {
-  token: string;
-  password: string;
-}
-
-export interface MessageResponse {
-  message: string;
+  /** Defaults to "customer" server-side if omitted. */
+  role?: Extract<UserRole, "customer" | "restaurant_owner">;
 }

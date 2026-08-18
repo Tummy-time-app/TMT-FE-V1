@@ -50,10 +50,17 @@ export function normalizeApiError(
 
   if ("status" in error) {
     const status = error.status as ApiErrorStatus;
-    const data = error.data as { message?: string; errors?: Record<string, string[]> } | undefined;
+    // TMT-BE-V1's Express services respond with `{ error: "..." }`, not
+    // `{ message: "..." }` (that was the NestJS/Supabase-era shape the
+    // `frontend` branch's mock adapter used) — check both so real backend
+    // error text actually surfaces instead of falling through to the
+    // generic per-status default below.
+    const data = error.data as
+      | { message?: string; error?: string; errors?: Record<string, string[]> }
+      | undefined;
     return {
       status,
-      message: data?.message ?? defaultMessageForStatus(status),
+      message: data?.message ?? data?.error ?? defaultMessageForStatus(status),
       fieldErrors: data?.errors,
     };
   }
@@ -79,6 +86,8 @@ function defaultMessageForStatus(status: ApiErrorStatus): string {
       return "You don't have permission to do that.";
     case 404:
       return "We couldn't find what you were looking for.";
+    case 409:
+      return "That already exists — please check and try again.";
     case 422:
       return "Please check the information you entered.";
     case 429:

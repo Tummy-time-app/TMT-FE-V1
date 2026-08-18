@@ -10,13 +10,15 @@ import { sessionExpired } from "@/features/auth/authSlice";
 import type { RootState } from "../index";
 
 /**
- * Backend Architecture doc §2/§12: "API versioning via URI prefix: /api/v1/...".
- * Baked in here (not repeated in every endpoint's URL string) so every
- * feature API slice can write clean relative paths like `/orders` or
- * `/vendors/:id/products` and still hit the versioned route.
+ * TMT-BE-V1 is an API-gateway-fronted set of microservices, not a single
+ * versioned API — the gateway proxies /api/users/*, /api/restaurants/*,
+ * /api/orders/*, /api/notifications/* to their respective services, with
+ * no /api/v1 prefix anywhere (see TMT-BE-V1/api-gateway/src/index.ts).
+ * `env.apiUrl` is that gateway's bare root URL — every feature API slice
+ * writes its FULL path including the resource prefix, e.g. "/api/users/me".
  */
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: env.apiUrl ? `${env.apiUrl.replace(/\/+$/, "")}/api/v1` : env.apiUrl,
+  baseUrl: env.apiUrl ? env.apiUrl.replace(/\/+$/, "") : env.apiUrl,
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.session?.accessToken;
     if (token) headers.set("Authorization", `Bearer ${token}`);

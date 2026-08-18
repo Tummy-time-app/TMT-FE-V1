@@ -26,20 +26,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let token: string | undefined;
+    let session: { accessToken?: string; refreshToken?: string } = {};
     try {
-      token = (JSON.parse(stored) as { accessToken?: string }).accessToken;
+      session = JSON.parse(stored) as { accessToken?: string; refreshToken?: string };
     } catch {
-      token = undefined;
+      session = {};
     }
 
-    if (!token) {
+    if (!session.accessToken) {
       dispatch(restorationFailed());
       return;
     }
 
     dispatch(restoring());
-    dispatch(authApi.endpoints.getSession.initiate(token))
+    // getSession retries once via refreshToken if the (15m-lived) access
+    // token has already expired — see authApi.ts's doc comment.
+    dispatch(
+      authApi.endpoints.getSession.initiate({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      })
+    )
       .unwrap()
       .then((response) => dispatch(setCredentials(response)))
       .catch(() => dispatch(restorationFailed()));
