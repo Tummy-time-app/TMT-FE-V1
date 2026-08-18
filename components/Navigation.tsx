@@ -1,131 +1,63 @@
 "use client";
 import Image from "next/image";
-import { useCart } from "@/lib/CartContext";
+import { initialItems } from "@/lib/cartData";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import {
-  LogOut,
-  PackageSearch,
-  Wallet,
-  Tag,
-  LifeBuoy,
-  MapPin,
-  X,
-  Store,
-  ShoppingCart,
-  Leaf,
-  Bag,
-  Users,
-  Heart,
-  UserCircle,
-  type IconComponent,
-} from "@/components/icons";
 import hamburgerMenuAnimation from "../app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "../app/assets/lottie/close-x.json";
 import LottieIcon from "./LottieIcon";
-import { useAuth } from "@/features/auth/hooks";
-import { useToast } from "@/components/feedback/ToastProvider";
-import { addRecentSearch } from "@/lib/utils/recentSearches";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 
-const vendorCategories: {
-  icon: IconComponent;
-  label: string;
-  desc: string;
-  href: string;
-  badge: string | null;
-}[] = [
+const vendorCategories = [
   {
-    icon: Store,
+    emoji: "🏪",
     label: "Restaurants",
     desc: "African, continental & intercontinental",
     href: "/vendors/restaurants",
     badge: null,
   },
   {
-    icon: ShoppingCart,
+    emoji: "🛒",
     label: "Shops",
     desc: "Groceries & daily household essentials",
     href: "/vendors/shops",
-    badge: null,
+    badge: "Coming soon",
   },
   {
-    icon: Leaf,
+    emoji: "🌿",
     label: "Local Markets",
     desc: "Fresh produce directly from local markets",
     href: "/vendors/markets",
-    badge: null,
+    badge: "Coming soon",
   },
 ];
 
 const navLinks = [
-  { label: "Foods",  href: "/vendors/restaurants" },
-  { label: "Offers", href: "/promotions", highlight: true },
+  { label: "Foods",    href: "/foods"    },
+  { label: "Services", href: "/services" },
+  { label: "Offers",   href: "/offers",  highlight: true },
 ];
 
 const Navigation: React.FC = () => {
   const [mobileMenuOpen,    setMobileMenuOpen]    = useState(false);
   const [vendorsOpen,       setVendorsOpen]       = useState(false);
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
-  const [userMenuOpen,      setUserMenuOpen]      = useState(false);
   const [searchFocused,     setSearchFocused]     = useState(false);
   const [searchValue,       setSearchValue]       = useState("");
-  const { cartCount } = useCart();
-  const { user, isAuthenticated, isSessionLoading, logout } = useAuth();
-  const toast = useToast();
-  const router = useRouter();
+  const [cartCount] = useState(initialItems.length); // wire to cart store
 
   const vendorRef = useRef<HTMLLIElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  /* close vendor dropdown / user menu on outside click or Escape */
+  /* close vendor dropdown on outside click */
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (vendorRef.current && !vendorRef.current.contains(e.target as Node)) {
         setVendorsOpen(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
     };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setVendorsOpen(false);
-        setUserMenuOpen(false);
-        setMobileMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  const handleLogout = () => {
-    setUserMenuOpen(false);
-    logout();
-    toast.success("You've been logged out.");
-    router.push("/");
-  };
-
-  const submitSearch = (value: string) => {
-    const q = value.trim();
-    if (!q) return;
-    addRecentSearch(q);
-    closeAll();
-    router.push(`/search?q=${encodeURIComponent(q)}`);
-  };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      submitSearch(searchValue);
-    }
-  };
 
   /* lock body scroll when drawer is open */
   useEffect(() => {
@@ -169,7 +101,7 @@ const Navigation: React.FC = () => {
           {/* CENTER — location + search */}
           <div className="nav-search-group">
             <button className="nav-location-btn" aria-label="Change delivery address">
-              <span className="nav-location-icon"><MapPin size={14} aria-hidden /></span>
+              <span className="nav-location-icon">📍</span>
               <span className="nav-location-text">
                 <span className="nav-location-label">Deliver to</span>
                 <span className="nav-location-value">Current location</span>
@@ -191,7 +123,6 @@ const Navigation: React.FC = () => {
                 placeholder="Search restaurants, foods, stores…"
                 value={searchValue}
                 onChange={e => setSearchValue(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 aria-label="Search"
@@ -201,7 +132,7 @@ const Navigation: React.FC = () => {
                   className="nav-search-clear"
                   onClick={() => { setSearchValue(""); searchRef.current?.focus(); }}
                   aria-label="Clear search"
-                ><X size={12} aria-hidden /></button>
+                >✕</button>
               )}
             </div>
           </div>
@@ -209,123 +140,14 @@ const Navigation: React.FC = () => {
           {/* RIGHT — cart + auth */}
           <div className="navbar__actions">
             <Link href="/cart" className="navbar__cart" aria-label={`Cart, ${cartCount} items`}>
-              <Bag size={20} aria-hidden />
+              <Image src="/images/cart.png" width={20} height={20} alt="" aria-hidden />
               {cartCount > 0 && (
                 <span className="nav-cart-badge" aria-hidden>{cartCount}</span>
               )}
             </Link>
 
-            {isAuthenticated && <NotificationBell />}
-
-            {isSessionLoading ? (
-              <span className="nav-user-skeleton" aria-hidden />
-            ) : isAuthenticated && user ? (
-              <div className="nav-user" ref={userMenuRef}>
-                <button
-                  className="nav-user-btn"
-                  onClick={() => setUserMenuOpen((p) => !p)}
-                  aria-haspopup="true"
-                  aria-expanded={userMenuOpen}
-                >
-                  <span className="nav-user-avatar" aria-hidden>
-                    {user.name.charAt(0).toUpperCase()}
-                  </span>
-                  <span className="nav-user-name">{user.name.split(" ")[0]}</span>
-                  <span className={`nav-chevron ${userMenuOpen ? "nav-chevron--up" : ""}`}>▾</span>
-                </button>
-
-                {userMenuOpen && (
-                  <div className="nav-user-dropdown" role="menu">
-                    <Link
-                      href="/account"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <UserCircle size={15} aria-hidden />
-                      Account
-                    </Link>
-                    <Link
-                      href="/orders"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <PackageSearch size={15} aria-hidden />
-                      My orders
-                    </Link>
-                    <Link
-                      href="/favorites"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Heart size={15} aria-hidden />
-                      Favorites
-                    </Link>
-                    <Link
-                      href="/wallet"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Wallet size={15} aria-hidden />
-                      Wallet
-                    </Link>
-                    <Link
-                      href="/addresses"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <MapPin size={15} aria-hidden />
-                      Addresses
-                    </Link>
-                    <Link
-                      href="/promotions"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Tag size={15} aria-hidden />
-                      Promotions
-                    </Link>
-                    <Link
-                      href="/referrals"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Users size={15} aria-hidden />
-                      Refer & earn
-                    </Link>
-                    <Link
-                      href="/support"
-                      className="nav-user-dropdown__item"
-                      role="menuitem"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <LifeBuoy size={15} aria-hidden />
-                      Support
-                    </Link>
-                    <button
-                      type="button"
-                      className="nav-user-dropdown__item nav-user-dropdown__item--danger"
-                      role="menuitem"
-                      onClick={handleLogout}
-                    >
-                      <LogOut size={15} aria-hidden />
-                      Log out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                <Link href="/login" className="navbar__login">Login</Link>
-                <Link href="/register" className="nav-signup">Sign up</Link>
-              </>
-            )}
+            <Link href="/login" className="navbar__login">Login</Link>
+            <Link href="/register" className="nav-signup">Sign up</Link>
           </div>
         </div>
 
@@ -361,7 +183,7 @@ const Navigation: React.FC = () => {
                         role="menuitem"
                         onClick={() => setVendorsOpen(false)}
                       >
-                        <span className="nav-dropdown__emoji"><v.icon size={22} aria-hidden /></span>
+                        <span className="nav-dropdown__emoji">{v.emoji}</span>
                         <div className="nav-dropdown__item-body">
                           <span className="nav-dropdown__item-label">
                             {v.label}
@@ -375,7 +197,7 @@ const Navigation: React.FC = () => {
                   </div>
 
                   <div className="nav-dropdown__footer">
-                    <Link href="/vendors/restaurants" onClick={() => setVendorsOpen(false)}
+                    <Link href="/vendors" onClick={() => setVendorsOpen(false)}
                       className="nav-dropdown__footer-link">
                       Browse all vendors &rarr;
                     </Link>
@@ -417,12 +239,12 @@ const Navigation: React.FC = () => {
         {/* Drawer header */}
         <div className="nav-drawer__header">
           <Image src="/images/logo/tummytime-logo.png" width={130} height={40} alt="TummyTime" className="nav-drawer__img" />
-          <button onClick={closeAll} className="nav-drawer__close" aria-label="Close"><X size={14} aria-hidden /></button>
+          <button onClick={closeAll} className="nav-drawer__close" aria-label="Close">✕</button>
         </div>
 
         {/* Location inside drawer */}
         <button className="nav-drawer__location">
-          <span><MapPin size={16} aria-hidden /></span>
+          <span>📍</span>
           <div>
             <p className="nav-drawer__location-label">Deliver to</p>
             <p className="nav-drawer__location-value">Current location ▾</p>
@@ -440,9 +262,6 @@ const Navigation: React.FC = () => {
             type="text"
             placeholder="Search restaurants, foods…"
             className="nav-drawer__search-input"
-            value={searchValue}
-            onChange={e => setSearchValue(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
           />
         </div>
 
@@ -467,7 +286,7 @@ const Navigation: React.FC = () => {
                   className="nav-drawer__sub-link"
                   onClick={closeAll}
                 >
-                  <span className="nav-drawer__sub-emoji"><v.icon size={20} aria-hidden /></span>
+                  <span className="nav-drawer__sub-emoji">{v.emoji}</span>
                   <div className="nav-drawer__sub-body">
                     <p className="nav-drawer__sub-label">{v.label}</p>
                     <p className="nav-drawer__sub-desc">{v.desc}</p>
@@ -493,36 +312,8 @@ const Navigation: React.FC = () => {
 
         {/* Drawer footer */}
         <div className="nav-drawer__footer">
-          {isAuthenticated && user ? (
-            <>
-              <div className="nav-drawer__user">
-                <span className="nav-user-avatar" aria-hidden>
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
-                <div>
-                  <p className="nav-drawer__user-name">{user.name}</p>
-                  <p className="nav-drawer__user-email">{user.email}</p>
-                </div>
-              </div>
-              <Link href="/orders" className="navbar__login nav-drawer__btn-full" onClick={closeAll}>
-                <PackageSearch size={15} aria-hidden style={{ marginRight: 6, verticalAlign: -2 }} />
-                My orders
-              </Link>
-              <button
-                type="button"
-                className="nav-signup nav-drawer__btn-full"
-                onClick={() => { closeAll(); handleLogout(); }}
-              >
-                <LogOut size={15} aria-hidden style={{ marginRight: 6, verticalAlign: -2 }} />
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="navbar__login nav-drawer__btn-full" onClick={closeAll}>Login</Link>
-              <Link href="/register" className="nav-signup nav-drawer__btn-full" onClick={closeAll}>Create account</Link>
-            </>
-          )}
+          <Link href="/login" className="navbar__login nav-drawer__btn-full">Login</Link>
+          <Link href="/signup" className="nav-signup nav-drawer__btn-full">Create account</Link>
         </div>
       </aside>
     </>

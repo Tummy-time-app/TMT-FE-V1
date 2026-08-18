@@ -1,80 +1,65 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useVendorFilters } from "./VendorFilters";
-import { useGetVendorsQuery } from "@/features/vendors/vendorsApi";
+import { Vendor, VENDORS } from "@/lib/vendordata";
 import VendorCard from "../VendorCard";
-import { ErrorState } from "@/components/feedback/ErrorState";
-import { UtensilsCrossed, ShoppingBasket, AppleFruit, Heart, type IconComponent } from "@/components/icons";
-import type { VendorBusinessType } from "@/features/vendors/types";
-
-const PAGE_SIZE = 6;
-
-const NOUN: Record<VendorBusinessType, string> = { restaurant: "restaurants", shop: "shops", market: "markets" };
-const EMPTY_ICON: Record<VendorBusinessType, IconComponent> = { restaurant: UtensilsCrossed, shop: ShoppingBasket, market: AppleFruit };
 
 const VendorsGrid = () => {
-  const { businessType, activeCategory, sortKey, filters, search, page, setPage, resetFilters, setFilteredCount } =
+  const { activeCategory, sortKey, filters, search, page, setPage } =
     useVendorFilters();
 
-  const { data, isLoading, isFetching, error, refetch } = useGetVendorsQuery({
-    businessType,
-    category: activeCategory,
-    search,
-    sort: sortKey,
-    freeDelivery: filters.freeDelivery,
-    openNow: filters.openNow,
-    maxDeliveryTime: filters.maxDeliveryTime,
-    page,
-    pageSize: PAGE_SIZE,
-  });
+  const { setFilteredCount } = useVendorFilters();
 
-  const featured = data?.featured ?? [];
-  const visibleAll = data?.vendors ?? [];
-  const total = data?.total ?? 0;
-  const hasMore = visibleAll.length < total;
-  const isPaginating = isFetching && page > 1;
+  const PAGE_SIZE = 6;
+
+  const filtered = useMemo<Vendor[]>(() => {
+    let list = [...VENDORS];
+
+    if (activeCategory !== "all")
+      list = list.filter((v) => v.category === activeCategory);
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (v) =>
+          v.name.toLowerCase().includes(q) ||
+          v.cuisine.toLowerCase().includes(q),
+      );
+    }
+
+    if (filters.freeDelivery) list = list.filter((v) => v.deliveryFee === 0);
+    if (filters.openNow) list = list.filter((v) => v.isOpen);
+
+    if (filters.maxDeliveryTime > 0)
+      list = list.filter(
+        (v) =>
+          parseInt(v.deliveryTime.split("-")[1]) <= filters.maxDeliveryTime,
+      );
+
+    if (sortKey === "rating") list.sort((a, b) => b.rating - a.rating);
+    if (sortKey === "delivery_time")
+      list.sort((a, b) => parseInt(a.deliveryTime) - parseInt(b.deliveryTime));
+    if (sortKey === "delivery_fee")
+      list.sort((a, b) => a.deliveryFee - b.deliveryFee);
+
+    return list;
+  }, [activeCategory, sortKey, filters, search]);
 
   useEffect(() => {
-    setFilteredCount(featured.length + total);
-  }, [featured.length, total, setFilteredCount]);
+    setFilteredCount(filtered.length);
+  }, [filtered, setFilteredCount]);
 
-  if (isLoading) {
-    return (
-      <section className="vp-section">
-        <div className="vp-grid">
-          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-            <VendorCard key={i} skeleton />
-          ))}
-        </div>
-      </section>
-    );
-  }
+  const featured = filtered.filter((v) => v.isFeatured);
+  const allVendors = filtered.filter((v) => !v.isFeatured);
 
-  if (error) {
-    return <ErrorState error={error} onRetry={refetch} />;
-  }
-
-  const noun = NOUN[businessType];
-  const EmptyIcon = EMPTY_ICON[businessType];
-
-  if (featured.length === 0 && visibleAll.length === 0) {
-    return (
-      <div className="vp-empty">
-        <div className="vp-empty-icon"><EmptyIcon size={32} aria-hidden /></div>
-        <p className="vp-empty-title">No {noun} found</p>
-        <p className="vp-empty-sub">Try a different search term or clear your filters.</p>
-        <button className="vp-empty-cta" onClick={resetFilters}>
-          Clear filters
-        </button>
-      </div>
-    );
-  }
+  const visibleAll = allVendors.slice(0, page * PAGE_SIZE);
+  const hasMore = visibleAll.length < allVendors.length;
 
   return (
     <>
       {featured.length > 0 && (
         <section className="vp-section">
           <h2 className="vp-section-title">
-            Handpicked for you <span><Heart size={18} aria-hidden /></span>
+            Handpicked for you <span>🤍</span>
           </h2>
 
           <div className="vp-grid">
@@ -85,32 +70,29 @@ const VendorsGrid = () => {
         </section>
       )}
 
-      {visibleAll.length > 0 && (
-        <section className="vp-section">
-          <div className="vp-section-row">
-            <h2 className="vp-section-title">All {noun}</h2>
-            <span className="vp-count">{total} {noun}</span>
-          </div>
+      <section className="vp-section">
+        <div className="vp-section-row">
+          <h2 className="vp-section-title">All restaurants</h2>
+          <span className="vp-count">{allVendors.length} restaurants</span>
+        </div>
 
-          <div className="vp-grid">
-            {visibleAll.map((v) => (
-              <VendorCard key={v.id} vendor={v} />
-            ))}
-          </div>
+        <div className="vp-grid">
+          {visibleAll.map((v) => (
+            <VendorCard key={v.id} vendor={v} />
+          ))}
+        </div>
 
-          {hasMore && (
-            <div className="vp-load-more">
-              <button
-                className="vp-load-more-btn"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={isPaginating}
-              >
-                {isPaginating ? "Loading…" : `View more ${noun}`}
-              </button>
-            </div>
-          )}
-        </section>
-      )}
+        {hasMore && (
+          <div className="vp-load-more">
+            <button
+              className="vp-load-more-btn"
+              onClick={() => setPage((p) => p + 1)}
+            >
+              View more restaurants
+            </button>
+          </div>
+        )}
+      </section>
     </>
   );
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import { Suspense } from "react";
 import VendorFilters, {
   useVendorFilters,
 } from "@/components/vendor/VendorFilters";
@@ -24,28 +23,20 @@ function Header() {
   );
 }
 
-function VendorsPageContent() {
-  return (
-    <VendorFilters>
-      <Header />
-
-      <VendorFilters.Drawer />
-
-      <VendorFilters.Categories />
-
-      <VendorFilters.SortBar />
-
-      <VendorsGrid />
-    </VendorFilters>
-  );
-}
-
 export default function VendorsPage() {
   return (
     <main className="vp-root">
-      <Suspense fallback={null}>
-        <VendorsPageContent />
-      </Suspense>
+      <VendorFilters>
+        <Header />
+
+        <VendorFilters.Drawer />
+
+        <VendorFilters.Categories />
+
+        <VendorFilters.SortBar />
+
+        <VendorsGrid />
+      </VendorFilters>
     </main>
   );
 }

@@ -1,10 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
-import { X } from "@/components/icons";
-import { useGetVendorCategoriesQuery } from "@/features/vendors/vendorsApi";
-import type { VendorBusinessType } from "@/features/vendors/types";
+import { CATEGORIES } from "@/lib/vendordata";
 
 /* ───────────────────────── TYPES ───────────────────────── */
 
@@ -30,7 +27,6 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 type ContextType = {
-  businessType: VendorBusinessType;
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   filterOpen: boolean;
@@ -70,18 +66,13 @@ export function useVendorFilters() {
 
 /* ───────────────────────── PROVIDER ───────────────────────── */
 
-function VendorFilters({ children, businessType = "restaurant" }: { children: ReactNode; businessType?: VendorBusinessType }) {
-  // Deep-link support: the homepage's category strip and "See all" carousel
-  // links pass ?category=, so browsing arrives pre-filtered — same as
-  // clicking a cuisine icon on Uber Eats' own homepage. Read once at mount
-  // (no effect needed — this is a plain synchronous URL read, not fetched data).
-  const searchParams = useSearchParams();
+function VendorFilters({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState(() => searchParams.get("category") ?? "all");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [filteredCount, setFilteredCount] = useState(0);
 
@@ -99,7 +90,6 @@ function VendorFilters({ children, businessType = "restaurant" }: { children: Re
   return (
     <VendorFiltersContext.Provider
       value={{
-        businessType,
         filters,
         setFilters,
         page,
@@ -125,14 +115,8 @@ function VendorFilters({ children, businessType = "restaurant" }: { children: Re
 
 /* ───────────────────────── SEARCH ───────────────────────── */
 
-const SEARCH_PLACEHOLDER: Record<VendorBusinessType, string> = {
-  restaurant: "Search restaurants or cuisines…",
-  shop: "Search shops or products…",
-  market: "Search markets or produce…",
-};
-
 VendorFilters.Search = function Search() {
-  const { search, setSearch, setPage, businessType } = useVendorFilters();
+  const { search, setSearch, page, setPage } = useVendorFilters();
 
   return (
     <div className="vp-search-wrap">
@@ -153,7 +137,7 @@ VendorFilters.Search = function Search() {
       <input
         type="text"
         className="vp-search-input"
-        placeholder={SEARCH_PLACEHOLDER[businessType]}
+        placeholder="Search restaurants or cuisines…"
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
@@ -168,7 +152,7 @@ VendorFilters.Search = function Search() {
           onClick={() => setSearch("")}
           aria-label="Clear"
         >
-          <X size={13} aria-hidden />
+          ✕
         </button>
       )}
     </div>
@@ -294,36 +278,31 @@ VendorFilters.Drawer = function Drawer() {
 /* ───────────────────────── CATEGORIES ───────────────────────── */
 
 VendorFilters.Categories = function Categories() {
-  const { activeCategory, setActiveCategory, setPage, businessType } = useVendorFilters();
-  const { data: categories, isLoading } = useGetVendorCategoriesQuery(businessType);
+  const { activeCategory, setActiveCategory, setPage } = useVendorFilters();
 
   return (
     <section className="vp-section">
       <h2 className="vp-section-title">Explore categories</h2>
       <div className="vp-categories" role="list">
-        {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="vc-skel" style={{ width: 88, height: 78, borderRadius: 16, flexShrink: 0 }} aria-hidden />
-            ))
-          : categories?.map((cat) => (
-              <button
-                key={cat.id}
-                role="listitem"
-                className={`vp-cat-btn ${
-                  activeCategory === cat.id ? "vp-cat-btn--active" : ""
-                }`}
-                style={{
-                  background: activeCategory === cat.id ? cat.gradient : undefined,
-                }}
-                onClick={() => {
-                  setActiveCategory(cat.id);
-                  setPage(1);
-                }}
-              >
-                <span className="vp-cat-emoji"><cat.icon size={26} aria-hidden /></span>
-                <span className="vp-cat-label">{cat.label}</span>
-              </button>
-            ))}
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            role="listitem"
+            className={`vp-cat-btn ${
+              activeCategory === cat.id ? "vp-cat-btn--active" : ""
+            }`}
+            style={{
+              background: activeCategory === cat.id ? cat.gradient : undefined,
+            }}
+            onClick={() => {
+              setActiveCategory(cat.id);
+              setPage(1);
+            }}
+          >
+            <span className="vp-cat-emoji">{cat.emoji}</span>
+            <span className="vp-cat-label">{cat.label}</span>
+          </button>
+        ))}
       </div>
     </section>
   );

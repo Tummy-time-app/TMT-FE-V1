@@ -1,25 +1,14 @@
 "use client";
-import { useCart } from "@/lib/CartContext";
+import { CartEntry, MenuItem, type RestaurantData } from "@/lib/restaurantData";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
-import { notFound } from "next/navigation";
-import { useGetVendorDetailQuery } from "@/features/vendors/vendorsApi";
-import type { MenuItem, VendorDetail, VendorBusinessType } from "@/features/vendors/types";
-import { normalizeApiError } from "@/lib/utils/apiError";
-import { formatCartQty, qtyStep } from "@/lib/utils/quantity";
-import { ErrorState } from "@/components/feedback/ErrorState";
-import { Map } from "@/components/maps/Map";
-import { VendorMarker } from "@/components/maps/VendorMarker";
-import { VendorReviews } from "@/features/reviews/components/VendorReviews";
-import { FavoriteButton } from "@/features/favorites/components/FavoriteButton";
-import { StarSolid, Bike, ClipboardList, MapPin, Share, X, Flame, Store, Check, Minus, Plus, CheckCircle2 } from "@/components/icons";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
 }
 
-/** Restaurant items get pack-size options in the detail modal; grocery items don't. */
+/* ── Item modal types ────────────────────────────────────── */
 interface PackOption {
   id: string;
   label: string;
@@ -32,111 +21,54 @@ interface ModalState {
   selectedPack: string | null;
 }
 
+/* Mock pack options — replace with real data per item */
 const PACK_OPTIONS: PackOption[] = [
   { id: "big",     label: "Big pack",      price: 400 },
   { id: "regular", label: "Pack",          price: 400 },
   { id: "branded", label: "Branded pack",  price: 400 },
 ];
 
-const BREADCRUMB: Record<VendorBusinessType, { label: string; href: string }> = {
-  restaurant: { label: "← Restaurants", href: "/vendors/restaurants" },
-  shop: { label: "← Shops", href: "/vendors/shops" },
-  market: { label: "← Local Markets", href: "/vendors/markets" },
-};
-
 interface Props {
-  id: string;
+  data: RestaurantData;
 }
 
-function VendorDetailSkeleton() {
-  return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[380px_1fr]">
-      <div className="space-y-4">
-        <div className="aspect-video w-full animate-pulse rounded-xl bg-black/5" />
-        <div className="h-6 w-2/3 animate-pulse rounded bg-black/5" />
-        <div className="h-4 w-1/2 animate-pulse rounded bg-black/5" />
-        <div className="h-4 w-1/3 animate-pulse rounded bg-black/5" />
-      </div>
-      <div className="space-y-4">
-        <div className="h-10 w-full animate-pulse rounded-full bg-black/5" />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-20 w-full animate-pulse rounded-xl bg-black/5" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function StoreDetailClient({ id }: Props) {
-  const { data, isLoading, error, refetch } = useGetVendorDetailQuery(id);
-
-  if (isLoading) return <VendorDetailSkeleton />;
-
-  if (error) {
-    if (normalizeApiError(error).status === 404) notFound();
-    return <ErrorState error={error} onRetry={refetch} />;
-  }
-
-  if (!data) return null;
-
-  return <StoreDetail data={data} />;
-}
-
-function StoreDetail({ data }: { data: VendorDetail }) {
+export function RestaurantClient({ data }: Props) {
   const { restaurant, menuItems: allItems } = data;
-  const businessType: VendorBusinessType = restaurant.businessType ?? "restaurant";
-  // Restaurants use the "tap to customize in a modal" pattern; shops/markets use
-  // Instacart/Uber-Eats-grocery's pattern instead — tap "+" to add 1 straight to
-  // cart, then an inline stepper on the card itself. No pack-options modal.
-  const isGrocery = businessType !== "restaurant";
-  const breadcrumb = BREADCRUMB[businessType];
-
-  const { items: cartItems, addItem, changeQty, getItemQty } = useCart();
 
   const [activeCategory, setActiveCategory] = useState(restaurant.categories[0] ?? "");
+  const [cart, setCart]         = useState<CartEntry[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [search, setSearch]     = useState("");
   const [modal, setModal]       = useState<ModalState | null>(null);
-  const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
-  const [riderNote, setRiderNote] = useState("");
-  const [showRiderNote, setShowRiderNote] = useState(false);
-  const [allowSubstitutes, setAllowSubstitutes] = useState(true);
 
   const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
-  /* ── Cart items for this vendor ────────────────────────── */
-  const vendorCart = cartItems.filter(i => i.vendorId === restaurant.id);
-  const vendorTotal = vendorCart.reduce((s, i) => s + i.price * i.qty, 0);
-  const hasSubstitutableItems = isGrocery && vendorCart.some(i => i.substitutionAllowed);
+  /* ── Cart helpers ──────────────────────────────────────── */
+  const cartTotal = cart.reduce((s, e) => s + e.item.price * e.qty, 0);
+  const cartCount = cart.reduce((s, e) => s + e.qty, 0);
 
-  const addToCart = (item: MenuItem, qty: number) => {
-    addItem({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      vendor: restaurant.name,
-      vendorId: restaurant.id,
-      vendorBusinessType: businessType,
-      price: item.price,
-      image: item.image,
-      unitType: item.unitType,
-      weightUnit: item.weightUnit,
-      substitutionAllowed: item.substitutionAllowed,
-    }, qty);
+  const addToCart = useCallback((item: MenuItem, qty: number) => {
+    setCart(prev => {
+      const existing = prev.find(e => e.item.id === item.id);
+      if (existing) return prev.map(e =>
+        e.item.id === item.id ? { ...e, qty: e.qty + qty } : e
+      );
+      return [...prev, { item, qty }];
+    });
+  }, []);
+
+  const changeCartQty = (id: number, delta: number) => {
+    setCart(prev =>
+      prev
+        .map(e => e.item.id === id ? { ...e, qty: Math.max(0, e.qty + delta) } : e)
+        .filter(e => e.qty > 0)
+    );
   };
 
-  /* ── Grocery direct-add (no modal) ──────────────────────── */
-  const handleDirectAdd = (e: React.MouseEvent, item: MenuItem) => {
-    e.stopPropagation();
-    addToCart(item, qtyStep(item.unitType));
-  };
-  const handleStepperChange = (e: React.MouseEvent, item: MenuItem, delta: number) => {
-    e.stopPropagation();
-    changeQty(item.id, delta);
-  };
+  const getCartQty = (id: number) => cart.find(e => e.item.id === id)?.qty ?? 0;
 
-  /* ── Modal helpers (restaurant items only) ──────────────── */
+  /* ── Modal helpers ─────────────────────────────────────── */
   const openModal = (item: MenuItem) => {
     setModal({ item, qty: 1, selectedPack: null });
   };
@@ -154,12 +86,6 @@ function StoreDetail({ data }: { data: VendorDetail }) {
     if (!modal) return;
     addToCart(modal.item, modal.qty);
     closeModal();
-  };
-
-  const handleItemClick = (item: MenuItem) => {
-    if (!item.available) return;
-    if (isGrocery) return; // direct-add buttons/stepper handle grocery items, no modal
-    openModal(item);
   };
 
   /* ── Category scroll spy (right panel) ─────────────────── */
@@ -209,17 +135,13 @@ function StoreDetail({ data }: { data: VendorDetail }) {
     return () => { document.body.style.overflow = ""; };
   }, [modal]);
 
-  const checkoutHref = `/checkout?vendor=${restaurant.id}&type=${orderType}${
-    riderNote ? `&note=${encodeURIComponent(riderNote)}` : ""
-  }${isGrocery ? `&substitutes=${allowSubstitutes ? "1" : "0"}` : ""}`;
-
   return (
     <>
       <div className="rp-shell">
         <aside className="rp-left">
           {/* breadcrumb */}
-          <Link href={breadcrumb.href} className="rp-breadcrumb__link">
-            {breadcrumb.label}
+          <Link href="/vendors/restaurants" className="rp-breadcrumb__link">
+            ← Restaurants
           </Link>
 
           {/* hero image */}
@@ -248,7 +170,7 @@ function StoreDetail({ data }: { data: VendorDetail }) {
               <h1 className="rp-left__name">{restaurant.name}</h1>
               <div className="rp-left__rating">
                 <span className="rp-left__rating-score">{restaurant.rating}</span>
-                <span className="rp-left__rating-star"><StarSolid size={13} aria-hidden /></span>
+                <span className="rp-left__rating-star">★</span>
               </div>
             </div>
 
@@ -261,24 +183,17 @@ function StoreDetail({ data }: { data: VendorDetail }) {
             {/* extra meta */}
             <div className="rp-left__meta-list">
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon"><Bike size={15} aria-hidden /></span>
+                <span className="rp-left__meta-icon">🛵</span>
                 <span>Delivery · {formatNaira(restaurant.deliveryFee)}</span>
               </div>
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon"><ClipboardList size={15} aria-hidden /></span>
+                <span className="rp-left__meta-icon">📋</span>
                 <span>Min. order {formatNaira(restaurant.minOrder)}</span>
               </div>
               <div className="rp-left__meta-row">
-                <span className="rp-left__meta-icon"><MapPin size={15} aria-hidden /></span>
+                <span className="rp-left__meta-icon">📍</span>
                 <span>{restaurant.address}</span>
               </div>
-            </div>
-
-            {/* location */}
-            <div className="my-1 overflow-hidden rounded-lg">
-              <Map center={restaurant.location} zoom={15} height={140}>
-                <VendorMarker position={restaurant.location} />
-              </Map>
             </div>
 
             {/* tags */}
@@ -290,11 +205,9 @@ function StoreDetail({ data }: { data: VendorDetail }) {
 
             {/* actions */}
             <div className="rp-left__actions">
-              <FavoriteButton vendorId={restaurant.id} variant="inline" className="rp-action-btn" />
-              <button className="rp-action-btn"><Share size={14} aria-hidden style={{ verticalAlign: -2 }} /> Share</button>
+              <button className="rp-action-btn">🤍 Save</button>
+              <button className="rp-action-btn">🔗 Share</button>
             </div>
-
-            <VendorReviews vendorId={restaurant.id} />
           </div>
         </aside>
 
@@ -316,7 +229,7 @@ function StoreDetail({ data }: { data: VendorDetail }) {
                 onChange={e => setSearch(e.target.value)}
               />
               {search && (
-                <button className="rp-search__clear" onClick={() => setSearch("")} aria-label="Clear search"><X size={12} aria-hidden /></button>
+                <button className="rp-search__clear" onClick={() => setSearch("")}>✕</button>
               )}
             </div>
 
@@ -350,29 +263,26 @@ function StoreDetail({ data }: { data: VendorDetail }) {
 
                   <div className="rp-list">
                     {items.map(item => {
-                      const qty = getItemQty(item.id);
-                      const priceLabel = item.unitType === "weight"
-                        ? `${formatNaira(item.price)}/${item.weightUnit ?? "kg"}`
-                        : formatNaira(item.price);
+                      const qty = getCartQty(item.id);
                       return (
                         <div
                           key={item.id}
                           className={`rp-list-item ${!item.available ? "rp-list-item--unavailable" : ""}`}
-                          onClick={() => handleItemClick(item)}
+                          onClick={() => item.available && openModal(item)}
                         >
                           {/* text side */}
                           <div className="rp-list-item__body">
                             <p className="rp-list-item__name">{item.name}</p>
                             <p className="rp-list-item__desc">{item.description}</p>
-                            <p className="rp-list-item__price">{priceLabel}</p>
+                            <p className="rp-list-item__price">{formatNaira(item.price)}</p>
 
                             {/* in-cart badge */}
                             {qty > 0 && (
-                              <span className="rp-list-item__in-cart">{formatCartQty({ qty, unitType: item.unitType, weightUnit: item.weightUnit })} in cart</span>
+                              <span className="rp-list-item__in-cart">{qty} in cart</span>
                             )}
                           </div>
 
-                          {/* image + add button / stepper */}
+                          {/* image + add button */}
                           <div className="rp-list-item__img-wrap">
                             <Image
                               src={item.image}
@@ -383,7 +293,7 @@ function StoreDetail({ data }: { data: VendorDetail }) {
                             {!item.available && (
                               <div className="rp-list-item__sold-out">Sold out</div>
                             )}
-                            {item.available && !isGrocery && (
+                            {item.available && (
                               <button
                                 className="rp-list-item__add"
                                 onClick={e => { e.stopPropagation(); openModal(item); }}
@@ -392,33 +302,9 @@ function StoreDetail({ data }: { data: VendorDetail }) {
                                 <span className="rp-list-item__add-icon">+</span>
                               </button>
                             )}
-                            {item.available && isGrocery && qty === 0 && (
-                              <button
-                                className="rp-list-item__add"
-                                onClick={e => handleDirectAdd(e, item)}
-                                aria-label={`Add ${item.name}`}
-                              >
-                                <span className="rp-list-item__add-icon">+</span>
-                              </button>
-                            )}
-                            {item.available && isGrocery && qty > 0 && (
-                              <div className="rp-list-item__stepper" onClick={e => e.stopPropagation()}>
-                                <button
-                                  className="rp-list-item__stepper-btn"
-                                  onClick={e => handleStepperChange(e, item, -qtyStep(item.unitType))}
-                                  aria-label={`Decrease ${item.name}`}
-                                ><Minus size={11} aria-hidden /></button>
-                                <span className="rp-list-item__stepper-val">{qty}</span>
-                                <button
-                                  className="rp-list-item__stepper-btn rp-list-item__stepper-btn--plus"
-                                  onClick={e => handleStepperChange(e, item, qtyStep(item.unitType))}
-                                  aria-label={`Increase ${item.name}`}
-                                ><Plus size={11} aria-hidden /></button>
-                              </div>
-                            )}
                             {/* badges */}
                             {item.popular && (
-                              <span className="rp-list-item__badge rp-list-item__badge--popular"><Flame size={13} aria-hidden /></span>
+                              <span className="rp-list-item__badge rp-list-item__badge--popular">🔥</span>
                             )}
                           </div>
                         </div>
@@ -435,11 +321,11 @@ function StoreDetail({ data }: { data: VendorDetail }) {
       {/* ══════════════════════════════════════════════════════
           FLOATING CART BAR
       ══════════════════════════════════════════════════════ */}
-      {vendorCart.length > 0 && (
+      {cartCount > 0 && (
         <div className="rp-cart-bar" onClick={() => setCartOpen(true)}>
-          <div className="rp-cart-bar__count">{vendorCart.reduce((s, i) => s + i.qty, 0)}</div>
+          <div className="rp-cart-bar__count">{cartCount}</div>
           <span className="rp-cart-bar__label">View Cart</span>
-          <span className="rp-cart-bar__total">{formatNaira(vendorTotal)}</span>
+          <span className="rp-cart-bar__total">{formatNaira(cartTotal)}</span>
         </div>
       )}
 
@@ -450,114 +336,53 @@ function StoreDetail({ data }: { data: VendorDetail }) {
       <aside className={`rp-cart-drawer ${cartOpen ? "rp-cart-drawer--open" : ""}`}>
         <div className="rp-cart-drawer__header">
           <h3 className="rp-cart-drawer__title">Your Order</h3>
-          <button className="rp-cart-drawer__close" onClick={() => setCartOpen(false)} aria-label="Close cart"><X size={14} aria-hidden /></button>
+          <button className="rp-cart-drawer__close" onClick={() => setCartOpen(false)}>✕</button>
         </div>
         <div className="rp-cart-drawer__vendor">
-          <span><Store size={14} aria-hidden /></span><span>{restaurant.name}</span>
+          <span>🏪</span><span>{restaurant.name}</span>
         </div>
-
-        {/* Delivery / Pickup toggle */}
-        <div className="rp-cart-drawer__toggle">
-          <button
-            className={`rp-cart-drawer__toggle-btn ${orderType === "delivery" ? "rp-cart-drawer__toggle-btn--active" : ""}`}
-            onClick={() => setOrderType("delivery")}
-          >
-            Delivery
-          </button>
-          <button
-            className={`rp-cart-drawer__toggle-btn ${orderType === "pickup" ? "rp-cart-drawer__toggle-btn--active" : ""}`}
-            onClick={() => setOrderType("pickup")}
-          >
-            Pickup
-          </button>
-        </div>
-
         <div className="rp-cart-drawer__items">
-          {vendorCart.map(entry => (
-            <div key={entry.id} className="rp-cart-entry">
+          {cart.map(entry => (
+            <div key={entry.item.id} className="rp-cart-entry">
               <div className="rp-cart-entry__img-wrap">
-                <Image src={entry.image} alt={entry.name} fill className="object-cover" />
+                <Image src={entry.item.image} alt={entry.item.name} fill className="object-cover" />
               </div>
               <div className="rp-cart-entry__body">
-                <p className="rp-cart-entry__name">{entry.name}</p>
-                <p className="rp-cart-entry__price">{formatNaira(entry.price * entry.qty)}</p>
+                <p className="rp-cart-entry__name">{entry.item.name}</p>
+                <p className="rp-cart-entry__price">{formatNaira(entry.item.price * entry.qty)}</p>
               </div>
               <div className="rp-stepper rp-stepper--sm">
-                <button className="rp-stepper__btn" onClick={() => changeQty(entry.id, -qtyStep(entry.unitType))} aria-label={`Decrease ${entry.name} quantity`}>−</button>
-                <span className="rp-stepper__val">{formatCartQty(entry)}</span>
-                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeQty(entry.id, qtyStep(entry.unitType))} aria-label={`Increase ${entry.name} quantity`}>+</button>
+                <button className="rp-stepper__btn" onClick={() => changeCartQty(entry.item.id, -1)}>−</button>
+                <span className="rp-stepper__val">{entry.qty}</span>
+                <button className="rp-stepper__btn rp-stepper__btn--plus" onClick={() => changeCartQty(entry.item.id, 1)}>+</button>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Substitutions — grocery orders only */}
-        {hasSubstitutableItems && (
-          <label className="rp-cart-drawer__substitute">
-            <input
-              type="checkbox"
-              checked={allowSubstitutes}
-              onChange={() => setAllowSubstitutes(v => !v)}
-              className="rp-cart-drawer__note-check"
-            />
-            <span className="rp-cart-drawer__substitute-icon"><CheckCircle2 size={14} aria-hidden /></span>
-            <span>Allow substitutions if an item is unavailable</span>
-          </label>
-        )}
-
-        {/* Rider note */}
-        <div className="rp-cart-drawer__note-section">
-          <label className="rp-cart-drawer__note-toggle">
-            <input
-              type="checkbox"
-              checked={showRiderNote}
-              onChange={() => setShowRiderNote(!showRiderNote)}
-              className="rp-cart-drawer__note-check"
-            />
-            <span>Leave a note for the rider</span>
-          </label>
-          {showRiderNote && (
-            <textarea
-              className="rp-cart-drawer__note-input"
-              placeholder="E.g. Please call when you arrive..."
-              value={riderNote}
-              onChange={e => setRiderNote(e.target.value)}
-              rows={2}
-            />
-          )}
-        </div>
-
         <div className="rp-cart-drawer__summary">
           <div className="rp-cart-drawer__line">
-            <span>Subtotal</span><span>{formatNaira(vendorTotal)}</span>
+            <span>Subtotal</span><span>{formatNaira(cartTotal)}</span>
           </div>
-          {orderType === "delivery" && (
-            <div className="rp-cart-drawer__line">
-              <span>Delivery fee</span><span>{formatNaira(restaurant.deliveryFee)}</span>
-            </div>
-          )}
+          <div className="rp-cart-drawer__line">
+            <span>Delivery fee</span><span>{formatNaira(restaurant.deliveryFee)}</span>
+          </div>
           <div className="rp-cart-drawer__total">
             <span>Total</span>
-            <span>{formatNaira(vendorTotal + (orderType === "delivery" ? restaurant.deliveryFee : 0))}</span>
+            <span>{formatNaira(cartTotal + restaurant.deliveryFee)}</span>
           </div>
         </div>
-
-        <div className="rp-cart-drawer__actions">
-          <Link href={checkoutHref} className="rp-cart-drawer__cta">
-            Checkout to {orderType}
-          </Link>
-        </div>
+        <Link href="/cart" className="rp-cart-drawer__cta">Go to Cart →</Link>
       </aside>
 
       {/* ══════════════════════════════════════════════════════
-          ITEM MODAL — restaurant items only
+          ITEM MODAL
       ══════════════════════════════════════════════════════ */}
       {modal && (
         <>
           <div className="rp-modal-backdrop" onClick={closeModal} />
           <div className="rp-modal" role="dialog" aria-modal="true" aria-label={modal.item.name}>
             {/* close */}
-            <button className="rp-modal__close" onClick={closeModal} aria-label="Close"><X size={16} aria-hidden /></button>
+            <button className="rp-modal__close" onClick={closeModal} aria-label="Close">✕</button>
 
             {/* hero image */}
             <div className="rp-modal__img-wrap">
@@ -593,7 +418,7 @@ function StoreDetail({ data }: { data: VendorDetail }) {
                     >
                       <div className={`rp-modal__option-radio ${modal.selectedPack === opt.id ? "rp-modal__option-radio--checked" : ""}`}>
                         {modal.selectedPack === opt.id
-                          ? <span className="rp-modal__option-check"><Check size={11} aria-hidden /></span>
+                          ? <span className="rp-modal__option-check">✓</span>
                           : <span className="rp-modal__option-plus">+</span>}
                       </div>
                       <span className="rp-modal__option-label">{opt.label}</span>

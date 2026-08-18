@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CartProvider } from "@/lib/CartContext";
 import Loading from "../app/loading";
 
 export default function ClientWrapper({
@@ -16,9 +15,5 @@ export default function ClientWrapper({
     return () => clearTimeout(timer);
   }, []);
 
-  return loading ? (
-    <Loading />
-  ) : (
-    <CartProvider>{children}</CartProvider>
-  );
+  return loading ? <Loading /> : <>{children}</>;
 }

@@ -1,8 +1,8 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import LoadingBike from "@/components/LoadingBike";
-import { RiceBowl, Burger, Flame, Cherries, Pizza, Soup, type IconComponent } from "@/components/icons";
+import bicycleAnimation from "./assets/lottie/bicicleta delivery.json";
+import LottieIcon from "../components/LottieIcon";
 
 const loadingMessages = [
   "Finding the best spots near you…",
@@ -13,18 +13,15 @@ const loadingMessages = [
 ];
 
 export default function Loading() {
-  const [progress, setProgress] = useState(0);
-  const [msgIndex, setMsgIndex] = useState(0);
-  const [exiting, setExiting] = useState(false);
+  const [progress, setProgress]   = useState(0);
+  const [msgIndex, setMsgIndex]   = useState(0);
+  const [exiting, setExiting]     = useState(false);
 
   /* progress bar */
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
+        if (p >= 100) { clearInterval(interval); return 100; }
         return Math.min(p + Math.random() * 9 + 2, 100);
       });
     }, 120);
@@ -34,10 +31,7 @@ export default function Loading() {
       setProgress(100);
     }, 2500);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    return () => { clearInterval(interval); clearTimeout(timeout); };
   }, []);
 
   /* cycle loading messages */
@@ -68,24 +62,16 @@ export default function Loading() {
 
       {/* floating food icons */}
       <div className="loading-floats" aria-hidden>
-        {(
-          [
-            { Icon: RiceBowl, size: 38 },
-            { Icon: Burger, size: 29 },
-            { Icon: Flame, size: 32 },
-            { Icon: Cherries, size: 35 },
-            { Icon: Pizza, size: 26 },
-            { Icon: Soup, size: 32 },
-          ] as { Icon: IconComponent; size: number }[]
-        ).map(({ Icon, size }, i) => (
+        {["🍛", "🍔", "🌶️", "🍅", "🍕", "🥘"].map((icon, i) => (
           <span key={i} className={`loading-float loading-float--${i + 1}`}>
-            <Icon size={size} aria-hidden />
+            {icon}
           </span>
         ))}
       </div>
 
       {/* ── card ── */}
       <div className="loading-card">
+
         {/* logo */}
         <div className="loading-logo-wrap">
           <Image
@@ -103,17 +89,33 @@ export default function Loading() {
         </p>
 
         {/* bike animation */}
-        <LoadingBike />
+        <div className="loading-bike-track">
+          <div className="loading-road" aria-hidden />
+          <div
+            className="loading-bike"
+            style={{ left: `${Math.min(progress, 92)}%` }}
+          >
+            <LottieIcon
+              animationData={bicycleAnimation}
+              className="loading-bike-lottie"
+              loop
+            />
+          </div>
+          {/* road dashes */}
+          <div className="loading-road-dashes" aria-hidden>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <span key={i} className="loading-road-dash" />
+            ))}
+          </div>
+        </div>
 
         {/* progress bar */}
-        <div
-          className="loading-bar-track"
-          role="progressbar"
-          aria-valuenow={Math.round(progress)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div className="loading-bar-fill" style={{ width: `${progress}%` }}>
+        <div className="loading-bar-track" role="progressbar"
+          aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="loading-bar-fill"
+            style={{ width: `${progress}%` }}
+          >
             <div className="loading-bar-shimmer" />
           </div>
           {/* checkpoint dots */}
@@ -131,6 +133,7 @@ export default function Loading() {
           <span className="loading-percent">{Math.round(progress)}%</span>
           <span className="loading-message">{loadingMessages[msgIndex]}</span>
         </div>
+
       </div>
 
       {/* ── inline styles ── */}
@@ -238,6 +241,54 @@ export default function Loading() {
           font-style: normal;
           color: var(--crimson);
           font-weight: 700;
+        }
+
+        /* bike track */
+        .loading-bike-track {
+          position: relative;
+          width: 100%;
+          height: 64px;
+          margin-bottom: 20px;
+        }
+        .loading-road {
+          position: absolute;
+          bottom: 8px;
+          left: 0; right: 0;
+          height: 3px;
+          background: rgba(172,0,0,0.1);
+          border-radius: 2px;
+        }
+        .loading-road-dashes {
+          position: absolute;
+          bottom: 9px;
+          left: 0; right: 0;
+          display: flex;
+          justify-content: space-around;
+          padding: 0 4px;
+        }
+        .loading-road-dash {
+          width: 12px;
+          height: 1px;
+          background: rgba(172,0,0,0.2);
+          border-radius: 1px;
+          animation: dashScroll 0.6s linear infinite;
+        }
+        @keyframes dashScroll {
+          from { transform: translateX(0); opacity:1; }
+          to   { transform: translateX(-20px); opacity:0; }
+        }
+        .loading-bike {
+          position: absolute;
+          bottom: 10px;
+          transform: translateX(-50%);
+          transition: left 0.3s ease-out;
+          width: 56px;
+          height: 48px;
+        }
+        .loading-bike-lottie {
+          width: 56px !important;
+          height: 48px !important;
+          display: block;
         }
 
         /* progress bar */

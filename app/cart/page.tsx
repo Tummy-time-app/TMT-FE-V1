@@ -1,14 +1,17 @@
 "use client";
-import { useCart } from "@/lib/CartContext";
+import { CartItem, initialItems } from "@/lib/cartData";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useValidatePromoCodeMutation } from "@/features/promotions/promotionsApi";
-import { normalizeApiError } from "@/lib/utils/apiError";
-import { ShoppingCart, Store, X, Pencil, Zap, Tag, PartyPopper, Lock } from "@/components/icons";
 
 const DELIVERY_FEE = 500;
 const FREE_DELIVERY_THRESHOLD = 10000;
+
+const vendorTypeLabel: Record<CartItem["vendorType"], string> = {
+  restaurant: "🏪 Restaurant",
+  shop: "🛒 Shop",
+  market: "🌿 Market",
+};
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function formatNaira(amount: number) {
@@ -17,51 +20,48 @@ function formatNaira(amount: number) {
 
 /* ── Component ───────────────────────────────────────────── */
 export default function CartPage() {
-  const {
-    items,
-    cartTotal: subtotal,
-    changeQty,
-    removeItem,
-    updateNote,
-    clearCart,
-    appliedPromo,
-    applyPromo: setAppliedPromo,
-    removePromo,
-  } = useCart();
+  const [items, setItems]           = useState<CartItem[]>(initialItems);
   const [promo, setPromo]           = useState("");
-  const [promoError, setPromoError] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState(false);
   const [noteId, setNoteId]         = useState<number | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
-  const [validatePromoCode, { isLoading: isValidatingPromo }] = useValidatePromoCodeMutation();
 
   /* calculations */
-  const discount   = appliedPromo?.discountAmount ?? 0;
+  const subtotal   = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const discount   = promoApplied ? Math.round(subtotal * 0.1) : 0;
   const delivery   = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total      = subtotal - discount + delivery;
 
   /* actions */
-  const handleRemove = (id: number) => {
+  const changeQty = (id: number, delta: number) => {
+    setItems(prev =>
+      prev
+        .map(i => i.id === id ? { ...i, qty: Math.max(0, i.qty + delta) } : i)
+        .filter(i => i.qty > 0)
+    );
+  };
+
+  const removeItem = (id: number) => {
     setRemovingId(id);
     setTimeout(() => {
-      removeItem(id);
+      setItems(prev => prev.filter(i => i.id !== id));
       setRemovingId(null);
     }, 320);
   };
 
-  const handleApplyPromo = async () => {
-    setPromoError("");
-    try {
-      const result = await validatePromoCode({ code: promo, vendorId: items[0]?.vendorId, subtotal }).unwrap();
-      setAppliedPromo({ code: result.promotion.code, discountAmount: result.discountAmount });
-    } catch (err) {
-      setPromoError(normalizeApiError(err as never).message);
-    }
+  const updateNote = (id: number, note: string) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, note } : i));
   };
 
-  const handleRemovePromo = () => {
-    removePromo();
-    setPromo("");
-    setPromoError("");
+  const applyPromo = () => {
+    if (promo.trim().toUpperCase() === "TUMMY10") {
+      setPromoApplied(true);
+      setPromoError(false);
+    } else {
+      setPromoError(true);
+      setPromoApplied(false);
+    }
   };
 
   /* ── Empty state ──────────────────────────────────────── */
@@ -69,7 +69,7 @@ export default function CartPage() {
     return (
       <div className="cart-empty">
         <div className="cart-empty__inner">
-          <div className="cart-empty__icon"><ShoppingCart size={36} aria-hidden /></div>
+          <div className="cart-empty__icon">🛒</div>
           <h2 className="cart-empty__heading">Your cart is empty</h2>
           <p className="cart-empty__sub">
             {`Looks like you haven't added anything yet.`}
@@ -98,7 +98,7 @@ export default function CartPage() {
           </div>
           <button
             className="cart-header__clear"
-            onClick={() => clearCart()}
+            onClick={() => setItems([])}
           >
             Clear all
           </button>
@@ -131,15 +131,15 @@ export default function CartPage() {
                   <div>
                     <p className="cart-item__name">{item.name}</p>
                     <span className="cart-item__vendor">
-                      <Store size={12} aria-hidden style={{ verticalAlign: -2 }} /> Restaurant &nbsp;·&nbsp; {item.vendor}
+                      {vendorTypeLabel[item.vendorType]} &nbsp;·&nbsp; {item.vendor}
                     </span>
                   </div>
                   <button
                     className="cart-item__remove"
-                    onClick={() => handleRemove(item.id)}
+                    onClick={() => removeItem(item.id)}
                     aria-label={`Remove ${item.name}`}
                   >
-                    <X size={13} aria-hidden />
+                    ✕
                   </button>
                 </div>
 
@@ -160,13 +160,9 @@ export default function CartPage() {
                     className="cart-item__note-btn"
                     onClick={() => setNoteId(item.id)}
                   >
-                    {item.note ? (
-                      <>
-                        <Pencil size={12} aria-hidden style={{ verticalAlign: -2 }} /> {item.note}
-                      </>
-                    ) : (
-                      "+ Add a note"
-                    )}
+                    {item.note
+                      ? `📝 ${item.note}`
+                      : "+ Add a note"}
                   </button>
                 )}
 
@@ -205,7 +201,7 @@ export default function CartPage() {
 
           {/* delivery estimate banner */}
           <div className="cart-eta">
-            <span className="cart-eta__icon"><Zap size={18} aria-hidden /></span>
+            <span className="cart-eta__icon">⚡</span>
             <div>
               <p className="cart-eta__label">Estimated delivery</p>
               <p className="cart-eta__time">25 – 35 min</p>
@@ -232,9 +228,9 @@ export default function CartPage() {
                 {formatNaira(DELIVERY_FEE)}
               </span>
             </div>
-            {appliedPromo && (
+            {promoApplied && (
               <div className="cart-summary__line cart-summary__line--discount">
-                <span>Promo ({appliedPromo.code})</span>
+                <span>Promo (TUMMY10)</span>
                 <span>− {formatNaira(discount)}</span>
               </div>
             )}
@@ -259,42 +255,40 @@ export default function CartPage() {
 
           {/* promo code */}
           <div className="cart-promo">
-            <div className={`cart-promo__wrap ${promoError ? "cart-promo__wrap--error" : ""} ${appliedPromo ? "cart-promo__wrap--success" : ""}`}>
-              <span className="cart-promo__icon"><Tag size={15} aria-hidden /></span>
+            <div className={`cart-promo__wrap ${promoError ? "cart-promo__wrap--error" : ""} ${promoApplied ? "cart-promo__wrap--success" : ""}`}>
+              <span className="cart-promo__icon">🏷️</span>
               <input
                 className="cart-promo__input"
                 placeholder="Promo code"
                 value={promo}
                 onChange={e => {
                   setPromo(e.target.value);
-                  setPromoError("");
+                  setPromoError(false);
                 }}
-                disabled={!!appliedPromo}
+                disabled={promoApplied}
               />
-              {appliedPromo ? (
+              {promoApplied ? (
                 <button
                   className="cart-promo__btn cart-promo__btn--remove"
-                  onClick={handleRemovePromo}
+                  onClick={() => { setPromoApplied(false); setPromo(""); }}
                 >
                   Remove
                 </button>
               ) : (
                 <button
                   className="cart-promo__btn"
-                  onClick={handleApplyPromo}
-                  disabled={!promo.trim() || isValidatingPromo}
+                  onClick={applyPromo}
+                  disabled={!promo.trim()}
                 >
-                  {isValidatingPromo ? "Checking…" : "Apply"}
+                  Apply
                 </button>
               )}
             </div>
             {promoError && (
-              <p className="cart-promo__error">{promoError}</p>
+              <p className="cart-promo__error">Invalid promo code. Try TUMMY10</p>
             )}
-            {appliedPromo && (
-              <p className="cart-promo__success">
-                <PartyPopper size={13} aria-hidden style={{ verticalAlign: -2 }} /> {appliedPromo.code} applied — you saved {formatNaira(discount)}!
-              </p>
+            {promoApplied && (
+              <p className="cart-promo__success">🎉 10% discount applied!</p>
             )}
           </div>
 
@@ -305,13 +299,13 @@ export default function CartPage() {
           </div>
 
           {/* checkout CTA */}
-          <Link href="/checkout" className="cart-checkout">
+          <button className="cart-checkout">
             <span>Proceed to Checkout</span>
             <span className="cart-checkout__arrow">→</span>
-          </Link>
+          </button>
 
           <p className="cart-summary__note">
-            <Lock size={12} aria-hidden style={{ verticalAlign: -2 }} /> Secure checkout &nbsp;·&nbsp; Pay on delivery available
+            🔒 Secure checkout &nbsp;·&nbsp; Pay on delivery available
           </p>
         </aside>
       </div>
