@@ -52,25 +52,11 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: [
-    "Auth",
-    "Vendors",
-    "Orders",
-    "Products",
-    "Wallet",
-    "Payouts",
-    "Promotions",
-    "Notifications",
-    "Support",
-    "Addresses",
-    "Reviews",
-    "Referrals",
-    "Banners",
-    "AuditLog",
-    "Favorites",
-    "Categories",
-    "RiderDocuments",
-    "Payments",
-  ],
+  // Kept to exactly what's actually built against TMT-BE-V1's real surface
+  // (customer-facing subset — see restaurantsApi.ts/ordersApi.ts's doc
+  // comments) rather than the speculative full domain list the `frontend`
+  // branch's ported code assumed (Wallet/Payouts/Referrals/... don't exist
+  // as endpoints anywhere in this backend).
+  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications"],
   endpoints: () => ({}),
 });
