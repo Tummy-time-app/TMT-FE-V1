@@ -3,26 +3,41 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { setCredentials } from "@/features/auth/authSlice";
 import { useLoginMutation } from "@/features/auth/authApi";
 import { defaultRouteForRole } from "@/features/auth/roleHome";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas";
+import type { UnverifiedLoginError } from "@/features/auth/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { cn } from "@/lib/utils/cn";
 import { safeRedirectPath } from "@/lib/utils/safeRedirect";
 import { useAppDispatch } from "@/store/hooks";
-import { AuthSocialButtons } from "./AuthSocialButtons";
+import { EyeIcon, EyeOffIcon } from "@/components/icons";
+import { ResendVerificationNotice } from "./ResendVerificationNotice";
 
-const fieldClass =
-  "w-full rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-3.5 text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 focus:outline-none";
-const fieldInvalidClass = "border-red-400 focus:border-red-500 focus:ring-red-500";
-
+/**
+ * Ported from the `frontend` branch's app/(auth)/login/page.tsx — markup,
+ * field set, and the show/hide password eye button kept faithful (see
+ * app/auth.css). Deliberate departures:
+ *
+ * 1. Real react-hook-form + zod validation and a real useLoginMutation call
+ *    in place of the source's local useState fields and a `setTimeout`
+ *    that faked success — the source had no backend at all, and its
+ *    success-modal-then-redirect never showed a real error either.
+ * 2. Handles the 403 UnverifiedLoginError TMT-BE-V1 now sends when the
+ *    account hasn't clicked its verification email yet (see authApi.ts's
+ *    doc comment) — swaps to the same "resend the link" state
+ *    RegisterForm uses, instead of surfacing it as a generic error.
+ */
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -42,88 +57,101 @@ export function LoginForm() {
         safeRedirectPath(searchParams.get("redirect"), defaultRouteForRole(response.user.role)),
       );
     } catch (err) {
+      const data = (err as { data?: Partial<UnverifiedLoginError> } | undefined)?.data;
+      if (data?.requiresVerification) {
+        setUnverifiedEmail(data.email ?? values.email);
+        return;
+      }
       setError("root", { message: normalizeApiError(err as never).message });
     }
   };
 
-  return (
-    <div className="w-full max-w-sm">
-      <h1 className="text-2xl font-medium text-neutral-900">Welcome back</h1>
+  if (unverifiedEmail) {
+    return (
+      <>
+        <h1 className="auth-heading">Verify your email</h1>
+        <p className="auth-subtext">
+          This account hasn&apos;t been verified yet. We can resend the verification link below.
+        </p>
 
-      <form
-        className="mt-6 space-y-4"
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-      >
-        <div>
-          <label htmlFor="email" className="sr-only">
+        <ResendVerificationNotice email={unverifiedEmail} />
+
+        <p className="auth-footer-text">
+          <button type="button" className="auth-footer-link" onClick={() => setUnverifiedEmail(null)}>
+            Back to login
+          </button>
+        </p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h1 className="auth-heading">Welcome back</h1>
+      <p className="auth-subtext">Sign in to your account to continue</p>
+
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className="auth-field">
+          <label htmlFor="email" className="auth-label">
             Email
           </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             aria-invalid={!!errors.email}
-            className={cn(fieldClass, errors.email && fieldInvalidClass)}
+            className={cn("auth-input", errors.email && "auth-input--invalid")}
             {...register("email")}
           />
-          {errors.email && (
-            <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="auth-error-text">{errors.email.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="password" className="sr-only">
+        <div className="auth-field">
+          <label htmlFor="password" className="auth-label">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Password"
-            aria-invalid={!!errors.password}
-            className={cn(fieldClass, errors.password && fieldInvalidClass)}
-            {...register("password")}
-          />
-          {errors.password && (
-            <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
-          )}
+          <div className="auth-input-wrap">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              aria-invalid={!!errors.password}
+              className={cn("auth-input", errors.password && "auth-input--invalid")}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              className="auth-eye-btn"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOffIcon className="size-[18px]" /> : <EyeIcon className="size-[18px]" />}
+            </button>
+          </div>
+          {errors.password && <p className="auth-error-text">{errors.password.message}</p>}
         </div>
 
-        <div className="text-right">
-          <Link
-            href="/forgot-password"
-            className="text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-900 hover:underline"
-          >
+        <div className="auth-forgot-wrap">
+          <Link href="/forgot-password" className="auth-forgot-link">
             Forgot password?
           </Link>
         </div>
 
-        {errors.root && (
-          <p className="text-sm text-red-600">{errors.root.message}</p>
-        )}
+        {errors.root && <p className="auth-error-text">{errors.root.message}</p>}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-lg bg-neutral-900 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isLoading ? "Signing in…" : "Log in"}
+        <button type="submit" disabled={isLoading} className="auth-submit-btn">
+          {isLoading ? <span className="auth-spinner" /> : "Log in"}
         </button>
       </form>
 
-      <AuthSocialButtons />
-
-      <p className="mt-8 text-center text-sm text-neutral-600">
+      <p className="auth-footer-text">
         New to TummyTime?{" "}
-        <Link
-          href="/signup"
-          className="font-semibold text-neutral-900 underline underline-offset-2"
-        >
+        <Link href="/signup" className="auth-footer-link">
           Sign up
         </Link>
       </p>
-    </div>
+    </>
   );
 }

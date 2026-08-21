@@ -7,9 +7,10 @@ export const loginSchema = z.object({
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 /**
- * No OTP/forgot-password/reset-password schemas here — those flows don't
- * exist on TMT-BE-V1 (see authApi.ts's doc comment). Add them back if/when
- * the backend grows those endpoints.
+ * No forgot-password/reset-password schemas here — those flows don't exist
+ * on TMT-BE-V1 (see authApi.ts's doc comment). No OTP schema either: email
+ * verification is real now, but it's an emailed link the backend confirms
+ * server-side, not a code entered into a form here.
  */
 export const registerSchema = z
   .object({

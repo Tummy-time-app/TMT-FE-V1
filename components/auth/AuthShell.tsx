@@ -1,23 +1,33 @@
 import Image from "next/image";
-import Link from "next/link";
 
+/**
+ * Ported from the `frontend` branch's app/(auth)/{login,register,verify}/
+ * page.tsx — the full-bleed maroon-to-gold gradient behind a centered white
+ * card, logo at the top (see app/auth.css). Structure/markup/CSS classes
+ * kept faithful to the source; two deliberate departures:
+ *
+ * 1. The logo lives here once (all three source pages repeated the same
+ *    <Image>) rather than in every child.
+ * 2. `/tummytime-logo.png` (this repo's actual asset) is used in place of
+ *    the source's `/images/logo/tummytime-logo.png`, which doesn't exist
+ *    here — see components/nav/Navigation.tsx, which already uses the same
+ *    real path.
+ */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="bg-neutral-900 px-6 py-5 sm:px-10">
-        <Link href="/" className="inline-flex items-center">
-          <Image
-            src="/tummytime-logo.png"
-            alt="TummyTime"
-            width={331}
-            height={93}
-            className="h-7 w-auto sm:h-8"
-          />
-        </Link>
-      </header>
-      <main className="flex flex-1 items-center justify-center px-4 py-16">
+    <div className="auth-root">
+      <div className="auth-bg" aria-hidden />
+      <div className="auth-card">
+        <Image
+          src="/tummytime-logo.png"
+          alt="TummyTime"
+          width={180}
+          height={50}
+          priority
+          className="auth-logo-img"
+        />
         {children}
-      </main>
+      </div>
     </div>
   );
 }

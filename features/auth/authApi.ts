@@ -1,37 +1,55 @@
 import { baseApi } from "@/store/api/baseApi";
 import { isDevMode } from "@/lib/dev/devMode";
 import { toQueryError } from "@/lib/utils/apiError";
-import { mockGetSession, mockLogin, mockRegister } from "@/lib/mocks/auth.mock";
+import { mockGetSession, mockLogin, mockRegister, mockResendVerification } from "@/lib/mocks/auth.mock";
 import type {
   AuthResponse,
   LoginCredentials,
   RegisterPayload,
+  RegisterResult,
   User,
 } from "./types";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
  * TMT-BE-V1's user-service (see services/user-service/src/routes/auth.ts —
- * the wired-up router; routes/auth.route.ts is a dead, unmounted stub with
- * empty login/verify/forgot-password handlers, don't trust it) is a plain
- * Express + jsonwebtoken auth: no Supabase, no NestJS, no /api/v1 prefix,
- * no email verification/OTP/password-reset, and *no route is actually
+ * the wired-up router; routes/auth.route.ts is a dead, unmounted stub, don't
+ * trust it) is a plain Express + jsonwebtoken auth: no Supabase, no NestJS,
+ * no /api/v1 prefix, no password-reset, and *no route is actually
  * protected* — shared/src/middleware/auth.ts's authenticateJWT exists but
  * isn't applied anywhere server-side yet.
  *
  * Access tokens live 15 minutes, refresh tokens 7 days (both JWTs signed
  * with the same payload: {id, email, name, role}) — see user-service's
  * generateTokens(). GET /users/me only decodes whichever access token you
- * send it; it does NOT hit the DB, so the `phone` field (never in the JWT
- * payload) disappears after a session restore even though it was present
- * right after login/register. That's a backend gap, not a bug here.
+ * send it; it does NOT hit the DB, so the `phone`/`isEmailVerified` fields
+ * (never in the JWT payload) disappear after a session restore even though
+ * they were present right after login/register. That's a backend gap, not
+ * a bug here.
+ *
+ * Email verification IS now real (added on origin/staging after this file
+ * was first written — the local TMT-BE-V1 checkout needs `git pull` to see
+ * it in services/user-service/src/routes/auth.ts):
+ * - POST /users/register always creates the account unverified and returns
+ *   RegisterResult (message + requiresVerification: true + user) — no
+ *   tokens at all, not even a degraded session. The account only becomes
+ *   usable once the user clicks the link user-service emailed them.
+ * - GET /users/verify-email?token=... does the actual verifying. It's
+ *   handled entirely server-side (redirects the browser to
+ *   `${FRONTEND_URL}/?verified=true` or `?verified=false&error=...`) — no
+ *   frontend route calls this directly, but "/" needs to read that query
+ *   param and show the result (see components/landing/VerifiedBanner.tsx).
+ * - POST /users/login 403s with UnverifiedLoginError (error +
+ *   requiresVerification: true + email) instead of issuing a session when
+ *   isEmailVerified is still false — LoginForm branches on that shape.
+ * - POST /users/resend-verification re-sends the link for a given email.
  * ═══════════════════════════════════════════════════════════════════════
  */
 
 /** Mirrors user-service's generateTokens() access-token lifetime. */
 const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 
-/** The exact envelope POST /users/register and POST /users/login return. */
+/** The exact envelope a *verified* POST /users/login returns. */
 interface BackendAuthResponse {
   message: string;
   accessToken: string;
@@ -73,7 +91,8 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["Auth"],
     }),
 
-    register: builder.mutation<AuthResponse, RegisterPayload>({
+    /** Never returns a session — see this file's doc comment. */
+    register: builder.mutation<RegisterResult, RegisterPayload>({
       queryFn: async (payload, _api, _extra, fetchWithBQ) => {
         try {
           if (isDevMode) return { data: await mockRegister(payload) };
@@ -84,12 +103,30 @@ export const authApi = baseApi.injectEndpoints({
             body: payload,
           });
           if (result.error) return { error: result.error };
-          return { data: toAuthResponse(result.data as BackendAuthResponse) };
+          return { data: result.data as RegisterResult };
         } catch (error) {
           return { error: toQueryError(error) };
         }
       },
-      invalidatesTags: ["Auth"],
+    }),
+
+    /** Re-sends the verification link for an unverified account. */
+    resendVerification: builder.mutation<{ message: string }, { email: string }>({
+      queryFn: async ({ email }, _api, _extra, fetchWithBQ) => {
+        try {
+          if (isDevMode) return { data: await mockResendVerification(email) };
+
+          const result = await fetchWithBQ({
+            url: "/api/users/resend-verification",
+            method: "POST",
+            body: { email },
+          });
+          if (result.error) return { error: result.error };
+          return { data: result.data as { message: string } };
+        } catch (error) {
+          return { error: toQueryError(error) };
+        }
+      },
     }),
 
     /**
@@ -155,4 +192,9 @@ export const authApi = baseApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useLoginMutation, useRegisterMutation, useLazyGetSessionQuery } = authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useResendVerificationMutation,
+  useLazyGetSessionQuery,
+} = authApi;
