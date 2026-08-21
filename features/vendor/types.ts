@@ -1,3 +1,5 @@
+import type { MenuItem } from "@/features/restaurants/types";
+
 /**
  * The vendor's own view of their store — mirrors TMT-BE-V1's full
  * `restaurants` DB row (services/restaurant-service/src/db/schema.ts),
@@ -131,5 +133,32 @@ export interface CreateExtraPayload {
   name: string;
   price: number;
   isRequired?: boolean;
+  available?: boolean;
+}
+
+/* ── Inventory ──────────────────────────────────────────────────
+ * GET/PATCH .../inventory, .../stock — see vendor.ts. The real DB row
+ * for a menu item always carries these; features/restaurants/types.ts's
+ * `MenuItem` leaves them out since customer browsing doesn't need them.
+ */
+export type StockStatus = "AVAILABLE" | "LOW_STOCK" | "OUT_OF_STOCK";
+
+export interface VendorMenuItem extends MenuItem {
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
+  stockStatus: StockStatus;
+}
+
+export interface InventorySummary {
+  total: number;
+  available: number;
+  lowStock: number;
+  outOfStock: number;
+}
+
+export interface UpdateStockPayload {
+  menuItemId: string;
+  stockQuantity?: number;
+  stockStatus?: StockStatus;
   available?: boolean;
 }

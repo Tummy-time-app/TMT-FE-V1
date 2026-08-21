@@ -80,7 +80,10 @@ export async function mockCreateMenuItem(payload: CreateMenuItemPayload): Promis
     throw { status: 409, message: "A menu item with this name already exists in this restaurant" };
   }
   const now = new Date().toISOString();
-  const item: MenuItem = {
+  // Includes stockQuantity/stockStatus/lowStockThreshold (VendorMenuItem
+  // fields, not on the thin MenuItem type) matching the real DB row's
+  // defaults — lib/mocks/vendorInventory.mock.ts reads these back.
+  const item = {
     id: crypto.randomUUID(),
     restaurantId: payload.restaurantId,
     name: payload.name,
@@ -89,6 +92,9 @@ export async function mockCreateMenuItem(payload: CreateMenuItemPayload): Promis
     category: payload.category || "Main",
     imageUrl: payload.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80",
     available: true,
+    stockQuantity: 100,
+    lowStockThreshold: 10,
+    stockStatus: "AVAILABLE" as const,
     createdAt: now,
     updatedAt: now,
   };

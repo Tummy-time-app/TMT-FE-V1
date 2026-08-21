@@ -6,6 +6,7 @@ import {
   type FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { env } from "@/config/env";
+import { isApiUrlMissingInProduction } from "@/lib/dev/devMode";
 import { sessionExpired } from "@/features/auth/authSlice";
 import type { RootState } from "../index";
 
@@ -31,12 +32,27 @@ const rawBaseQuery = fetchBaseQuery({
  * Wraps the raw fetch base query so a 401 from ANY endpoint clears the
  * session centrally — individual feature endpoints never need to handle
  * auth expiry themselves (spec §50).
+ *
+ * Also guards against the production-with-no-backend state: if
+ * NEXT_PUBLIC_API_URL wasn't set at build/deploy time, every request short-
+ * circuits with a clear config error instead of either firing a broken
+ * relative fetch or (see lib/dev/devMode.ts) silently falling back to the
+ * mock adapter's localStorage-backed data.
  */
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,
   extraOptions
 ) => {
+  if (isApiUrlMissingInProduction) {
+    return {
+      error: {
+        status: "CUSTOM_ERROR",
+        error: "NEXT_PUBLIC_API_URL is not configured",
+        data: { message: "This app isn't connected to a backend right now. Please try again later." },
+      } as FetchBaseQueryError,
+    };
+  }
   const result = await rawBaseQuery(args, api, extraOptions);
   if (result.error?.status === 401) {
     api.dispatch(sessionExpired());
@@ -57,6 +73,6 @@ export const baseApi = createApi({
   // comments) rather than the speculative full domain list the `frontend`
   // branch's ported code assumed (Wallet/Payouts/Referrals/... don't exist
   // as endpoints anywhere in this backend).
-  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications", "VendorStores", "Categories"],
+  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications", "VendorStores", "Categories", "Inventory"],
   endpoints: () => ({}),
 });

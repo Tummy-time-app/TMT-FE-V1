@@ -165,9 +165,27 @@ export function StoreSettings({ storeId }: { storeId: string }) {
             {store.verificationStatus === "VERIFIED" ? "Verified" : "Verification pending"}
           </p>
         </div>
-        <Link href={`/vendor/${storeId}/menu`} className="vd-submit-btn" style={{ marginTop: 0, width: "auto", padding: "10px 18px", textDecoration: "none", display: "inline-block" }}>
-          Manage menu
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <Link href={`/vendor/${storeId}/menu`} className="vd-submit-btn" style={{ marginTop: 0, width: "auto", padding: "10px 18px", textDecoration: "none", display: "inline-block" }}>
+            Manage menu
+          </Link>
+          <Link
+            href={`/vendor/${storeId}/inventory`}
+            className="vd-submit-btn"
+            style={{
+              marginTop: 0,
+              width: "auto",
+              padding: "10px 18px",
+              textDecoration: "none",
+              display: "inline-block",
+              background: "transparent",
+              color: "var(--crimson)",
+              border: "2px solid rgba(172, 0, 0, 0.3)",
+            }}
+          >
+            Inventory
+          </Link>
+        </div>
       </header>
 
       <div className="vd-section">
