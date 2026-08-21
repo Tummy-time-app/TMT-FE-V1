@@ -1405,3 +1405,56 @@
     display: none;
   }
 }
+
+/* ── VERIFIED-EMAIL BANNER ────────────────────────────
+   Not ported from the source — new here. TMT-BE-V1's email-verification
+   link redirects the browser to `${FRONTEND_URL}/?verified=true` (or
+   `?verified=false&error=...`), landing on this page — see
+   components/landing/VerifiedBanner.tsx and features/auth/authApi.ts's
+   doc comment. Reuses this file's --crimson/--amber tokens rather than
+   app/auth.css's, since it renders on the landing page, not inside the
+   auth card. */
+
+.verified-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.verified-banner--success {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.verified-banner--error {
+  background: #fef3f2;
+  color: var(--crimson);
+}
+
+.verified-banner__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.verified-banner__dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.verified-banner__dismiss:hover {
+  opacity: 1;
+}

@@ -1,17 +1,23 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
+import { VerifiedBanner } from "@/components/landing/VerifiedBanner";
 import { Navigation } from "@/components/nav/Navigation";
 
 /**
  * Ported from the `frontend` branch's app/page.tsx (Hero + categories grid
- * + floating food icon strip), with two deliberate departures — see
- * Navigation.tsx's doc comment for the nav bar, and below for the footer.
+ * + floating food icon strip), with three deliberate departures — see
+ * Navigation.tsx's doc comment for the nav bar, below for the footer, and
+ * VerifiedBanner's doc comment for why it's here at all.
  */
 export default function Home() {
   return (
     <main>
       <Navigation />
+      <Suspense>
+        <VerifiedBanner />
+      </Suspense>
       <Hero />
 
       {/* ── CATEGORIES ─────────────────────────────── */}

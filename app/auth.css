@@ -1,0 +1,321 @@
+/**
+ * Ported from the `frontend` branch's app/(auth)/{login,register,verify}/
+ * page.tsx — each of those had its own near-identical inline <style> block
+ * (gradient background, white rounded card, Nunito type); consolidated here
+ * into one shared stylesheet under an `auth-` prefix, following the same
+ * ported-CSS-file convention as app/landing.css (see its doc comment).
+ *
+ * Deliberate departures from a literal copy:
+ * - The `@import url(...)` Google Fonts line is dropped — Nunito is loaded
+ *   via next/font/google's `variable` option in app/layout.tsx instead
+ *   (--font-nunito), avoiding the FOUC risk an unloaded <link>/@import
+ *   font has (same reasoning as --font-display/--font-body there).
+ * - Class names are prefixed `auth-` (`.card` etc. were only ever going to
+ *   collide with something else's `.card` in a codebase this size).
+ * - The source had three near-duplicate stylesheets (one per page); this
+ *   file merges them into shared classes shown just once, plus a
+ *   `.auth-verify-notice` block that's new here (the source's verify page
+ *   was a 6-digit OTP screen — TMT-BE-V1's real verification is an emailed
+ *   link, not an in-app code, so that page's OTP-box CSS isn't ported; see
+ *   components/auth/ResendVerificationNotice.tsx).
+ */
+
+:root {
+  --auth-maroon: #8b0000;
+  --auth-crimson: #c8102e;
+  --auth-orange: #d94f00;
+  --auth-gold: #f5a800;
+}
+
+.auth-root {
+  font-family: var(--font-nunito);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    var(--auth-maroon) 0%,
+    var(--auth-crimson) 30%,
+    var(--auth-orange) 60%,
+    var(--auth-gold) 100%
+  );
+  z-index: 0;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 48px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.22),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: authCardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes authCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.auth-logo-img {
+  object-fit: contain;
+  margin-bottom: 20px;
+  margin-top: 16px;
+}
+
+.auth-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--auth-crimson);
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: -0.2px;
+}
+
+.auth-subtext {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 28px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 50px;
+  border: 1.5px solid transparent;
+  background: #f4f4f4;
+  font-family: var(--font-nunito);
+  font-size: 14px;
+  color: #222;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.auth-input-wrap .auth-input {
+  padding-right: 46px;
+}
+
+.auth-input:focus {
+  background: #fff;
+  border-color: var(--auth-crimson);
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
+}
+
+.auth-input::placeholder {
+  color: #bbb;
+}
+
+.auth-input--invalid {
+  border-color: #dc2626;
+}
+
+.auth-input--invalid:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.auth-eye-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.auth-eye-btn:hover {
+  color: var(--auth-crimson);
+}
+
+.auth-forgot-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.auth-forgot-link {
+  font-size: 13px;
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.auth-forgot-link:hover {
+  color: var(--auth-crimson);
+}
+
+.auth-submit-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(90deg, var(--auth-gold) 0%, var(--auth-crimson) 100%);
+  color: #fff;
+  font-family: var(--font-nunito);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(200, 16, 46, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  margin-top: 4px;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  opacity: 0.93;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(200, 16, 46, 0.35);
+}
+
+.auth-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: authSpin 0.7s linear infinite;
+}
+
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-footer-text {
+  margin-top: 24px;
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+}
+
+.auth-footer-link {
+  color: var(--auth-crimson);
+  font-weight: 700;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.auth-footer-link:hover {
+  color: var(--auth-gold);
+}
+
+.auth-error-text {
+  font-size: 13px;
+  color: #c53030;
+  font-weight: 600;
+  text-align: center;
+}
+
+.auth-success-text {
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Post-register / blocked-login "check your email" state ── */
+
+.auth-verify-notice {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.auth-verify-email {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  background: #f4f4f4;
+  border-radius: 50px;
+  padding: 10px 20px;
+  word-break: break-all;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 32px 24px 28px;
+  }
+}

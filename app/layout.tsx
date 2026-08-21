@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Poppins, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Poppins, Plus_Jakarta_Sans, Nunito } from "next/font/google";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CartProvider } from "@/lib/CartContext";
 import { ProfileProvider } from "@/lib/ProfileContext";
 import { StoreProvider } from "@/store/provider";
 import "./globals.css";
 import "./landing.css";
+import "./auth.css";
+import "./loading.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +33,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
+// Auth pages only (see app/auth.css) — ported from the `frontend` branch's
+// login/register/verify pages, whose Nunito came from a Google Fonts
+// @import that never actually loaded. next/font avoids that FOUC risk.
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   title: "TummyTime — Everything You Need",
   description: "Everything You Need, Right On Time.",
@@ -44,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${plusJakartaSans.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${plusJakartaSans.variable} ${nunito.variable} antialiased`}
       >
         <StoreProvider>
           <AuthProvider>

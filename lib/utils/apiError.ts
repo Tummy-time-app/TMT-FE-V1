@@ -22,11 +22,21 @@ export interface NormalizedApiError {
  */
 export function toQueryError(error: unknown): FetchBaseQueryError {
   if (error && typeof error === "object" && "status" in error) {
-    const err = error as { status: unknown; message?: unknown; errors?: unknown };
-    const status = typeof err.status === "number" ? err.status : ("CUSTOM_ERROR" as const);
+    const { status: rawStatus, message, errors, ...rest } = error as {
+      status: unknown;
+      message?: unknown;
+      errors?: unknown;
+      [key: string]: unknown;
+    };
+    const status = typeof rawStatus === "number" ? rawStatus : ("CUSTOM_ERROR" as const);
     return {
       status,
-      data: { message: err.message ?? "Something went wrong.", errors: err.errors },
+      // `...rest` forwards any extra fields a real endpoint's error body
+      // carries beyond message/errors (e.g. the 403 login response's
+      // `requiresVerification`/`email` — see UnverifiedLoginError) so a
+      // thrown mock error can mirror it exactly rather than only ever
+      // producing {message, errors}.
+      data: { message: message ?? "Something went wrong.", errors, ...rest },
     } as FetchBaseQueryError;
   }
   if (error instanceof Error) {

@@ -19,8 +19,8 @@ export type UserRole =
 
 /**
  * The user object the backend actually sends back. Deliberately thin —
- * there's no avatarUrl, emailVerified, active, vendorId, or timestamp
- * fields anywhere in user-service's auth responses.
+ * there's no avatarUrl, active, vendorId, or timestamp field anywhere in
+ * user-service's auth responses.
  */
 export interface User {
   id: string;
@@ -35,6 +35,12 @@ export interface User {
    * via the optional type rather than silently defaulting to "".
    */
   phone?: string;
+  /**
+   * Absent after a session restore via GET /users/me for the same reason
+   * `phone` is — the JWT payload never carried it either. Only meaningful
+   * right after register/login.
+   */
+  isEmailVerified?: boolean;
 }
 
 export interface AuthSession {
@@ -50,10 +56,10 @@ export interface AuthSession {
 }
 
 /**
- * Both /register and /login return a full session immediately — there's
- * no email-confirmation gate (no verification flow exists on this backend
- * at all, see authApi.ts's doc comment), so register and login share this
- * one response shape.
+ * A full session — what a *verified* login always returns, and what
+ * register used to return immediately before TMT-BE-V1 grew an
+ * email-verification gate (see authApi.ts's doc comment). Register no
+ * longer returns this; see RegisterResult below.
  */
 export interface AuthResponse {
   user: User;
@@ -72,4 +78,28 @@ export interface RegisterPayload {
   password: string;
   /** Defaults to "customer" server-side if omitted. */
   role?: Extract<UserRole, "customer" | "restaurant_owner">;
+}
+
+/**
+ * Every successful registration returns this now — new accounts always
+ * start unverified, so no session/tokens come back at all. The user must
+ * click the link user-service emailed them (GET /users/verify-email, handled
+ * entirely server-side — no frontend route calls it) before they can log in.
+ */
+export interface RegisterResult {
+  message: string;
+  requiresVerification: true;
+  user: User;
+}
+
+/**
+ * The error body POST /users/login sends back (as a 403) when the account
+ * exists, the password is correct, but isEmailVerified is still false.
+ * Lets LoginForm distinguish "wrong password" from "go check your email"
+ * and offer a resend instead of a generic error message.
+ */
+export interface UnverifiedLoginError {
+  error: string;
+  requiresVerification: true;
+  email: string;
 }
