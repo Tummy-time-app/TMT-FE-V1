@@ -11,6 +11,9 @@ export interface Restaurant {
   ownerId: string;
   name: string;
   address: string;
+  /** Not in the backend doc's restaurant-service schema yet — added frontend-side for the map feature (components/maps/); absent means "no map to show." */
+  lat?: number | null;
+  lng?: number | null;
   phone?: string | null;
   cuisine?: string | null;
   rating?: string | number | null;

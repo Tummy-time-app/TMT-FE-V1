@@ -2,37 +2,34 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/CartContext";
 import { useAuth } from "@/features/auth/hooks";
 import { useProfile } from "@/lib/ProfileContext";
 import { VENDOR_ROLES } from "@/components/vendor-portal/useVendorGuard";
-import {
-  ReceiptIcon,
-  ShoppingBagIcon,
-  StoreIcon,
-  UtensilsIcon,
-  type IconComponent,
-} from "@/components/icons";
+import { LocationPickerMap } from "@/components/maps/LocationPickerMap";
 import hamburgerMenuAnimation from "@/app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
 import LottieIcon from "@/components/LottieIcon";
 
 /**
  * Ported from the `frontend` branch's components/Navigation.tsx (structure,
- * markup, and CSS classes kept faithful — see app/landing.css). Two
- * deliberate departures from a literal copy:
+ * markup, and CSS classes kept faithful — see app/landing.css). One
+ * deliberate departure from a literal copy: Login/Signup are wired to the
+ * real `useAuth()` we integrated against TMT-BE-V1 — the source branch's
+ * version is just static links with no auth awareness at all. Showing them
+ * to an already-signed-in user would regress work from earlier in this
+ * session.
  *
- * 1. Login/Signup are wired to the real `useAuth()` we integrated against
- *    TMT-BE-V1 — the source branch's version is just static links with no
- *    auth awareness at all. Showing them to an already-signed-in user
- *    would regress work from earlier in this session.
- * 2. A "quick links" section (Orders/Shop/Food/Restaurants) is folded into
- *    the mobile drawer, shown only when signed in — carried over from the
- *    SideNav this component replaces, rather than dropped.
- *
- * Search and "Deliver to" location are ported as decorative/non-functional,
- * same as the source — no real search or geolocation backend exists yet.
+ * Search and "Deliver to" location started as decorative ports (no real
+ * search or geolocation backend existed at the time) — both are now real:
+ * search submits to /vendors/restaurants?q=..., which RestaurantsList
+ * already filters by (see app/vendors/restaurants/page.tsx's Suspense
+ * wrapper, required because it reads that query param via
+ * useSearchParams). "Deliver to" opens the same LocationPickerMap used by
+ * onboarding, reading/writing the same ProfileContext address — so the
+ * header, checkout, and tracking map all agree on one location.
  */
 
 const vendorCategories = [
@@ -65,32 +62,31 @@ const navLinks = [
   { label: "Offers", href: "/offers", highlight: true },
 ];
 
-/** Only shown once signed in — carried over from the SideNav this component replaces. */
-const customerLinks: { href: string; label: string; icon: IconComponent }[] = [
-  { href: "/orders", label: "Orders", icon: ReceiptIcon },
-  { href: "/shop", label: "Shop", icon: ShoppingBagIcon },
-  { href: "/food", label: "Food", icon: UtensilsIcon },
-  { href: "/restaurants", label: "Restaurants", icon: StoreIcon },
-];
-
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [vendorsOpen, setVendorsOpen] = useState(false);
   const [mobileVendorsOpen, setMobileVendorsOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [mobileLocationOpen, setMobileLocationOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
+  const router = useRouter();
   const { user, isAuthenticated, isSessionLoading } = useAuth();
-  const { profile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   const { cartCount } = useCart();
 
   const vendorRef = useRef<HTMLLIElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (vendorRef.current && !vendorRef.current.contains(e.target as Node)) {
         setVendorsOpen(false);
+      }
+      if (locationRef.current && !locationRef.current.contains(e.target as Node)) {
+        setLocationOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -107,7 +103,32 @@ export function Navigation() {
   const closeAll = () => {
     setMobileMenuOpen(false);
     setVendorsOpen(false);
+    setLocationOpen(false);
+    setMobileLocationOpen(false);
   };
+
+  const submitSearch = (raw: string) => {
+    const q = raw.trim();
+    router.push(q ? `/vendors/restaurants?q=${encodeURIComponent(q)}` : "/vendors/restaurants");
+    closeAll();
+  };
+
+  // Re-picking here is a deliberate "change my location" action, unlike
+  // onboarding's picker (components/onboarding/steps/DeliveryAddressStep.tsx)
+  // which never overwrites text the customer already typed — so a
+  // successful resolve wins here, falling back to whatever was there only
+  // if reverse geocoding failed.
+  const deliveryLabel = profile.address.line1 || profile.address.city || "Current location";
+  const handleAddressPick = (pos: { lat: number; lng: number }) =>
+    updateProfile({ address: { ...profile.address, lat: pos.lat, lng: pos.lng } });
+  const handleAddressResolved = (resolved: { line1: string; city: string }) =>
+    updateProfile({
+      address: {
+        ...profile.address,
+        line1: resolved.line1 || profile.address.line1,
+        city: resolved.city || profile.address.city,
+      },
+    });
 
   const showAuthActions = !isSessionLoading && !isAuthenticated;
   const showProfileChip = !isSessionLoading && isAuthenticated && user;
@@ -143,56 +164,89 @@ export function Navigation() {
           </div>
 
           {/* CENTER — location + search */}
-          <div className="nav-search-group">
-            <button className="nav-location-btn" aria-label="Change delivery address">
-              <span className="nav-location-icon">📍</span>
-              <span className="nav-location-text">
-                <span className="nav-location-label">Deliver to</span>
-                <span className="nav-location-value">Current location</span>
-              </span>
-              <span className="nav-location-chevron">▾</span>
-            </button>
+          <div className="nav-location-wrap" ref={locationRef}>
+            <div className="nav-search-group">
+              <button
+                type="button"
+                className="nav-location-btn"
+                aria-label="Change delivery address"
+                aria-haspopup="true"
+                aria-expanded={locationOpen}
+                onClick={() => setLocationOpen((p) => !p)}
+              >
+                <span className="nav-location-icon">📍</span>
+                <span className="nav-location-text">
+                  <span className="nav-location-label">Deliver to</span>
+                  <span className="nav-location-value">{deliveryLabel}</span>
+                </span>
+                <span className={`nav-location-chevron ${locationOpen ? "nav-chevron--up" : ""}`}>▾</span>
+              </button>
 
-            <div className={`nav-search ${searchFocused ? "nav-search--focused" : ""}`}>
-              <span className="nav-search-icon">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-              </span>
-              <input
-                ref={searchRef}
-                type="text"
-                className="nav-search-input"
-                placeholder="Search restaurants, foods, stores…"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                aria-label="Search"
-              />
-              {searchValue && (
-                <button
-                  className="nav-search-clear"
-                  onClick={() => {
-                    setSearchValue("");
-                    searchRef.current?.focus();
-                  }}
-                  aria-label="Clear search"
-                >
-                  ✕
+              <form
+                className={`nav-search ${searchFocused ? "nav-search--focused" : ""}`}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  submitSearch(searchValue);
+                }}
+              >
+                <button type="submit" className="nav-search-icon" aria-label="Search">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
                 </button>
-              )}
+                <input
+                  ref={searchRef}
+                  type="text"
+                  className="nav-search-input"
+                  placeholder="Search restaurants, foods, stores…"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  aria-label="Search"
+                />
+                {searchValue && (
+                  <button
+                    type="button"
+                    className="nav-search-clear"
+                    onClick={() => {
+                      setSearchValue("");
+                      searchRef.current?.focus();
+                    }}
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </form>
             </div>
+
+            {locationOpen && (
+              <div className="nav-location-popover" role="dialog" aria-label="Set delivery location">
+                <LocationPickerMap
+                  value={
+                    profile.address.lat != null && profile.address.lng != null
+                      ? { lat: profile.address.lat, lng: profile.address.lng }
+                      : null
+                  }
+                  onChange={handleAddressPick}
+                  onAddressResolved={handleAddressResolved}
+                />
+                <button type="button" className="nav-location-done-btn" onClick={() => setLocationOpen(false)}>
+                  Done
+                </button>
+              </div>
+            )}
           </div>
 
           {/* RIGHT — cart + auth */}
@@ -321,44 +375,74 @@ export function Navigation() {
           </button>
         </div>
 
-        <button className="nav-drawer__location">
+        <button
+          type="button"
+          className="nav-drawer__location"
+          aria-expanded={mobileLocationOpen}
+          onClick={() => setMobileLocationOpen((p) => !p)}
+        >
           <span>📍</span>
           <div>
             <p className="nav-drawer__location-label">Deliver to</p>
-            <p className="nav-drawer__location-value">Current location ▾</p>
+            <p className="nav-drawer__location-value">
+              {deliveryLabel} <span className={mobileLocationOpen ? "nav-chevron--up" : ""}>▾</span>
+            </p>
           </div>
         </button>
 
-        <div className="nav-drawer__search-wrap">
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="nav-drawer__search-icon"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input type="text" placeholder="Search restaurants, foods…" className="nav-drawer__search-input" />
-        </div>
+        {mobileLocationOpen && (
+          <div className="nav-drawer__location-panel">
+            <LocationPickerMap
+              value={
+                profile.address.lat != null && profile.address.lng != null
+                  ? { lat: profile.address.lat, lng: profile.address.lng }
+                  : null
+              }
+              onChange={handleAddressPick}
+              onAddressResolved={handleAddressResolved}
+            />
+            <button
+              type="button"
+              className="nav-location-done-btn"
+              onClick={() => setMobileLocationOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        )}
+
+        <form
+          className="nav-drawer__search-wrap"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitSearch(searchValue);
+          }}
+        >
+          <button type="submit" className="nav-drawer__search-icon" aria-label="Search">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
+          <input
+            type="text"
+            placeholder="Search restaurants, foods…"
+            className="nav-drawer__search-input"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+          />
+        </form>
 
         <nav className="nav-drawer__nav">
-          {isAuthenticated && (
-            <div className="nav-drawer__section" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginBottom: 8 }}>
-              {customerLinks.map(({ href, label, icon: Icon }) => (
-                <Link key={href} href={href} onClick={closeAll} className="nav-drawer__link">
-                  <Icon className="size-4 shrink-0" />
-                  {label}
-                </Link>
-              ))}
-            </div>
-          )}
-
           <div className="nav-drawer__section">
             <button
               className="nav-drawer__link nav-drawer__link--accordion"

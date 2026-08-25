@@ -71,6 +71,8 @@ export function CartView() {
         deliveryAddress: profile.address.line1
           ? `${profile.address.line1}, ${profile.address.city}`
           : undefined,
+        deliveryLat: profile.address.lat,
+        deliveryLng: profile.address.lng,
       }).unwrap();
       setOrderPlaced(true);
       clearCart();

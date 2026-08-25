@@ -63,6 +63,8 @@ export async function mockCreateOrder(payload: CreateOrderPayload): Promise<Orde
     status: "pending",
     totalAmount: String(payload.totalAmount),
     deliveryAddress: payload.deliveryAddress || "123 Main St, Apt 4B",
+    deliveryLat: payload.deliveryLat,
+    deliveryLng: payload.deliveryLng,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

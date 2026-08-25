@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPinIcon } from "@/components/icons";
+import { LocationPickerMap } from "@/components/maps/LocationPickerMap";
 import type {
   DeliveryAddress,
   OnboardingDraft,
@@ -54,6 +55,28 @@ export function DeliveryAddressStep({
             </button>
           ))}
         </div>
+
+        <LocationPickerMap
+          value={
+            draft.address.lat != null && draft.address.lng != null
+              ? { lat: draft.address.lat, lng: draft.address.lng }
+              : null
+          }
+          onChange={(pos) =>
+            onChange({ address: { ...draft.address, lat: pos.lat, lng: pos.lng } })
+          }
+          onAddressResolved={(resolved) =>
+            onChange({
+              address: {
+                ...draft.address,
+                // Only fill fields the customer hasn't already typed — a
+                // pin-drop shouldn't clobber a manually-corrected address.
+                line1: draft.address.line1 || resolved.line1,
+                city: draft.address.city || resolved.city,
+              },
+            })
+          }
+        />
 
         <label className="flex items-center gap-3 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-3.5 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900">
           <MapPinIcon className="size-5 shrink-0 text-neutral-500" />

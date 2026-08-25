@@ -34,6 +34,9 @@ export interface Order {
   status: OrderStatus;
   totalAmount: string | number;
   deliveryAddress?: string;
+  /** Not in the backend doc's order-service schema yet — added frontend-side for the map feature (components/maps/); absent means no tracking map to show. */
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -49,4 +52,6 @@ export interface CreateOrderPayload {
   items: OrderItem[];
   totalAmount: number;
   deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
 }

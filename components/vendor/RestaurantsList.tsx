@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useListRestaurantsQuery } from "@/features/restaurants/restaurantsApi";
 import { RestaurantCard, RestaurantCardSkeleton } from "./RestaurantCard";
 
@@ -32,7 +33,13 @@ const PAGE_SIZE = 6;
 export function RestaurantsList() {
   const { data: restaurants = [], isLoading, isError } = useListRestaurantsQuery();
 
-  const [search, setSearch] = useState("");
+  // Seeds from ?q=... when arriving via the nav search bar (components/nav/
+  // Navigation.tsx) — a plain useState initializer, not a synced effect, so
+  // typing in the box afterward doesn't fight the URL. Reading
+  // useSearchParams() requires this page to be wrapped in <Suspense> — see
+  // app/vendors/restaurants/page.tsx.
+  const initialQuery = useSearchParams().get("q") ?? "";
+  const [search, setSearch] = useState(initialQuery);
   const [activeCuisine, setActiveCuisine] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [openNow, setOpenNow] = useState(false);

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/CartContext";
 import { useGetMenuQuery, useGetRestaurantQuery } from "@/features/restaurants/restaurantsApi";
 import type { MenuItem } from "@/features/restaurants/types";
+import { Map } from "@/components/maps/Map";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -134,6 +135,19 @@ export function RestaurantView({ restaurantId }: { restaurantId: string }) {
                 <span>{restaurant.address}</span>
               </div>
             </div>
+
+            {/* Only stores with a set location render a map — most vendor-created
+                stores don't have one yet (see features/restaurants/types.ts). */}
+            {restaurant.lat != null && restaurant.lng != null && (
+              <div style={{ marginTop: 12, marginBottom: 12 }}>
+                <Map
+                  center={{ lat: restaurant.lat, lng: restaurant.lng }}
+                  zoom={15}
+                  markers={[{ id: restaurant.id, kind: "vendor", lat: restaurant.lat, lng: restaurant.lng }]}
+                  height={160}
+                />
+              </div>
+            )}
 
             {restaurant.cuisine && (
               <div className="rp-left__tags">
