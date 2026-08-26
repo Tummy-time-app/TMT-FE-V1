@@ -9,6 +9,19 @@ import { useAuth } from "@/features/auth/hooks";
 import { useProfile } from "@/lib/ProfileContext";
 import { VENDOR_ROLES } from "@/components/vendor-portal/useVendorGuard";
 import { LocationPickerMap } from "@/components/maps/LocationPickerMap";
+import { useListRestaurantsQuery } from "@/features/restaurants/restaurantsApi";
+import { useRecentSearches } from "@/lib/useRecentSearches";
+import {
+  MapPinIcon,
+  SearchIcon,
+  CloseIcon,
+  ClockIcon,
+  StoreIcon,
+  BasketIcon,
+  LeafIcon,
+  UtensilsIcon,
+  type IconComponent,
+} from "@/components/icons";
 import hamburgerMenuAnimation from "@/app/assets/lottie/hamburger-menu.json";
 import closeXAnimation from "@/app/assets/lottie/close-x.json";
 import LottieIcon from "@/components/LottieIcon";
@@ -32,27 +45,27 @@ import LottieIcon from "@/components/LottieIcon";
  * header, checkout, and tracking map all agree on one location.
  */
 
-const vendorCategories = [
+const vendorCategories: { icon: IconComponent; label: string; desc: string; href: string; badge: string | null }[] = [
   {
-    emoji: "🏪",
+    icon: StoreIcon,
     label: "Restaurants",
     desc: "African, continental & intercontinental",
     href: "/vendors/restaurants",
-    badge: null as string | null,
+    badge: null,
   },
   {
-    emoji: "🛒",
+    icon: BasketIcon,
     label: "Shops",
     desc: "Groceries & daily household essentials",
     href: "/vendors/shops",
-    badge: "Coming soon",
+    badge: null,
   },
   {
-    emoji: "🌿",
+    icon: LeafIcon,
     label: "Local Markets",
     desc: "Fresh produce directly from local markets",
     href: "/vendors/markets",
-    badge: "Coming soon",
+    badge: null,
   },
 ];
 
@@ -62,6 +75,8 @@ const navLinks = [
   { label: "Offers", href: "/offers", highlight: true },
 ];
 
+const POPULAR_SEARCHES = ["Jollof rice", "Pizza", "Burgers", "Suya", "Shawarma", "Ice cream"];
+
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [vendorsOpen, setVendorsOpen] = useState(false);
@@ -69,12 +84,17 @@ export function Navigation() {
   const [locationOpen, setLocationOpen] = useState(false);
   const [mobileLocationOpen, setMobileLocationOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
   const router = useRouter();
   const { user, isAuthenticated, isSessionLoading } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { cartCount } = useCart();
+  const { recent: recentSearches, add: addRecentSearch, clear: clearRecentSearches } = useRecentSearches();
+  // Only fetched once the panel is actually open — not on every page load
+  // just because Navigation renders everywhere.
+  const { data: searchableRestaurants = [] } = useListRestaurantsQuery(undefined, { skip: !searchPanelOpen });
 
   const vendorRef = useRef<HTMLLIElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
@@ -87,6 +107,7 @@ export function Navigation() {
       }
       if (locationRef.current && !locationRef.current.contains(e.target as Node)) {
         setLocationOpen(false);
+        setSearchPanelOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -105,13 +126,19 @@ export function Navigation() {
     setVendorsOpen(false);
     setLocationOpen(false);
     setMobileLocationOpen(false);
+    setSearchPanelOpen(false);
   };
 
   const submitSearch = (raw: string) => {
     const q = raw.trim();
+    if (q) addRecentSearch(q);
     router.push(q ? `/vendors/restaurants?q=${encodeURIComponent(q)}` : "/vendors/restaurants");
     closeAll();
   };
+
+  const matchingRestaurants = searchValue.trim()
+    ? searchableRestaurants.filter((r) => r.name.toLowerCase().includes(searchValue.trim().toLowerCase())).slice(0, 5)
+    : [];
 
   // Re-picking here is a deliberate "change my location" action, unlike
   // onboarding's picker (components/onboarding/steps/DeliveryAddressStep.tsx)
@@ -172,9 +199,12 @@ export function Navigation() {
                 aria-label="Change delivery address"
                 aria-haspopup="true"
                 aria-expanded={locationOpen}
-                onClick={() => setLocationOpen((p) => !p)}
+                onClick={() => {
+                  setLocationOpen((p) => !p);
+                  setSearchPanelOpen(false);
+                }}
               >
-                <span className="nav-location-icon">📍</span>
+                <MapPinIcon className="nav-location-icon" width={14} height={14} />
                 <span className="nav-location-text">
                   <span className="nav-location-label">Deliver to</span>
                   <span className="nav-location-value">{deliveryLabel}</span>
@@ -190,19 +220,7 @@ export function Navigation() {
                 }}
               >
                 <button type="submit" className="nav-search-icon" aria-label="Search">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
+                  <SearchIcon width={16} height={16} />
                 </button>
                 <input
                   ref={searchRef}
@@ -211,7 +229,11 @@ export function Navigation() {
                   placeholder="Search restaurants, foods, stores…"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
+                  onFocus={() => {
+                    setSearchFocused(true);
+                    setSearchPanelOpen(true);
+                    setLocationOpen(false);
+                  }}
                   onBlur={() => setSearchFocused(false)}
                   aria-label="Search"
                 />
@@ -225,7 +247,7 @@ export function Navigation() {
                     }}
                     aria-label="Clear search"
                   >
-                    ✕
+                    <CloseIcon width={12} height={12} />
                   </button>
                 )}
               </form>
@@ -245,6 +267,82 @@ export function Navigation() {
                 <button type="button" className="nav-location-done-btn" onClick={() => setLocationOpen(false)}>
                   Done
                 </button>
+              </div>
+            )}
+
+            {/* Search-suggestions panel — click-outside via locationRef, not
+                onBlur, so clicking a suggestion doesn't get raced by the
+                input losing focus first. */}
+            {searchPanelOpen && (
+              <div className="nav-search-panel" role="dialog" aria-label="Search suggestions">
+                {searchValue.trim() ? (
+                  <div className="nav-search-panel__section">
+                    <p className="nav-search-panel__label">Restaurants</p>
+                    {matchingRestaurants.length > 0 ? (
+                      matchingRestaurants.map((r) => (
+                        <Link
+                          key={r.id}
+                          href={`/vendors/restaurants/${r.id}`}
+                          className="nav-search-panel__suggestion"
+                          onClick={() => {
+                            addRecentSearch(r.name);
+                            closeAll();
+                          }}
+                        >
+                          <UtensilsIcon width={14} height={14} />
+                          {r.name}
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="nav-search-panel__empty">No matches yet — press enter to search anyway.</p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {recentSearches.length > 0 && (
+                      <div className="nav-search-panel__section">
+                        <div className="nav-search-panel__section-head">
+                          <p className="nav-search-panel__label">Recent</p>
+                          <button type="button" className="nav-search-panel__clear" onClick={clearRecentSearches}>
+                            Clear
+                          </button>
+                        </div>
+                        {recentSearches.map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            className="nav-search-panel__suggestion"
+                            onClick={() => {
+                              setSearchValue(term);
+                              submitSearch(term);
+                            }}
+                          >
+                            <ClockIcon width={14} height={14} />
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="nav-search-panel__section">
+                      <p className="nav-search-panel__label">Popular searches</p>
+                      <div className="nav-search-panel__chips">
+                        {POPULAR_SEARCHES.map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            className="nav-search-panel__chip"
+                            onClick={() => {
+                              setSearchValue(term);
+                              submitSearch(term);
+                            }}
+                          >
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -316,7 +414,9 @@ export function Navigation() {
                         role="menuitem"
                         onClick={() => setVendorsOpen(false)}
                       >
-                        <span className="nav-dropdown__emoji">{v.emoji}</span>
+                        <span className="nav-dropdown__emoji">
+                          <v.icon width={18} height={18} />
+                        </span>
                         <div className="nav-dropdown__item-body">
                           <span className="nav-dropdown__item-label">
                             {v.label}
@@ -371,7 +471,7 @@ export function Navigation() {
         <div className="nav-drawer__header">
           <Image src="/tummytime-logo.png" width={130} height={40} alt="TummyTime" className="nav-drawer__img" />
           <button onClick={closeAll} className="nav-drawer__close" aria-label="Close">
-            ✕
+            <CloseIcon width={14} height={14} />
           </button>
         </div>
 
@@ -381,7 +481,7 @@ export function Navigation() {
           aria-expanded={mobileLocationOpen}
           onClick={() => setMobileLocationOpen((p) => !p)}
         >
-          <span>📍</span>
+          <MapPinIcon width={16} height={16} />
           <div>
             <p className="nav-drawer__location-label">Deliver to</p>
             <p className="nav-drawer__location-value">
@@ -419,19 +519,7 @@ export function Navigation() {
           }}
         >
           <button type="submit" className="nav-drawer__search-icon" aria-label="Search">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
+            <SearchIcon width={15} height={15} />
           </button>
           <input
             type="text"
@@ -441,6 +529,22 @@ export function Navigation() {
             onChange={(e) => setSearchValue(e.target.value)}
           />
         </form>
+
+        <div className="nav-drawer__popular">
+          {POPULAR_SEARCHES.map((term) => (
+            <button
+              key={term}
+              type="button"
+              className="nav-search-panel__chip"
+              onClick={() => {
+                setSearchValue(term);
+                submitSearch(term);
+              }}
+            >
+              {term}
+            </button>
+          ))}
+        </div>
 
         <nav className="nav-drawer__nav">
           <div className="nav-drawer__section">
@@ -456,7 +560,9 @@ export function Navigation() {
             <div className={`nav-drawer__accordion ${mobileVendorsOpen ? "nav-drawer__accordion--open" : ""}`}>
               {vendorCategories.map((v) => (
                 <Link key={v.label} href={v.href} className="nav-drawer__sub-link" onClick={closeAll}>
-                  <span className="nav-drawer__sub-emoji">{v.emoji}</span>
+                  <span className="nav-drawer__sub-emoji">
+                    <v.icon width={16} height={16} />
+                  </span>
                   <div className="nav-drawer__sub-body">
                     <p className="nav-drawer__sub-label">{v.label}</p>
                     <p className="nav-drawer__sub-desc">{v.desc}</p>

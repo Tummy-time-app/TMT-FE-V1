@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Map } from "./Map";
 import { reverseGeocode } from "./reverseGeocode";
 import type { LatLng } from "./types";
+import { MapPinIcon } from "@/components/icons";
 
 /** Lagos, Nigeria — matches the ₦ pricing used throughout the app; a reasonable default center before a real pick. */
 const DEFAULT_CENTER: LatLng = { lat: 6.5244, lng: 3.3792 };
@@ -66,7 +67,8 @@ export function LocationPickerMap({
           height={220}
         />
         <button type="button" className="tmt-map-locate-btn" onClick={useMyLocation} disabled={locating}>
-          📍 {locating ? "Locating…" : "Use my location"}
+          <MapPinIcon width={13} height={13} />
+          {locating ? "Locating…" : "Use my location"}
         </button>
       </div>
       <p className="tmt-map-hint">

@@ -1,0 +1,35 @@
+.tmt-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tmt-section-header__title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tmt-section-header__subtitle {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.tmt-section-header__see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--crimson-600);
+  transition: gap var(--duration-fast) var(--ease-standard);
+}
+
+.tmt-section-header__see-all:hover {
+  gap: 5px;
+}

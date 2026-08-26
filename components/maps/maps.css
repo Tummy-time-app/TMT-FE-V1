@@ -53,8 +53,8 @@
 
 .tmt-map-pin__glyph {
   transform: rotate(-45deg);
-  font-size: 14px;
-  line-height: 1;
+  display: flex;
+  color: #fff;
 }
 
 .tmt-map-pin__point {

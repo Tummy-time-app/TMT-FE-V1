@@ -1,0 +1,56 @@
+/**
+ * Food discovery page (Priority 3, net-new — see components/food/
+ * FoodDiscovery.tsx's doc comment). Reuses app/marketplace.css's design
+ * tokens; rail cards themselves are styled in components/food/
+ * FoodItemCard.css, kept colocated since that card is reused wherever a
+ * food-item rail shows up, not just here.
+ */
+
+.food-root {
+  margin: 0 auto;
+  padding: 24px 5vw 64px;
+}
+
+.food-header {
+  margin-bottom: 24px;
+}
+
+.food-title {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.food-subtitle {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.food-rail {
+  margin-bottom: 30px;
+}
+
+.food-rail__scroller {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin: 0 -5vw;
+  padding-left: 5vw;
+  padding-right: 5vw;
+}
+
+.food-rail__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .food-root {
+    padding-top: 16px;
+  }
+}

@@ -4,8 +4,10 @@ import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CartProvider } from "@/lib/CartContext";
 import { ProfileProvider } from "@/lib/ProfileContext";
 import { StoreProvider } from "@/store/provider";
+import { MiniCartBar } from "@/components/cart/MiniCartBar";
 import "./globals.css";
 import "./landing.css";
+import "./marketplace.css";
 import "./auth.css";
 import "./loading.css";
 
@@ -60,7 +62,10 @@ export default function RootLayout({
         <StoreProvider>
           <AuthProvider>
             <ProfileProvider>
-              <CartProvider>{children}</CartProvider>
+              <CartProvider>
+                {children}
+                <MiniCartBar />
+              </CartProvider>
             </ProfileProvider>
           </AuthProvider>
         </StoreProvider>

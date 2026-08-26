@@ -64,6 +64,13 @@
   font-size: 2rem;
   opacity: 0.12;
   animation: loadFloat 4s ease-in-out infinite;
+  color: var(--crimson, #ac0000);
+}
+/* Icons scale off each variant's own font-size below, same as the emoji this replaced. */
+.loading-float svg {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 .loading-float--1 {
   top: 10%;

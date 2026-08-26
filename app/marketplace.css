@@ -1,0 +1,69 @@
+/**
+ * Marketplace redesign — global design tokens.
+ *
+ * Additive to app/landing.css's :root (--crimson/--crimson-dark/--amber/
+ * --amber-light/--white/--off-white/--text-dark stay exactly as they are —
+ * still consumed by Hero.tsx, Navigation.tsx, the homepage category cards,
+ * etc.). This file only adds tonal variants, neutral surface tokens, and a
+ * radius/shadow/motion scale for the redesigned marketplace pages
+ * (restaurant listing/detail, food, shops, markets, cart, nav) to share —
+ * component-specific styles live colocated with their component (see
+ * components/maps/maps.css for the established pattern), not here.
+ *
+ * References to --crimson/--text-dark below resolve fine regardless of
+ * import order relative to landing.css — CSS custom properties resolve at
+ * point of use, not at definition, so there's no load-order dependency.
+ */
+
+:root {
+  /* ── Crimson tonal scale ── */
+  --crimson-50: #fdf1f0;
+  --crimson-100: #fbe1de;
+  --crimson-200: #f5bcb6;
+  --crimson-500: var(--crimson);
+  --crimson-600: #8f0000;
+  --crimson-700: var(--crimson-dark);
+  --crimson-glow: rgba(172, 0, 0, 0.16);
+
+  /* ── Amber tonal scale ── */
+  --amber-50: #fff8e8;
+  --amber-100: #ffefc4;
+  --amber-500: var(--amber);
+  --amber-600: #e6a000;
+
+  /* ── Neutral surfaces & ink ── */
+  --surface: #ffffff;
+  --surface-muted: #faf6f1;
+  --surface-sunken: #f2ede6;
+  --ink: var(--text-dark);
+  --ink-muted: #6b6660;
+  --ink-faint: #a39d95;
+  --line: rgba(26, 20, 16, 0.08);
+  --line-strong: rgba(26, 20, 16, 0.14);
+
+  /* ── Radius scale ── */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* ── Shadow scale ── */
+  --shadow-sm: 0 1px 2px rgba(26, 16, 8, 0.06);
+  --shadow-md: 0 8px 24px rgba(26, 16, 8, 0.08);
+  --shadow-lg: 0 20px 48px rgba(26, 16, 8, 0.14);
+  --shadow-glow: 0 6px 20px rgba(172, 0, 0, 0.18);
+
+  /* ── Motion ── */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

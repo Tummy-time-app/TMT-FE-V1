@@ -16,9 +16,12 @@
 }
 
 /* ── Header bar ─────────────────────────────────────────── */
+/* Light, not full-bleed crimson — matches the rest of the redesign's
+   "crimson is an accent, not the background" rule (brief section 27). */
 .cart-header {
-  background: var(--crimson);
-  padding: 28px 5vw 24px;
+  background: var(--surface, #fff);
+  border-bottom: 1px solid var(--line, rgba(172, 0, 0, 0.08));
+  padding: 24px 5vw 20px;
 }
 
 .cart-header__inner {
@@ -31,31 +34,31 @@
 
 .cart-header__title {
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
   font-weight: 700;
-  color: #fff;
-  line-height: 1;
+  color: var(--text-dark);
+  line-height: 1.1;
 }
 
 .cart-header__meta {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.72);
-  margin-top: 5px;
+  font-size: 0.85rem;
+  color: var(--ink-muted, #888);
+  margin-top: 4px;
   font-weight: 500;
 }
 
 .cart-header__meta span {
-  color: var(--amber);
+  color: var(--crimson);
   font-weight: 700;
 }
 
 .cart-header__clear {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: var(--crimson-50, rgba(172, 0, 0, 0.06));
+  border: 1px solid var(--crimson-100, rgba(172, 0, 0, 0.14));
+  color: var(--crimson-600, var(--crimson));
   font-family: var(--font-body);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
@@ -64,7 +67,7 @@
 }
 
 .cart-header__clear:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--crimson-100, rgba(172, 0, 0, 0.12));
 }
 
 /* ── Two-column body ─────────────────────────────────────── */
@@ -159,24 +162,25 @@
 }
 
 .cart-item__vendor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.72rem;
   font-weight: 500;
   color: #999;
   margin-top: 2px;
-  display: block;
 }
 
 .cart-item__remove {
   background: none;
   border: none;
   color: #ccc;
-  font-size: 0.75rem;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 6px;
   border-radius: 6px;
+  display: flex;
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
-  line-height: 1;
 }
 
 .cart-item__remove:hover {
@@ -186,6 +190,9 @@
 
 /* note */
 .cart-item__note-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   font-family: var(--font-body);
@@ -222,59 +229,12 @@
 
 .cart-item__note-input:focus { border-color: var(--crimson); }
 
-/* qty + price */
+/* qty (shared QuantityStepper primitive, components/ui/QuantityStepper.css) + price */
 .cart-item__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-}
-
-.cart-item__qty {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  background: var(--off-white);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1.5px solid rgba(172, 0, 0, 0.1);
-}
-
-.cart-item__qty-btn {
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--crimson);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-  line-height: 1;
-}
-
-.cart-item__qty-btn:hover {
-  background: rgba(172, 0, 0, 0.08);
-}
-
-.cart-item__qty-btn--plus {
-  background: var(--crimson);
-  color: #fff;
-}
-
-.cart-item__qty-btn--plus:hover {
-  background: var(--crimson-dark);
-}
-
-.cart-item__qty-value {
-  width: 32px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--text-dark);
 }
 
 .cart-item__price {
@@ -605,7 +565,6 @@
 }
 
 .cart-checkout__arrow {
-  font-size: 1.1rem;
   transition: transform 0.2s;
 }
 
@@ -614,6 +573,10 @@
 }
 
 .cart-summary__note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   font-size: 0.72rem;
   color: #bbb;
   text-align: center;
@@ -621,63 +584,10 @@
   line-height: 1.5;
 }
 
-/* ── Empty state ─────────────────────────────────────────── */
-.cart-empty {
-  min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 5vw;
-  background: var(--off-white);
-}
-
-.cart-empty__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  animation: fadeUp 0.5s ease both;
-}
-
-.cart-empty__icon {
-  font-size: 5rem;
-  margin-bottom: 20px;
-  filter: grayscale(0.3);
-  animation: iconDrift1 4s ease-in-out infinite;
-}
-
-.cart-empty__heading {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 12px;
-}
-
-.cart-empty__sub {
-  font-size: 1rem;
-  color: #888;
-  line-height: 1.7;
-  max-width: 300px;
-  margin-bottom: 32px;
-}
-
-.cart-empty__cta {
-  background: var(--crimson);
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  padding: 14px 36px;
-  border-radius: 12px;
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.cart-empty__cta:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(172, 0, 0, 0.3);
-}
+/* Empty/order-placed states now use the shared EmptyState component
+   (components/ui/EmptyState.tsx, `tmt-empty*`) + vp-empty-cta
+   (app/vendors-listing.css) instead of the bespoke .cart-empty* markup
+   this replaced. */
 
 /* ── Responsive ──────────────────────────────────────────── */
 
