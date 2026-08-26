@@ -107,7 +107,23 @@ export const baseApi = createApi({
   // (customer-facing subset — see restaurantsApi.ts/ordersApi.ts's doc
   // comments) rather than the speculative full domain list the `frontend`
   // branch's ported code assumed (Wallet/Payouts/Referrals/... don't exist
-  // as endpoints anywhere in this backend).
-  tagTypes: ["Auth", "Restaurants", "MenuItems", "Orders", "Notifications", "VendorStores", "Categories", "Inventory"],
+  // as endpoints anywhere in this backend). Shops/Products/Markets are the
+  // one deliberate exception — net-new marketplace surfaces (see features/
+  // shops/shopsApi.ts and features/markets/marketsApi.ts's doc comments)
+  // with no backend endpoint to mirror at all yet, added on explicit
+  // direction rather than assumed.
+  tagTypes: [
+    "Auth",
+    "Restaurants",
+    "MenuItems",
+    "Orders",
+    "Notifications",
+    "VendorStores",
+    "Categories",
+    "Inventory",
+    "Shops",
+    "Products",
+    "Markets",
+  ],
   endpoints: () => ({}),
 });

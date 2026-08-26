@@ -8,6 +8,7 @@ import { useGetOrderQuery, useUpdateOrderStatusMutation } from "@/features/order
 import { useGetRestaurantQuery } from "@/features/restaurants/restaurantsApi";
 import { CANCELABLE_STATUSES, ORDER_JOURNEY, ORDER_STATUS_META } from "@/features/orders/statusMeta";
 import { normalizeApiError } from "@/lib/utils/apiError";
+import { Map, type MapMarker } from "@/components/maps/Map";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -63,6 +64,31 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   const currentStepIndex = ORDER_JOURNEY.indexOf(order.status === "rider_arrived" ? "picked_up" : order.status);
   const canCancel = CANCELABLE_STATUSES.includes(order.status);
 
+  // Only real when both ends are known: the restaurant has a set location
+  // (features/restaurants/types.ts — most vendor-created stores don't yet)
+  // and this order was placed with a map-picked delivery address (older
+  // orders and hand-typed addresses have neither). No live GPS exists
+  // anywhere in this app (see components/maps/), so the rider pin below is
+  // a deterministic position derived from `order.status`, not a real feed
+  // — it moves vendor→delivery as the order progresses past "picked up",
+  // same honesty rule as the rest of this app's decorative-vs-real pieces.
+  const vendorPos = restaurant?.lat != null && restaurant?.lng != null ? { lat: restaurant.lat, lng: restaurant.lng } : null;
+  const deliveryPos = order.deliveryLat != null && order.deliveryLng != null ? { lat: order.deliveryLat, lng: order.deliveryLng } : null;
+  const showMap = !isStopped && vendorPos && deliveryPos;
+
+  let riderPos: { lat: number; lng: number } | null = null;
+  if (showMap) {
+    const pickedUpIndex = ORDER_JOURNEY.indexOf("picked_up");
+    const deliveredIndex = ORDER_JOURNEY.indexOf("delivered");
+    if (currentStepIndex >= pickedUpIndex) {
+      const frac = Math.min(1, Math.max(0, (currentStepIndex - pickedUpIndex) / (deliveredIndex - pickedUpIndex)));
+      riderPos = {
+        lat: vendorPos.lat + (deliveryPos.lat - vendorPos.lat) * frac,
+        lng: vendorPos.lng + (deliveryPos.lng - vendorPos.lng) * frac,
+      };
+    }
+  }
+
   const handleCancel = async () => {
     setCancelError(null);
     try {
@@ -110,6 +136,28 @@ export function OrderDetail({ orderId }: { orderId: string }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {showMap && (
+        <div style={{ marginTop: 16, marginBottom: 16 }}>
+          <h2 className="op-section-title">Delivery route</h2>
+          <Map
+            center={vendorPos}
+            zoom={13}
+            height={200}
+            route={[vendorPos, deliveryPos]}
+            markers={[
+              { id: "vendor", kind: "vendor", ...vendorPos },
+              { id: "delivery", kind: "customer", ...deliveryPos },
+              ...(riderPos ? ([{ id: "rider", kind: "rider", ...riderPos }] as MapMarker[]) : []),
+            ]}
+          />
+          {order.status === "out_for_delivery" && (
+            <p className="op-address" style={{ marginTop: 8 }}>
+              🛵 Your rider is on the way.
+            </p>
+          )}
         </div>
       )}
 

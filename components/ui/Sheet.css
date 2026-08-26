@@ -1,0 +1,117 @@
+.tmt-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-standard);
+  z-index: 900;
+}
+
+.tmt-sheet-backdrop--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tmt-sheet {
+  position: fixed;
+  z-index: 901;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.tmt-sheet__handle {
+  display: none;
+}
+
+.tmt-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.tmt-sheet__title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tmt-sheet__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.tmt-sheet__close:hover {
+  background: var(--crimson-50);
+  color: var(--crimson-600);
+}
+
+.tmt-sheet__body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tmt-sheet__footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+/* ── Desktop: right-side drawer ── */
+@media (min-width: 641px) {
+  .tmt-sheet {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(400px, 92vw);
+    transform: translateX(100%);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  }
+
+  .tmt-sheet--open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Mobile: bottom sheet ── */
+@media (max-width: 640px) {
+  .tmt-sheet {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 86vh;
+    transform: translateY(100%);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding-top: 6px;
+  }
+
+  .tmt-sheet--open {
+    transform: translateY(0);
+  }
+
+  .tmt-sheet__handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--line-strong);
+    margin: 0 auto 8px;
+  }
+}

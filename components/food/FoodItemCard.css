@@ -1,0 +1,122 @@
+.food-card {
+  position: relative;
+  width: 168px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.food-card__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.food-card__img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-sunken);
+  margin-bottom: 8px;
+}
+
+.food-card__img {
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-standard);
+}
+
+.food-card:hover .food-card__img {
+  transform: scale(1.06);
+}
+
+.food-card__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(20, 12, 8, 0.72);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.food-card__badge svg {
+  width: 10px;
+  height: 10px;
+  color: var(--amber-500);
+}
+
+.food-card__unavailable {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.food-card__name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.food-card__restaurant {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.food-card__price {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 4px;
+}
+
+.food-card__add {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--crimson-600);
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.food-card__add:hover {
+  background: var(--crimson-500);
+  color: #fff;
+  transform: scale(1.08);
+}

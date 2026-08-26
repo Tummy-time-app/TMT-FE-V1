@@ -14,6 +14,9 @@ export interface DeliveryAddress {
   label: "Home" | "Work" | "Other";
   line1: string;
   city: string;
+  /** Set when the address was placed via the map picker (components/maps/LocationPickerMap.tsx) — absent for addresses only ever typed by hand. */
+  lat?: number;
+  lng?: number;
 }
 
 export interface UserProfile {

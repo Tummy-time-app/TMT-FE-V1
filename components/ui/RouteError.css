@@ -1,0 +1,47 @@
+.route-error {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 4px;
+}
+
+.route-error__icon {
+  width: 40px;
+  height: 40px;
+  color: var(--crimson, #ac0000);
+  margin-bottom: 8px;
+}
+
+.route-error__title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark, #1a1a1a);
+}
+
+.route-error__sub {
+  font-size: 0.9rem;
+  color: #888;
+  max-width: 360px;
+}
+
+.route-error__cta {
+  margin-top: 18px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 100px;
+  background: var(--crimson, #ac0000);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.route-error__cta:hover {
+  background: var(--crimson-dark, #6b1300);
+}

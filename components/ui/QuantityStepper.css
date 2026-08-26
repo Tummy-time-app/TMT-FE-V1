@@ -1,0 +1,64 @@
+.tmt-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+
+.tmt-stepper__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.tmt-stepper__btn:hover:not(:disabled) {
+  background: var(--crimson-50);
+  color: var(--crimson-600);
+}
+
+.tmt-stepper__btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.tmt-stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tmt-stepper--md .tmt-stepper__btn {
+  width: 30px;
+  height: 30px;
+}
+
+.tmt-stepper--md .tmt-stepper__value {
+  min-width: 18px;
+  font-size: 0.9rem;
+}
+
+.tmt-stepper--sm .tmt-stepper__btn {
+  width: 24px;
+  height: 24px;
+  font-size: 0.85rem;
+}
+
+.tmt-stepper--sm .tmt-stepper__value {
+  min-width: 14px;
+  font-size: 0.8rem;
+}
+
+.tmt-stepper__value {
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}

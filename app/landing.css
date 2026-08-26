@@ -169,11 +169,20 @@
   align-items: center;
 }
 
+/* Carries the flex/width sizing .nav-search-group used to own directly —
+   moved up a level so the location popover (a sibling of .nav-search-group,
+   not a descendant) has something to anchor to without being clipped by
+   that element's own overflow:hidden pill shape. */
+.nav-location-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 640px;
+}
+
 .nav-search-group {
   display: flex;
   align-items: center;
-  flex: 1;
-  max-width: 640px;
+  width: 100%;
   gap: 0;
   border: 1.5px solid rgba(172, 0, 0, 0.18);
   border-radius: 12px;
@@ -205,7 +214,8 @@
 }
 
 .nav-location-icon {
-  font-size: 14px;
+  color: var(--crimson);
+  flex-shrink: 0;
 }
 
 .nav-location-text {
@@ -235,6 +245,157 @@
   margin-left: 2px;
 }
 
+/* ── Delivery location popover (desktop) — same visual language as
+   .nav-dropdown above, just anchored under .nav-location-wrap instead. ── */
+.nav-location-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 320px;
+  max-width: 90vw;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+  padding: 14px;
+  z-index: 400;
+  animation: navDropdown 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.nav-location-done-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: var(--crimson);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.nav-location-done-btn:hover {
+  background: var(--crimson-dark);
+}
+
+.nav-drawer__location-panel {
+  padding: 0 2px 14px;
+}
+
+/* ── Search suggestions panel (desktop) — same floating-card language as
+   .nav-location-popover above, just wider and content-driven. ── */
+.nav-search-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
+  padding: 14px 16px;
+  z-index: 400;
+  max-height: 70vh;
+  overflow-y: auto;
+  animation: navDropdown 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.nav-search-panel__section + .nav-search-panel__section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(172, 0, 0, 0.08);
+}
+
+.nav-search-panel__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-search-panel__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.nav-search-panel__clear {
+  background: none;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--crimson);
+  cursor: pointer;
+}
+
+.nav-search-panel__empty {
+  font-size: 0.82rem;
+  color: #999;
+  padding: 6px 4px;
+}
+
+.nav-search-panel__suggestion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 6px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.nav-search-panel__suggestion:hover {
+  background: rgba(172, 0, 0, 0.05);
+}
+
+.nav-search-panel__suggestion svg {
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.nav-search-panel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav-search-panel__chip {
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1.5px solid rgba(172, 0, 0, 0.14);
+  background: #fff;
+  color: var(--text-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.nav-search-panel__chip:hover {
+  border-color: var(--crimson);
+  background: rgba(172, 0, 0, 0.04);
+}
+
+/* Mobile drawer's popular-searches row reuses .nav-search-panel__chip. */
+.nav-drawer__popular {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 2px 16px;
+}
+
 .nav-search {
   display: flex;
   align-items: center;
@@ -244,6 +405,13 @@
 }
 
 .nav-search-icon {
+  /* Now a <button type="submit"> (was a decorative <span>) — reset the
+     browser's default button chrome so it still just looks like an icon. */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   color: #aaa;
   flex-shrink: 0;
   display: flex;
@@ -485,7 +653,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  color: var(--crimson);
   flex-shrink: 0;
 }
 
@@ -669,6 +837,14 @@
 }
 
 .nav-drawer__search-icon {
+  /* Now a <button type="submit"> (was a decorative <svg> directly) — reset
+     the browser's default button chrome so it still just looks like an icon. */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
   color: #aaa;
   flex-shrink: 0;
 }
@@ -755,7 +931,14 @@
 }
 
 .nav-drawer__sub-emoji {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(172, 0, 0, 0.07);
+  color: var(--crimson);
   flex-shrink: 0;
 }
 
@@ -1246,7 +1429,7 @@
 @media (max-width: 1100px) {
   .navbar__nav { display: none; }
   .nav-bottom { display: none; }
-  .nav-search-group { max-width: 100%; }
+  .nav-location-wrap { max-width: 100%; }
 
   .hero {
     grid-template-columns: 1fr 1.1fr;
@@ -1268,7 +1451,7 @@
 }
 
 @media (max-width: 768px) {
-  .nav-search-group {
+  .nav-location-wrap {
     max-width: none;
   }
 
@@ -1284,7 +1467,7 @@
 @media (max-width: 640px) {
   .nav-location-btn { display: none; }
 
-  .nav-search-group {
+  .nav-location-wrap {
     flex: 1 1 100%;
     order: 3;
     margin-top: 8px;
