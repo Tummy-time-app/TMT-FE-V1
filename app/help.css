@@ -1,0 +1,96 @@
+/**
+ * New page — matches the established visual language elsewhere in this
+ * branch (--crimson/--font-display/--font-body tokens from app/landing.css).
+ */
+
+.hc-root {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 5vw 80px;
+}
+
+.hc-header {
+  margin-bottom: 28px;
+}
+
+.hc-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.hc-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.hc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.hc-item {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 4px 18px;
+}
+
+.hc-item__q {
+  padding: 14px 0;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  list-style: none;
+}
+
+.hc-item__q::-webkit-details-marker {
+  display: none;
+}
+
+.hc-item__q::after {
+  content: "+";
+  float: right;
+  color: var(--crimson);
+  font-weight: 700;
+}
+
+.hc-item[open] .hc-item__q::after {
+  content: "\2212";
+}
+
+.hc-item__a {
+  font-size: 0.85rem;
+  color: #777;
+  line-height: 1.55;
+  padding-bottom: 16px;
+}
+
+.hc-contact {
+  background: rgba(172, 0, 0, 0.05);
+  border-radius: 14px;
+  padding: 18px 20px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.hc-contact a {
+  color: var(--crimson);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.hc-contact a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .hc-root {
+    padding: 24px 4vw 60px;
+  }
+}

@@ -2,9 +2,8 @@ import type { UserRole } from "./types";
 
 /**
  * Where a role lands after login when there's no `?redirect=` to honor.
- * Not wired into LoginForm yet — none of /vendor or /admin exist as pages
- * in this branch, so login always sends everyone to "/" for now. Kept
- * up to date with TMT-BE-V1's actual role set for when those areas exist.
+ * Wired into LoginForm.tsx. /admin doesn't exist as a page in this branch
+ * yet, so an admin login still falls through to "/" in practice.
  */
 export function defaultRouteForRole(role: UserRole): string {
   switch (role) {

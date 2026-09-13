@@ -33,12 +33,15 @@ export function RegisterForm({
   role = "customer",
   redirectTo,
   heading = "Create your account",
+  loginHref = "/login",
 }: {
   /** Defaults to "customer" — pass "restaurant_owner" from the vendor signup page. */
   role?: RegisterPayload["role"];
   /** Where the post-verification login link should eventually send them. */
   redirectTo?: string;
   heading?: string;
+  /** Defaults to "/login" — pass "/vendor/login" from the vendor signup page so "Log in" doesn't drop a vendor back onto the generic customer-branded form. */
+  loginHref?: string;
 }) {
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
@@ -63,7 +66,9 @@ export function RegisterForm({
   };
 
   if (submittedEmail) {
-    const loginHref = redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login";
+    const verifiedLoginHref = redirectTo
+      ? `${loginHref}?redirect=${encodeURIComponent(redirectTo)}`
+      : loginHref;
     return (
       <>
         <h1 className="auth-heading">Check your email</h1>
@@ -82,7 +87,7 @@ export function RegisterForm({
         </p>
         <p className="auth-footer-text">
           Already verified?{" "}
-          <Link href={loginHref} className="auth-footer-link">
+          <Link href={verifiedLoginHref} className="auth-footer-link">
             Log in
           </Link>
         </p>
@@ -209,7 +214,7 @@ export function RegisterForm({
 
       <p className="auth-footer-text">
         Already have an account?{" "}
-        <Link href="/login" className="auth-footer-link">
+        <Link href={loginHref} className="auth-footer-link">
           Log in
         </Link>
       </p>

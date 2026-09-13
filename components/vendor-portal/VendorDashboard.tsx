@@ -1,14 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useVendorGuard } from "./useVendorGuard";
 import { useGetMyStoresQuery, useToggleStoreOpenMutation } from "@/features/vendor/vendorApi";
-import { CreateStoreForm } from "./CreateStoreForm";
 
 export function VendorDashboard() {
+  const router = useRouter();
   const { user, isReady, isSessionLoading, isVendor } = useVendorGuard();
   const { data: stores = [], isLoading } = useGetMyStoresQuery(user?.id ?? "", { skip: !isReady || !isVendor });
   const [toggleOpen] = useToggleStoreOpenMutation();
+
+  // A brand-new vendor account has no store yet — send them straight into
+  // the full setup wizard instead of landing on a mostly-empty dashboard
+  // (see VendorOnboardingFlow's doc comment for what that collects).
+  useEffect(() => {
+    if (isReady && isVendor && !isLoading && stores.length === 0) {
+      router.replace("/vendor/onboarding");
+    }
+  }, [isReady, isVendor, isLoading, stores.length, router]);
 
   if (isSessionLoading || !isReady) {
     return (
@@ -33,6 +44,17 @@ export function VendorDashboard() {
     );
   }
 
+  // Same condition as the redirect effect above — render nothing but a
+  // loading state for that one frame rather than flashing "0 stores"
+  // before the navigation to /vendor/onboarding lands.
+  if (!isLoading && stores.length === 0) {
+    return (
+      <div className="vd-root">
+        <p className="vp-empty">Setting things up…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="vd-root">
       <header className="vd-header">
@@ -44,7 +66,7 @@ export function VendorDashboard() {
 
       {isLoading ? (
         <p className="vp-empty">Loading your stores…</p>
-      ) : stores.length > 0 ? (
+      ) : (
         <div className="vd-store-list">
           {stores.map((store) => (
             <div key={store.id} className="vd-store-card">
@@ -71,9 +93,11 @@ export function VendorDashboard() {
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
-      <CreateStoreForm ownerId={user!.id} />
+      <Link href="/vendor/onboarding" className="vd-submit-btn" style={{ textDecoration: "none", display: "block", textAlign: "center" }}>
+        + Add another store
+      </Link>
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default function VendorSignupPage() {
         role="restaurant_owner"
         redirectTo="/vendor"
         heading="Register your restaurant"
+        loginHref="/vendor/login"
       />
     </AuthShell>
   );
