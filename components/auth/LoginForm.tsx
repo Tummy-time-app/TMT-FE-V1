@@ -30,8 +30,26 @@ import { ResendVerificationNotice } from "./ResendVerificationNotice";
  *    account hasn't clicked its verification email yet (see authApi.ts's
  *    doc comment) — swaps to the same "resend the link" state
  *    RegisterForm uses, instead of surfacing it as a generic error.
+ *
+ * Login itself is one shared flow for every role — the backend doesn't
+ * distinguish a "customer login" from a "vendor login" — but the copy and
+ * the signup footer link are parameterized (same idea as RegisterForm's
+ * `role`/`heading` props) so /vendor/login can present itself as a vendor
+ * entry point instead of the generic one, without duplicating the form.
  */
-export function LoginForm() {
+export function LoginForm({
+  heading = "Welcome back",
+  subtext = "Sign in to your account to continue",
+  signupHref = "/signup",
+  signupPrompt = "New to TummyTime?",
+  signupLabel = "Sign up",
+}: {
+  heading?: string;
+  subtext?: string;
+  signupHref?: string;
+  signupPrompt?: string;
+  signupLabel?: string;
+} = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -87,8 +105,8 @@ export function LoginForm() {
 
   return (
     <>
-      <h1 className="auth-heading">Welcome back</h1>
-      <p className="auth-subtext">Sign in to your account to continue</p>
+      <h1 className="auth-heading">{heading}</h1>
+      <p className="auth-subtext">{subtext}</p>
 
       <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="auth-field">
@@ -147,9 +165,9 @@ export function LoginForm() {
       </form>
 
       <p className="auth-footer-text">
-        New to TummyTime?{" "}
-        <Link href="/signup" className="auth-footer-link">
-          Sign up
+        {signupPrompt}{" "}
+        <Link href={signupHref} className="auth-footer-link">
+          {signupLabel}
         </Link>
       </p>
     </>

@@ -1,0 +1,22 @@
+.tmt-coming-soon {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 72px 5vw 96px;
+}
+
+.tmt-coming-soon__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 22px;
+  border-radius: 10px;
+  background: var(--crimson);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.tmt-coming-soon__link:hover {
+  opacity: 0.92;
+}

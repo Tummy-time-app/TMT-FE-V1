@@ -1,0 +1,80 @@
+/**
+ * New page — matches the established visual language elsewhere in this
+ * branch (--crimson/--font-display/--font-body tokens from app/landing.css,
+ * card shapes like the op-/vp- prefixed classes).
+ */
+
+.off-root {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 5vw 80px;
+}
+
+.off-header {
+  margin-bottom: 28px;
+}
+
+.off-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.off-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.off-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.off-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 22px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.off-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.off-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(172, 0, 0, 0.08);
+  color: var(--crimson);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.off-card__title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.off-card__desc {
+  font-size: 0.85rem;
+  color: #777;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .off-root {
+    padding: 24px 4vw 60px;
+  }
+}
