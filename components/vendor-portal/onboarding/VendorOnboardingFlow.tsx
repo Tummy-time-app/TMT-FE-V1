@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/features/auth/hooks";
 import { useVendorGuard } from "@/components/vendor-portal/useVendorGuard";
-import { useCreateStoreMutation, useUpdateStoreProfileMutation } from "@/features/vendor/vendorApi";
+import { useCreateStoreMutation, useGetMyStoresQuery, useUpdateStoreProfileMutation } from "@/features/vendor/vendorApi";
 import type { BusinessType, UpdateStoreProfilePayload, VendorRestaurant } from "@/features/vendor/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
@@ -63,9 +63,12 @@ type Step = 1 | 2 | 3 | "done";
  * (VendorDashboard redirects here whenever the owner has zero stores yet —
  * see its own doc comment) — this is what actually creates the store row,
  * replacing the old bare, single-field CreateStoreForm that used to sit
- * inline in the dashboard. Also reachable any time from the dashboard's
- * "Add another store" link, so it doubles as the general "create a new
- * store" flow, not just a one-time signup step.
+ * inline in the dashboard.
+ *
+ * One store per vendor account, deliberately — once a store exists, this
+ * bounces back to /vendor instead of letting the wizard run again (see the
+ * redirect effect below). There's no "add another store" flow; the
+ * dashboard doesn't link here once a store exists.
  *
  * Two real mutations back this, not one: createStore (POST /api/restaurants)
  * only accepts the core identity fields restaurant-service requires up
@@ -88,6 +91,18 @@ export function VendorOnboardingFlow() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdStore, setCreatedStore] = useState<VendorRestaurant | null>(null);
   const [profileSaveFailed, setProfileSaveFailed] = useState(false);
+
+  // One store per vendor: if they already have one, bounce back to the
+  // dashboard instead of letting this run again. Excludes `step === "done"`
+  // so this doesn't yank the vendor away from their own just-finished
+  // completion screen the moment createStore's cache invalidation makes
+  // `stores` go from 0 to 1 mid-session.
+  const { data: stores = [], isLoading: isLoadingStores } = useGetMyStoresQuery(user?.id ?? "", { skip: !user });
+  useEffect(() => {
+    if (isReady && isVendor && !isLoadingStores && stores.length > 0 && step !== "done") {
+      router.replace("/vendor");
+    }
+  }, [isReady, isVendor, isLoadingStores, stores.length, step, router]);
 
   const patch = (update: Partial<VendorOnboardingDraft>) =>
     setDraft((prev) => ({ ...prev, ...update }));
@@ -173,6 +188,16 @@ export function VendorOnboardingFlow() {
             Register your restaurant
           </Link>
         </div>
+      </OnboardingShell>
+    );
+  }
+
+  // Mirrors the redirect effect above — render a brief placeholder for
+  // that one frame rather than flashing step 1 before router.replace lands.
+  if (!isLoadingStores && stores.length > 0 && step !== "done") {
+    return (
+      <OnboardingShell>
+        <p className="py-20 text-center text-sm text-neutral-400">Redirecting…</p>
       </OnboardingShell>
     );
   }

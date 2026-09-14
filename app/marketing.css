@@ -1,0 +1,317 @@
+/**
+ * Shared classes for the static marketing pages (About, Blog, Careers,
+ * Contact, TummyTime for Business) — one sheet instead of five near-
+ * identical ones, following the --crimson/--font-display/--font-body
+ * tokens from app/landing.css (globally available via app/layout.tsx)
+ * and the same card/button shapes as the vd-/op-/vp- prefixed classes
+ * elsewhere in the app.
+ */
+
+.mkt-root {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 5vw 96px;
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.mkt-hero {
+  padding: 56px 0 40px;
+  text-align: center;
+}
+
+.mkt-hero__eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--crimson);
+  background: rgba(172, 0, 0, 0.08);
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+}
+
+.mkt-hero__title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.15;
+}
+
+.mkt-hero__subtitle {
+  font-size: 1rem;
+  color: #777;
+  max-width: 560px;
+  margin: 14px auto 0;
+  line-height: 1.6;
+}
+
+/* ── Sections ─────────────────────────────────────────── */
+.mkt-section {
+  margin-bottom: 40px;
+}
+
+.mkt-section-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.mkt-section-sub {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.mkt-prose {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.75;
+}
+
+.mkt-prose p + p {
+  margin-top: 14px;
+}
+
+/* ── Cards / grid ─────────────────────────────────────── */
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.mkt-card {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.mkt-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(172, 0, 0, 0.08);
+  color: var(--crimson);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.mkt-card__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.mkt-card__desc {
+  font-size: 0.85rem;
+  color: #777;
+  line-height: 1.55;
+}
+
+.mkt-card__meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+.mkt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.2s, opacity 0.2s;
+}
+
+.mkt-btn--primary {
+  background: var(--crimson);
+  color: #fff;
+}
+
+.mkt-btn--primary:hover {
+  background: var(--crimson-dark);
+  transform: translateY(-1px);
+}
+
+.mkt-btn--outline {
+  background: transparent;
+  color: var(--crimson);
+  border: 1.5px solid rgba(172, 0, 0, 0.3);
+}
+
+.mkt-btn--outline:hover {
+  background: rgba(172, 0, 0, 0.06);
+}
+
+.mkt-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Two-panel layout (TummyTime for Business) ───────────*/
+.mkt-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.mkt-panel {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mkt-panel__badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+}
+
+.mkt-panel__badge--live {
+  background: rgba(34, 139, 34, 0.12);
+  color: #1e7a1e;
+}
+
+.mkt-panel__badge--soon {
+  background: rgba(255, 183, 3, 0.18);
+  color: #a86a00;
+}
+
+.mkt-panel__title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.mkt-panel__desc {
+  font-size: 0.88rem;
+  color: #777;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.mkt-panel__list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mkt-panel__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.mkt-panel__list svg {
+  color: var(--crimson);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mkt-panel__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* ── Contact form ─────────────────────────────────────── */
+.mkt-form {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.mkt-field {
+  margin-bottom: 14px;
+}
+
+.mkt-field label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #777;
+  margin-bottom: 5px;
+}
+
+.mkt-input,
+.mkt-textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  padding: 11px 14px;
+  border: 1.5px solid rgba(172, 0, 0, 0.15);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.mkt-input:focus,
+.mkt-textarea:focus {
+  outline: none;
+  border-color: var(--crimson);
+}
+
+.mkt-textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.mkt-success {
+  font-size: 0.85rem;
+  color: #1e7a1e;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .mkt-hero {
+    padding: 40px 0 28px;
+  }
+
+  .mkt-hero__title {
+    font-size: 1.7rem;
+  }
+
+  .mkt-panels {
+    grid-template-columns: 1fr;
+  }
+}

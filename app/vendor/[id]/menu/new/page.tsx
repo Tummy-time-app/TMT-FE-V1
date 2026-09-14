@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { VendorStoreShell } from "@/components/vendor-portal/VendorStoreShell";
-import { StoreMenu } from "@/components/vendor-portal/StoreMenu";
+import { StoreMenuNew } from "@/components/vendor-portal/StoreMenuNew";
 import "@/app/vendors-listing.css";
 import "@/app/orders.css";
 import "@/app/vendor-portal.css";
 
 export const metadata: Metadata = {
-  title: "All Menus — TummyTime",
-  description: "Browse your store's menu on TummyTime.",
+  title: "New Menu — TummyTime",
+  description: "Add categories and menu items on TummyTime.",
 };
 
-export default async function VendorStoreMenuPage({
+export default async function VendorStoreMenuNewPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -18,8 +18,8 @@ export default async function VendorStoreMenuPage({
   const { id } = await params;
 
   return (
-    <VendorStoreShell storeId={id} active="menu">
-      <StoreMenu storeId={id} />
+    <VendorStoreShell storeId={id} active="menu-new">
+      <StoreMenuNew storeId={id} />
     </VendorStoreShell>
   );
 }
