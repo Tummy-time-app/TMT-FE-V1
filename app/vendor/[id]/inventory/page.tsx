@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Navigation } from "@/components/nav/Navigation";
 import { VendorStoreShell } from "@/components/vendor-portal/VendorStoreShell";
 import { StoreInventory } from "@/components/vendor-portal/StoreInventory";
 import "@/app/vendors-listing.css";
@@ -19,11 +18,8 @@ export default async function VendorStoreInventoryPage({
   const { id } = await params;
 
   return (
-    <>
-      <Navigation />
-      <VendorStoreShell storeId={id} active="inventory">
-        <StoreInventory storeId={id} />
-      </VendorStoreShell>
-    </>
+    <VendorStoreShell storeId={id} active="inventory">
+      <StoreInventory storeId={id} />
+    </VendorStoreShell>
   );
 }

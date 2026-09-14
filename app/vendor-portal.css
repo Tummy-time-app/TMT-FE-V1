@@ -254,43 +254,296 @@
   text-decoration: underline;
 }
 
-/* ── Store shell tabs (VendorStoreShell) ─────────────────── */
-.vd-tabs {
+/* ── Vendor portal top bar (VendorTopBar) — replaces the customer-facing
+   Navigation on every /vendor/* page; see that component's doc comment. */
+.vd-topbar {
   display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 5vw;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  margin-bottom: 24px;
+  background: #fff;
 }
 
-.vd-tabs::-webkit-scrollbar {
-  display: none;
+.vd-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.vd-tab {
+/* Desktop-only — collapses/expands VendorStoreShell's sidebar to an
+   icon-only rail. Hidden on mobile (≤880px), which uses the separate
+   off-canvas drawer + its own hamburger (.vd-shell__menu-btn) instead —
+   the two toggles are mutually exclusive by viewport, never both shown. */
+.vd-topbar__collapse-btn {
+  display: flex;
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #888;
-  text-decoration: none;
-  padding: 10px 14px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  color: var(--text-dark);
+  cursor: pointer;
+  padding: 4px;
 }
 
-.vd-tab:hover {
+.vd-topbar__brand {
+  display: flex;
+  align-items: center;
+}
+
+.vd-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vd-topbar__user {
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-dark);
 }
 
-.vd-tab--active {
-  border-bottom-color: var(--crimson);
+.vd-topbar__logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px solid rgba(172, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--crimson);
-  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vd-topbar__logout:hover {
+  background: rgba(172, 0, 0, 0.06);
+}
+
+/* ── Admin-style store shell (VendorStoreShell) ──────────────────────
+ * Sidebar + content layout in the shape of a Shopify/WordPress admin —
+ * TummyTime's own crimson/white brand, not either product's literal
+ * color scheme. .vd-root above is untouched and still used by
+ * VendorDashboard.tsx's plain "my stores" list page, which has no
+ * per-store sidebar context. Deliberately full-width (no max-width/
+ * centering) — a real dashboard, not a centered marketing-site column.
+ * ────────────────────────────────────────────────────────────────── */
+.vd-shell {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 60vh;
+}
+
+.vd-shell__mobile-bar {
+  display: none;
+}
+
+.vd-shell__backdrop {
+  display: none;
+}
+
+.vd-sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 28px 14px 40px;
+  position: sticky;
+  top: 0;
+  align-self: stretch;
+  transition: width 0.2s ease;
+}
+
+/* Desktop-only "minimize" state, toggled from VendorTopBar's hamburger
+   button — collapses to an icon-only rail. Neutralized back to the full
+   mobile-drawer width inside the ≤880px media query below, since the
+   toggle button itself is hidden there (mobile uses the off-canvas
+   drawer + its own hamburger instead). */
+.vd-sidebar--collapsed {
+  width: 68px;
+}
+
+.vd-sidebar--collapsed .vd-sidebar__back-label,
+.vd-sidebar--collapsed .vd-sidebar__label {
+  display: none;
+}
+
+.vd-sidebar--collapsed .vd-sidebar__back,
+.vd-sidebar--collapsed .vd-sidebar__link {
+  justify-content: center;
+}
+
+.vd-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 18px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.vd-sidebar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #888;
+  text-decoration: none;
+}
+
+.vd-sidebar__back:hover {
+  color: var(--crimson);
+}
+
+.vd-sidebar__close {
+  display: none;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.vd-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vd-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #666;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.vd-sidebar__icon {
+  color: #aaa;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.vd-sidebar__link:hover {
+  background: rgba(172, 0, 0, 0.05);
+  color: var(--text-dark);
+}
+
+.vd-sidebar__link:hover .vd-sidebar__icon {
+  color: var(--crimson);
+}
+
+.vd-sidebar__link--active {
+  background: rgba(172, 0, 0, 0.08);
+  color: var(--crimson);
+  border-left-color: var(--crimson);
+}
+
+.vd-sidebar__link--active .vd-sidebar__icon {
+  color: var(--crimson);
+}
+
+.vd-content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 40px 80px;
+}
+
+@media (max-width: 880px) {
+  .vd-shell {
+    display: block;
+  }
+
+  .vd-shell__mobile-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 5vw;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .vd-shell__menu-btn {
+    display: flex;
+    background: none;
+    border: none;
+    color: var(--text-dark);
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .vd-shell__mobile-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+  }
+
+  .vd-shell__backdrop--visible {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 450;
+  }
+
+  .vd-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 78vw;
+    max-width: 300px;
+    background: #fff;
+    z-index: 460;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    border-right: none;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .vd-sidebar--open {
+    transform: translateX(0);
+  }
+
+  /* The desktop "minimize" state is irrelevant to the mobile off-canvas
+     drawer — explicitly neutralize it rather than relying on cascade
+     order, so it stays correct if these rules are ever reordered. */
+  .vd-sidebar--collapsed {
+    width: 78vw;
+    max-width: 300px;
+  }
+
+  .vd-sidebar--collapsed .vd-sidebar__back-label,
+  .vd-sidebar--collapsed .vd-sidebar__label {
+    display: inline;
+  }
+
+  .vd-sidebar--collapsed .vd-sidebar__back,
+  .vd-sidebar--collapsed .vd-sidebar__link {
+    justify-content: flex-start;
+  }
+
+  .vd-sidebar__close {
+    display: flex;
+  }
+
+  .vd-topbar__collapse-btn {
+    display: none;
+  }
+
+  .vd-content {
+    padding: 24px 5vw 60px;
+  }
 }
 
 /* ── Order status pill tabs (StoreOrders) — visually distinct from

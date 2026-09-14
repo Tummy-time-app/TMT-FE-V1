@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Navigation } from "@/components/nav/Navigation";
 import { VendorStoreShell } from "@/components/vendor-portal/VendorStoreShell";
 import { StoreOrders } from "@/components/vendor-portal/StoreOrders";
 import "@/app/vendors-listing.css";
@@ -20,15 +19,12 @@ export default async function VendorStoreOrdersPage({
   const { id } = await params;
 
   return (
-    <>
-      <Navigation />
-      <VendorStoreShell storeId={id} active="orders">
-        {/* StoreOrders reads ?tab=... via useSearchParams(), same reason
-            app/vendors/restaurants/page.tsx wraps RestaurantsList. */}
-        <Suspense fallback={null}>
-          <StoreOrders storeId={id} />
-        </Suspense>
-      </VendorStoreShell>
-    </>
+    <VendorStoreShell storeId={id} active="orders">
+      {/* StoreOrders reads ?tab=... via useSearchParams(), same reason
+          app/vendors/restaurants/page.tsx wraps RestaurantsList. */}
+      <Suspense fallback={null}>
+        <StoreOrders storeId={id} />
+      </Suspense>
+    </VendorStoreShell>
   );
 }

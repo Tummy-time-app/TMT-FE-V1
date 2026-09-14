@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Navigation } from "@/components/nav/Navigation";
+import { VendorTopBar } from "@/components/vendor-portal/VendorTopBar";
 import { VendorDashboard } from "@/components/vendor-portal/VendorDashboard";
 import "@/app/vendors-listing.css";
 import "@/app/vendor-portal.css";
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function VendorPage() {
   return (
     <>
-      <Navigation />
+      <VendorTopBar />
       <VendorDashboard />
     </>
   );
