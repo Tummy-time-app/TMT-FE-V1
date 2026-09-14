@@ -14,12 +14,17 @@ export function VendorDashboard() {
 
   // A brand-new vendor account has no store yet — send them straight into
   // the full setup wizard instead of landing on a mostly-empty dashboard
-  // (see VendorOnboardingFlow's doc comment for what that collects).
+  // (see VendorOnboardingFlow's doc comment for what that collects). The
+  // common case from here on is exactly one store (one per vendor is now
+  // enforced at signup — see VendorOnboardingFlow's redirect guard), so
+  // skip the "list of one" and go straight to that store's own dashboard.
+  // The list below only ever renders for the >1 edge case: an account
+  // that already had multiple stores from before that restriction existed.
   useEffect(() => {
-    if (isReady && isVendor && !isLoading && stores.length === 0) {
-      router.replace("/vendor/onboarding");
-    }
-  }, [isReady, isVendor, isLoading, stores.length, router]);
+    if (!isReady || !isVendor || isLoading) return;
+    if (stores.length === 0) router.replace("/vendor/onboarding");
+    else if (stores.length === 1) router.replace(`/vendor/${stores[0].id}`);
+  }, [isReady, isVendor, isLoading, stores, router]);
 
   if (isSessionLoading || !isReady) {
     return (
@@ -44,24 +49,23 @@ export function VendorDashboard() {
     );
   }
 
-  // Same condition as the redirect effect above — render nothing but a
-  // loading state for that one frame rather than flashing "0 stores"
-  // before the navigation to /vendor/onboarding lands.
-  if (!isLoading && stores.length === 0) {
+  // Same conditions as the redirect effect above — render a placeholder
+  // for that one frame rather than flashing content before the
+  // navigation (to onboarding, or straight to the one store) lands.
+  if (!isLoading && stores.length <= 1) {
     return (
       <div className="vd-root">
-        <p className="vp-empty">Setting things up…</p>
+        <p className="vp-empty">{stores.length === 0 ? "Setting things up…" : "Loading your store…"}</p>
       </div>
     );
   }
 
+  // Reachable only for the >1 edge case described above.
   return (
     <div className="vd-root">
       <header className="vd-header">
         <h1 className="vd-title">Your Stores</h1>
-        <p className="vd-subtitle">
-          {stores.length} store{stores.length !== 1 ? "s" : ""}
-        </p>
+        <p className="vd-subtitle">{stores.length} stores</p>
       </header>
 
       {isLoading ? (
@@ -94,10 +98,6 @@ export function VendorDashboard() {
           ))}
         </div>
       )}
-
-      <Link href="/vendor/onboarding" className="vd-submit-btn" style={{ textDecoration: "none", display: "block", textAlign: "center" }}>
-        + Add another store
-      </Link>
     </div>
   );
 }

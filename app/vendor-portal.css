@@ -374,8 +374,13 @@
   justify-content: center;
 }
 
+/* Hidden on desktop by default — VendorTopBar's logo already links to
+   /vendor and is always visible there, so this would just duplicate it.
+   Shown only inside the ≤880px mobile media query below, where the
+   sidebar becomes a full-height overlay that covers the top bar (and its
+   logo) while open — this is the only way back to /vendor at that point. */
 .vd-sidebar__header {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   padding: 0 6px 18px;
@@ -425,6 +430,15 @@
   text-decoration: none;
   border-left: 3px solid transparent;
   transition: background 0.15s, color 0.15s;
+  /* Also used as a <button> for primary items with secondary links (e.g.
+     Menu) — reset button chrome so it matches the <Link> version exactly. */
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }
 
 .vd-sidebar__icon {
@@ -450,6 +464,68 @@
 
 .vd-sidebar__link--active .vd-sidebar__icon {
   color: var(--crimson);
+}
+
+/* ── Primary item with secondary links (currently just Menu: All/New/
+   Edit) — WP/Shopify-admin submenu style. The primary item is a toggle
+   button (not a navigating link) that expands/collapses this list; the
+   secondary links are what actually navigates. ──────────────────────── */
+.vd-sidebar__chevron {
+  margin-left: auto;
+  color: #aaa;
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Natural down-pointing orientation = expanded (submenu visible below), matching the collapsed state's rotated-right "closed" look. */
+.vd-sidebar__chevron--expanded {
+  transform: rotate(0deg);
+}
+
+.vd-sidebar__subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 29px;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  padding-left: 12px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+.vd-sidebar__subnav--open {
+  max-height: 200px;
+  opacity: 1;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.vd-sidebar__sublink {
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.vd-sidebar__sublink:hover {
+  background: rgba(172, 0, 0, 0.05);
+  color: var(--text-dark);
+}
+
+.vd-sidebar__sublink--active {
+  color: var(--crimson);
+  background: rgba(172, 0, 0, 0.06);
+}
+
+.vd-sidebar--collapsed .vd-sidebar__subnav {
+  display: none;
 }
 
 .vd-content {
@@ -531,6 +607,10 @@
   .vd-sidebar--collapsed .vd-sidebar__back,
   .vd-sidebar--collapsed .vd-sidebar__link {
     justify-content: flex-start;
+  }
+
+  .vd-sidebar__header {
+    display: flex;
   }
 
   .vd-sidebar__close {
