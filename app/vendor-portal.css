@@ -173,6 +173,19 @@
   gap: 12px;
 }
 
+/* ── Logo/cover URL preview (StoreSettings' Branding section) ────── */
+.vd-image-preview {
+  display: block;
+  width: 100%;
+  max-width: 160px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 8px;
+  border: 1px solid rgba(172, 0, 0, 0.15);
+  background: #f5f5f5;
+}
+
 .vd-submit-btn {
   width: 100%;
   background: var(--crimson);
@@ -241,11 +254,168 @@
   text-decoration: underline;
 }
 
+/* ── Store shell tabs (VendorStoreShell) ─────────────────── */
+.vd-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.vd-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.vd-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #888;
+  text-decoration: none;
+  padding: 10px 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.vd-tab:hover {
+  color: var(--text-dark);
+}
+
+.vd-tab--active {
+  border-bottom-color: var(--crimson);
+  color: var(--crimson);
+  font-weight: 700;
+}
+
+/* ── Order status pill tabs (StoreOrders) — visually distinct from
+   .vd-tabs above so the two tab rows don't read as one stack ────── */
+.vd-pill-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 20px;
+}
+
+.vd-pill-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.vd-pill-tab {
+  background: #fff;
+  border: 1.5px solid rgba(172, 0, 0, 0.15);
+  border-radius: 100px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #777;
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.vd-pill-tab:hover {
+  border-color: rgba(172, 0, 0, 0.35);
+}
+
+.vd-pill-tab--active {
+  background: var(--crimson);
+  border-color: var(--crimson);
+  color: #fff;
+}
+
+/* ── Stat tiles (StoreOverview, later StoreEarnings) ─────── */
+.vd-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.vd-metric-card {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+}
+
+.vd-metric-card__value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.vd-metric-card__label {
+  font-size: 0.78rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+/* ── Inline confirm panel (reject reason, review reply, remove-staff
+   confirm) — a bordered/tinted step that expands under an action ──── */
+.vd-inline-panel {
+  margin-top: 12px;
+  padding: 14px;
+  background: rgba(172, 0, 0, 0.04);
+  border: 1px solid rgba(172, 0, 0, 0.12);
+  border-radius: 12px;
+}
+
+.vd-inline-panel .vd-field:last-of-type {
+  margin-bottom: 12px;
+}
+
+/* ── Simple data table (StoreEarnings settlements, later StoreStaff) ── */
+.vd-table-wrap {
+  overflow-x: auto;
+}
+
+.vd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.vd-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+.vd-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--text-dark);
+  white-space: nowrap;
+}
+
+.vd-table tr:last-child td {
+  border-bottom: none;
+}
+
 @media (max-width: 640px) {
   .vd-root {
     padding: 24px 4vw 60px;
   }
   .vd-field-row {
     grid-template-columns: 1fr;
+  }
+  .vd-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useVendorGuard } from "./useVendorGuard";
 import { useGetInventoryQuery, useUpdateStockMutation } from "@/features/vendor/inventoryApi";
 import type { VendorMenuItem } from "@/features/vendor/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
@@ -65,34 +64,12 @@ function StockRow({ item, restaurantId }: { item: VendorMenuItem; restaurantId: 
   );
 }
 
+/** Rendered inside VendorStoreShell, which already guarantees a signed-in vendor before mounting this. */
 export function StoreInventory({ storeId }: { storeId: string }) {
-  const { isReady, isSessionLoading, isVendor } = useVendorGuard();
-  const { data, isLoading, isError } = useGetInventoryQuery(storeId, { skip: !isReady || !isVendor });
-
-  if (isSessionLoading || !isReady) {
-    return (
-      <div className="vd-root">
-        <p className="vp-empty">Loading…</p>
-      </div>
-    );
-  }
-
-  if (!isVendor) {
-    return (
-      <div className="vd-root">
-        <div className="vp-empty">
-          <p className="vp-empty-title">This isn&apos;t a vendor account</p>
-        </div>
-      </div>
-    );
-  }
+  const { data, isLoading, isError } = useGetInventoryQuery(storeId);
 
   return (
-    <div className="vd-root">
-      <Link href={`/vendor/${storeId}`} className="vd-back-link">
-        ← Back to store settings
-      </Link>
-
+    <>
       <header className="vd-header">
         <h1 className="vd-title">Inventory</h1>
         <p className="vd-subtitle">Stock levels across your menu</p>
@@ -138,6 +115,6 @@ export function StoreInventory({ storeId }: { storeId: string }) {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }

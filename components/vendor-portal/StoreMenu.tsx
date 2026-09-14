@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useVendorGuard } from "./useVendorGuard";
 import { useGetMenuQuery } from "@/features/restaurants/restaurantsApi";
 import {
   useCreateCategoryMutation,
@@ -108,11 +106,10 @@ function ItemExtras({ menuItemId }: { menuItemId: string }) {
   );
 }
 
+/** Rendered inside VendorStoreShell, which already guarantees a signed-in vendor before mounting this. */
 export function StoreMenu({ storeId }: { storeId: string }) {
-  const { isReady, isSessionLoading, isVendor } = useVendorGuard();
-
-  const { data: categories = [] } = useGetCategoriesQuery(storeId, { skip: !isReady || !isVendor });
-  const { data: menuItems = [], isLoading: isLoadingMenu } = useGetMenuQuery(storeId, { skip: !isReady || !isVendor });
+  const { data: categories = [] } = useGetCategoriesQuery(storeId);
+  const { data: menuItems = [], isLoading: isLoadingMenu } = useGetMenuQuery(storeId);
 
   const [createCategory, { isLoading: isCreatingCategory }] = useCreateCategoryMutation();
   const [createMenuItem, { isLoading: isCreatingItem }] = useCreateMenuItemMutation();
@@ -134,24 +131,6 @@ export function StoreMenu({ storeId }: { storeId: string }) {
     }
     return map;
   }, [menuItems]);
-
-  if (isSessionLoading || !isReady) {
-    return (
-      <div className="vd-root">
-        <p className="vp-empty">Loading…</p>
-      </div>
-    );
-  }
-
-  if (!isVendor) {
-    return (
-      <div className="vd-root">
-        <div className="vp-empty">
-          <p className="vp-empty-title">This isn&apos;t a vendor account</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,11 +164,7 @@ export function StoreMenu({ storeId }: { storeId: string }) {
   };
 
   return (
-    <div className="vd-root">
-      <Link href={`/vendor/${storeId}`} className="vd-back-link">
-        ← Back to store settings
-      </Link>
-
+    <>
       <header className="vd-header">
         <h1 className="vd-title">Menu</h1>
         <p className="vd-subtitle">
@@ -284,6 +259,6 @@ export function StoreMenu({ storeId }: { storeId: string }) {
           ))
         )}
       </div>
-    </div>
+    </>
   );
 }

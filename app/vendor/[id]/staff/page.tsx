@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { Navigation } from "@/components/nav/Navigation";
 import { VendorStoreShell } from "@/components/vendor-portal/VendorStoreShell";
-import { StoreInventory } from "@/components/vendor-portal/StoreInventory";
+import { StoreStaff } from "@/components/vendor-portal/StoreStaff";
 import "@/app/vendors-listing.css";
 import "@/app/orders.css";
 import "@/app/vendor-portal.css";
 
 export const metadata: Metadata = {
-  title: "Inventory — TummyTime",
-  description: "Track stock levels for your store on TummyTime.",
+  title: "Staff — TummyTime",
+  description: "Manage your store's team on TummyTime.",
 };
 
-export default async function VendorStoreInventoryPage({
+export default async function VendorStoreStaffPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -21,8 +21,8 @@ export default async function VendorStoreInventoryPage({
   return (
     <>
       <Navigation />
-      <VendorStoreShell storeId={id} active="inventory">
-        <StoreInventory storeId={id} />
+      <VendorStoreShell storeId={id} active="staff">
+        <StoreStaff storeId={id} />
       </VendorStoreShell>
     </>
   );
