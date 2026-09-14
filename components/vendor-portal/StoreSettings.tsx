@@ -1,49 +1,89 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useVendorGuard } from "./useVendorGuard";
+import { useAuth } from "@/features/auth/hooks";
 import {
   useGetMyStoresQuery,
   useUpdateStoreProfileMutation,
   useUpdateStoreStatusMutation,
 } from "@/features/vendor/vendorApi";
-import type { StoreStatus } from "@/features/vendor/types";
+import type { BusinessType, StoreStatus } from "@/features/vendor/types";
 import { normalizeApiError } from "@/lib/utils/apiError";
+
+const DAYS: { key: string; label: string }[] = [
+  { key: "monday", label: "Monday" },
+  { key: "tuesday", label: "Tuesday" },
+  { key: "wednesday", label: "Wednesday" },
+  { key: "thursday", label: "Thursday" },
+  { key: "friday", label: "Friday" },
+  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday" },
+];
+
+const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
+  { value: "restaurant", label: "Restaurant" },
+  { value: "grocery", label: "Grocery" },
+  { value: "retail", label: "Retail" },
+  { value: "other", label: "Other" },
+];
 
 interface FormState {
   name: string;
+  businessType: BusinessType;
+  businessCategory: string;
+  ownerName: string;
   address: string;
   landmark: string;
+  additionalDirections: string;
   state: string;
   city: string;
   phone: string;
   email: string;
   cuisine: string;
   description: string;
+  logoUrl: string;
+  coverImageUrl: string;
   averagePrepTime: string;
   minimumOrder: string;
+  openingHours: Record<string, string>;
+  verificationBusinessId: string;
+  verificationGovId: string;
+  verificationRegDoc: string;
+  verificationBankDetails: string;
+  /** One URL per line — parsed to an array on submit. */
+  verificationStoreImages: string;
 }
 
 const emptyForm: FormState = {
   name: "",
+  businessType: "restaurant",
+  businessCategory: "",
+  ownerName: "",
   address: "",
   landmark: "",
+  additionalDirections: "",
   state: "",
   city: "",
   phone: "",
   email: "",
   cuisine: "",
   description: "",
+  logoUrl: "",
+  coverImageUrl: "",
   averagePrepTime: "",
   minimumOrder: "",
+  openingHours: {},
+  verificationBusinessId: "",
+  verificationGovId: "",
+  verificationRegDoc: "",
+  verificationBankDetails: "",
+  verificationStoreImages: "",
 };
 
+/** Rendered inside VendorStoreShell, which already guarantees a signed-in vendor before mounting this. */
 export function StoreSettings({ storeId }: { storeId: string }) {
-  const { user, isReady, isSessionLoading, isVendor } = useVendorGuard();
-  const { data: stores = [], isLoading } = useGetMyStoresQuery(user?.id ?? "", {
-    skip: !isReady || !isVendor,
-  });
+  const { user } = useAuth();
+  const { data: stores = [], isLoading } = useGetMyStoresQuery(user?.id ?? "", { skip: !user });
   const store = stores.find((s) => s.id === storeId);
 
   const [updateProfile, { isLoading: isSaving }] = useUpdateStoreProfileMutation();
@@ -55,18 +95,31 @@ export function StoreSettings({ storeId }: { storeId: string }) {
 
   useEffect(() => {
     if (!store) return;
+    const docs = store.verificationDocs ?? {};
     setForm({
       name: store.name ?? "",
+      businessType: store.businessType ?? "restaurant",
+      businessCategory: store.businessCategory ?? "",
+      ownerName: store.ownerName ?? "",
       address: store.address ?? "",
       landmark: store.landmark ?? "",
+      additionalDirections: store.additionalDirections ?? "",
       state: store.state ?? "",
       city: store.city ?? "",
       phone: store.phone ?? "",
       email: store.email ?? "",
       cuisine: store.cuisine ?? "",
       description: store.description ?? "",
+      logoUrl: store.logoUrl ?? "",
+      coverImageUrl: store.coverImageUrl ?? "",
       averagePrepTime: store.averagePrepTime != null ? String(store.averagePrepTime) : "",
       minimumOrder: store.minimumOrder != null ? String(store.minimumOrder) : "",
+      openingHours: store.openingHours ?? {},
+      verificationBusinessId: docs.businessId ?? "",
+      verificationGovId: docs.govId ?? "",
+      verificationRegDoc: docs.regDoc ?? "",
+      verificationBankDetails: docs.bankDetails ?? "",
+      verificationStoreImages: docs.storeImages?.join("\n") ?? "",
     });
   }, [store]);
 
@@ -75,24 +128,54 @@ export function StoreSettings({ storeId }: { storeId: string }) {
     setSaved(false);
   };
 
+  const patchDay = (day: string, value: string) => {
+    setForm((prev) => ({ ...prev, openingHours: { ...prev.openingHours, [day]: value } }));
+    setSaved(false);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const openingHoursEntries = Object.entries(form.openingHours).filter(([, v]) => v.trim());
+    const storeImages = form.verificationStoreImages
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const hasVerificationDocs =
+      form.verificationBusinessId || form.verificationGovId || form.verificationRegDoc || form.verificationBankDetails || storeImages.length > 0;
+
     try {
       await updateProfile({
         id: storeId,
         patch: {
           name: form.name,
+          businessType: form.businessType,
+          businessCategory: form.businessCategory || undefined,
+          ownerName: form.ownerName || undefined,
           address: form.address,
           landmark: form.landmark || undefined,
+          additionalDirections: form.additionalDirections || undefined,
           state: form.state || undefined,
           city: form.city || undefined,
           phone: form.phone || undefined,
           email: form.email || undefined,
           cuisine: form.cuisine || undefined,
           description: form.description || undefined,
+          logoUrl: form.logoUrl || undefined,
+          coverImageUrl: form.coverImageUrl || undefined,
           averagePrepTime: form.averagePrepTime ? Number(form.averagePrepTime) : undefined,
           minimumOrder: form.minimumOrder ? Number(form.minimumOrder) : undefined,
+          openingHours: openingHoursEntries.length ? Object.fromEntries(openingHoursEntries) : undefined,
+          verificationDocs: hasVerificationDocs
+            ? {
+                businessId: form.verificationBusinessId || undefined,
+                govId: form.verificationGovId || undefined,
+                regDoc: form.verificationRegDoc || undefined,
+                bankDetails: form.verificationBankDetails || undefined,
+                storeImages: storeImages.length ? storeImages : undefined,
+              }
+            : undefined,
         },
       }).unwrap();
       setSaved(true);
@@ -110,82 +193,29 @@ export function StoreSettings({ storeId }: { storeId: string }) {
     }
   };
 
-  if (isSessionLoading || !isReady) {
-    return (
-      <div className="vd-root">
-        <p className="vp-empty">Loading…</p>
-      </div>
-    );
-  }
-
-  if (!isVendor) {
-    return (
-      <div className="vd-root">
-        <div className="vp-empty">
-          <p className="vp-empty-title">This isn&apos;t a vendor account</p>
-          <Link href="/" className="vp-empty-cta">
-            Go home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   if (isLoading) {
-    return (
-      <div className="vd-root">
-        <p className="vp-empty">Loading store…</p>
-      </div>
-    );
+    return <p className="vp-empty">Loading store…</p>;
   }
 
   if (!store) {
     return (
-      <div className="vd-root">
-        <div className="vp-empty">
-          <p className="vp-empty-title">Store not found</p>
-          <Link href="/vendor" className="vp-empty-cta">
-            ← Back to your stores
-          </Link>
-        </div>
+      <div className="vp-empty">
+        <p className="vp-empty-title">Store not found</p>
       </div>
     );
   }
 
   return (
-    <div className="vd-root">
-      <Link href="/vendor" className="vd-back-link">
-        ← Back to your stores
-      </Link>
-
-      <header className="vd-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div>
-          <h1 className="vd-title">{store.name}</h1>
-          <p className="vd-subtitle">
-            {store.verificationStatus === "VERIFIED" ? "Verified" : "Verification pending"}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <Link href={`/vendor/${storeId}/menu`} className="vd-submit-btn" style={{ marginTop: 0, width: "auto", padding: "10px 18px", textDecoration: "none", display: "inline-block" }}>
-            Manage menu
-          </Link>
-          <Link
-            href={`/vendor/${storeId}/inventory`}
-            className="vd-submit-btn"
-            style={{
-              marginTop: 0,
-              width: "auto",
-              padding: "10px 18px",
-              textDecoration: "none",
-              display: "inline-block",
-              background: "transparent",
-              color: "var(--crimson)",
-              border: "2px solid rgba(172, 0, 0, 0.3)",
-            }}
-          >
-            Inventory
-          </Link>
-        </div>
+    <>
+      <header className="vd-header">
+        <h1 className="vd-title">{store.name}</h1>
+        <p className="vd-subtitle">
+          {store.verificationStatus === "VERIFIED"
+            ? "Verified"
+            : store.verificationStatus === "REJECTED"
+              ? "Verification rejected"
+              : "Verification pending"}
+        </p>
       </header>
 
       <div className="vd-section">
@@ -205,6 +235,40 @@ export function StoreSettings({ storeId }: { storeId: string }) {
       </div>
 
       <form onSubmit={handleSave}>
+        <div className="vd-section">
+          <h2 className="vd-section-title">Business details</h2>
+          <div className="vd-field-row">
+            <div className="vd-field">
+              <label htmlFor="businessType">Business type</label>
+              <select
+                id="businessType"
+                className="vd-select"
+                value={form.businessType}
+                onChange={(e) => patch("businessType", e.target.value)}
+              >
+                {BUSINESS_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="vd-field">
+              <label htmlFor="businessCategory">Category</label>
+              <input
+                id="businessCategory"
+                className="vd-input"
+                value={form.businessCategory}
+                onChange={(e) => patch("businessCategory", e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="vd-field">
+            <label htmlFor="ownerName">Owner name</label>
+            <input id="ownerName" className="vd-input" value={form.ownerName} onChange={(e) => patch("ownerName", e.target.value)} />
+          </div>
+        </div>
+
         <div className="vd-section">
           <h2 className="vd-section-title">Basic info</h2>
           <div className="vd-field">
@@ -237,6 +301,16 @@ export function StoreSettings({ storeId }: { storeId: string }) {
             <label htmlFor="landmark">Landmark</label>
             <input id="landmark" className="vd-input" value={form.landmark} onChange={(e) => patch("landmark", e.target.value)} />
           </div>
+          <div className="vd-field">
+            <label htmlFor="additionalDirections">Additional directions</label>
+            <textarea
+              id="additionalDirections"
+              className="vd-textarea"
+              value={form.additionalDirections}
+              onChange={(e) => patch("additionalDirections", e.target.value)}
+              placeholder="Anything that helps a rider find you — gate color, floor number, etc."
+            />
+          </div>
           <div className="vd-field-row">
             <div className="vd-field">
               <label htmlFor="city">City</label>
@@ -259,6 +333,36 @@ export function StoreSettings({ storeId }: { storeId: string }) {
             <div className="vd-field">
               <label htmlFor="email">Email</label>
               <input id="email" type="email" className="vd-input" value={form.email} onChange={(e) => patch("email", e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="vd-section">
+          <h2 className="vd-section-title">Branding</h2>
+          <p className="vd-subtitle" style={{ marginTop: -4, marginBottom: 12 }}>
+            Paste a hosted image URL — there&apos;s no upload here yet.
+          </p>
+          <div className="vd-field-row">
+            <div className="vd-field">
+              <label htmlFor="logoUrl">Logo URL</label>
+              <input id="logoUrl" className="vd-input" value={form.logoUrl} onChange={(e) => patch("logoUrl", e.target.value)} />
+              {form.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URL, not a served asset
+                <img src={form.logoUrl} alt="" className="vd-image-preview" />
+              )}
+            </div>
+            <div className="vd-field">
+              <label htmlFor="coverImageUrl">Cover image URL</label>
+              <input
+                id="coverImageUrl"
+                className="vd-input"
+                value={form.coverImageUrl}
+                onChange={(e) => patch("coverImageUrl", e.target.value)}
+              />
+              {form.coverImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URL, not a served asset
+                <img src={form.coverImageUrl} alt="" className="vd-image-preview" />
+              )}
             </div>
           </div>
         </div>
@@ -291,6 +395,68 @@ export function StoreSettings({ storeId }: { storeId: string }) {
           </div>
         </div>
 
+        <div className="vd-section">
+          <h2 className="vd-section-title">Opening hours</h2>
+          {DAYS.map((day) => (
+            <div className="vd-field" key={day.key}>
+              <label htmlFor={`hours-${day.key}`}>{day.label}</label>
+              <input
+                id={`hours-${day.key}`}
+                className="vd-input"
+                placeholder="e.g. 8:00 AM - 10:00 PM"
+                value={form.openingHours[day.key] ?? ""}
+                onChange={(e) => patchDay(day.key, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="vd-section">
+          <h2 className="vd-section-title">Verification documents</h2>
+          <p className="vd-subtitle" style={{ marginTop: -4, marginBottom: 12 }}>
+            Free-form for now — paste references or hosted document URLs.
+          </p>
+          <div className="vd-field-row">
+            <div className="vd-field">
+              <label htmlFor="verBusinessId">Business ID</label>
+              <input
+                id="verBusinessId"
+                className="vd-input"
+                value={form.verificationBusinessId}
+                onChange={(e) => patch("verificationBusinessId", e.target.value)}
+              />
+            </div>
+            <div className="vd-field">
+              <label htmlFor="verGovId">Government ID</label>
+              <input id="verGovId" className="vd-input" value={form.verificationGovId} onChange={(e) => patch("verificationGovId", e.target.value)} />
+            </div>
+          </div>
+          <div className="vd-field-row">
+            <div className="vd-field">
+              <label htmlFor="verRegDoc">Registration document</label>
+              <input id="verRegDoc" className="vd-input" value={form.verificationRegDoc} onChange={(e) => patch("verificationRegDoc", e.target.value)} />
+            </div>
+            <div className="vd-field">
+              <label htmlFor="verBankDetails">Bank details</label>
+              <input
+                id="verBankDetails"
+                className="vd-input"
+                value={form.verificationBankDetails}
+                onChange={(e) => patch("verificationBankDetails", e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="vd-field">
+            <label htmlFor="verStoreImages">Store images (one URL per line)</label>
+            <textarea
+              id="verStoreImages"
+              className="vd-textarea"
+              value={form.verificationStoreImages}
+              onChange={(e) => patch("verificationStoreImages", e.target.value)}
+            />
+          </div>
+        </div>
+
         {error && <p className="vd-error">{error}</p>}
         {saved && <p className="vd-success">Saved!</p>}
 
@@ -298,6 +464,6 @@ export function StoreSettings({ storeId }: { storeId: string }) {
           {isSaving ? "Saving…" : "Save changes"}
         </button>
       </form>
-    </div>
+    </>
   );
 }

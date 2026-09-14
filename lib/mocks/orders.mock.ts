@@ -9,14 +9,18 @@ import type { NotificationLogEntry } from "@/features/notifications/types";
  * Backed by localStorage so orders (and the notification log they publish
  * to, mirroring the real RabbitMQ → notification-service pipeline) persist
  * across a reload. Only lib/dev/devMode.ts-gated branches inside
- * ordersApi.ts / notificationsApi.ts import from here.
+ * ordersApi.ts / notificationsApi.ts import from here — plus
+ * vendorOrders.mock.ts, which reads/writes this same storage so a vendor's
+ * accept/reject/ready/handover and the customer's own order view agree on
+ * one dev-mode source of truth. `loadOrders`/`saveOrders`/
+ * `publishNotification` are exported for exactly that reuse.
  * ═══════════════════════════════════════════════════════════════════════
  */
 
 const ORDERS_STORAGE_KEY = "tummytime_mock_orders";
 const NOTIFICATIONS_STORAGE_KEY = "tummytime_mock_notifications";
 
-function loadOrders(): Order[] {
+export function loadOrders(): Order[] {
   if (typeof window === "undefined") return [];
   try {
     return JSON.parse(window.localStorage.getItem(ORDERS_STORAGE_KEY) ?? "[]") as Order[];
@@ -25,7 +29,7 @@ function loadOrders(): Order[] {
   }
 }
 
-function saveOrders(orders: Order[]) {
+export function saveOrders(orders: Order[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
 }
@@ -39,7 +43,7 @@ function loadNotifications(): NotificationLogEntry[] {
   }
 }
 
-function publishNotification(entry: Omit<NotificationLogEntry, "id" | "timestamp">) {
+export function publishNotification(entry: Omit<NotificationLogEntry, "id" | "timestamp">) {
   if (typeof window === "undefined") return;
   const notifications = loadNotifications();
   notifications.unshift({
