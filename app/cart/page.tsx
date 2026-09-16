@@ -3,6 +3,7 @@ import { Navigation } from "@/components/nav/Navigation";
 import { CartView } from "@/components/cart/CartView";
 import "@/app/vendors-listing.css";
 import "@/app/cart.css";
+import "@/app/rewards.css";
 
 export const metadata: Metadata = {
   title: "Your Cart — TummyTime",

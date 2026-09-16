@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { DiscountIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { Navigation } from "@/components/nav/Navigation";
+import { CashbackView } from "@/components/rewards/CashbackView";
+import "@/app/rewards.css";
 
 export const metadata: Metadata = {
   title: "Cashback — TummyTime",
@@ -9,10 +10,9 @@ export const metadata: Metadata = {
 
 export default function CashbackPage() {
   return (
-    <ComingSoonPage
-      icon={DiscountIcon}
-      title="Cashback"
-      message="Earn cashback on your orders and use it toward future purchases — coming soon."
-    />
+    <>
+      <Navigation />
+      <CashbackView />
+    </>
   );
 }

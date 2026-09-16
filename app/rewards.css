@@ -1,0 +1,461 @@
+/**
+ * Shared styles for the four rewards pages (Wallet, Cashback, Loyalty
+ * Points, Free Deliveries) — matches the established visual language
+ * elsewhere in this branch (--crimson/--font-display/--font-body tokens
+ * from app/landing.css, card shapes like the op-/vp-/off- prefixed
+ * classes), same convention app/offers.css documents.
+ */
+
+.rwd-root {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 5vw 80px;
+}
+
+.rwd-header {
+  margin-bottom: 24px;
+}
+
+.rwd-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.rwd-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ── Balance / headline card ─────────────────────────────────────── */
+
+.rwd-balance-card {
+  background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dark) 100%);
+  border-radius: 20px;
+  padding: 28px 24px;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+
+.rwd-balance-card__label {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.rwd-balance-card__value {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.rwd-balance-card__cta {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  color: var(--crimson);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+}
+
+.rwd-balance-card__cta:hover {
+  background: var(--off-white);
+}
+
+/* ── Tiles (Cashback / Loyalty / Free Delivery quick links) ─────── */
+
+.rwd-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.rwd-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 16px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rwd-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.rwd-tile__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(172, 0, 0, 0.08);
+  color: var(--crimson);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rwd-tile__value {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.rwd-tile__label {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────── */
+
+.rwd-section {
+  margin-bottom: 28px;
+}
+
+.rwd-section-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+/* ── History / transaction lists ─────────────────────────────────── */
+
+.rwd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.rwd-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.rwd-list-row:last-child {
+  border-bottom: none;
+}
+
+.rwd-list-row__label {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.rwd-list-row__date {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+.rwd-list-row__amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.rwd-list-row__amount--positive {
+  color: #1a8a4a;
+}
+
+.rwd-list-row__amount--negative {
+  color: var(--text-dark);
+}
+
+/* ── Progress bar (Free Delivery) ────────────────────────────────── */
+
+.rwd-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(172, 0, 0, 0.1);
+  overflow: hidden;
+  margin: 10px 0 8px;
+}
+
+.rwd-progress-fill {
+  height: 100%;
+  background: var(--crimson);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* ── Rate table (Cashback explainer) ─────────────────────────────── */
+
+.rwd-rate-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.rwd-rate-table th,
+.rwd-rate-table td {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+}
+
+.rwd-rate-table th {
+  background: rgba(172, 0, 0, 0.05);
+  color: #888;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.rwd-rate-table td {
+  color: var(--text-dark);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ── Redemption options (Loyalty) ────────────────────────────────── */
+
+.rwd-redeem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.rwd-redeem-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.rwd-redeem-card__points {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.rwd-redeem-card__value {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+
+.rwd-btn {
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 9px 16px;
+}
+
+.rwd-btn--primary {
+  background: var(--crimson);
+  color: var(--white);
+}
+
+.rwd-btn--primary:hover {
+  background: var(--crimson-dark);
+}
+
+.rwd-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rwd-btn--ghost {
+  background: transparent;
+  color: var(--crimson);
+  border: 1px solid rgba(172, 0, 0, 0.3);
+}
+
+/* ── Add Money modal ──────────────────────────────────────────────── */
+
+.rwd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 60;
+  padding: env(safe-area-inset-bottom, 0px) 0 0;
+}
+
+.rwd-modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .rwd-modal-overlay {
+    align-items: center;
+  }
+  .rwd-modal {
+    border-radius: 24px;
+  }
+}
+
+.rwd-modal__title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+}
+
+.rwd-amount-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.rwd-amount-chip {
+  border: 1px solid rgba(172, 0, 0, 0.2);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.rwd-amount-chip--active {
+  background: var(--crimson);
+  color: var(--white);
+  border-color: var(--crimson);
+}
+
+.rwd-input {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.rwd-points-preview {
+  font-size: 0.85rem;
+  color: var(--crimson);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.rwd-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.rwd-modal__error {
+  color: #b3261e;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .rwd-root {
+    padding: 24px 4vw 60px;
+  }
+  .rwd-tiles {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Post-order reward summary (rendered inside CartView) ────────── */
+
+.rwd-summary-panel {
+  max-width: 440px;
+  margin: 40px auto;
+  padding: 0 5vw;
+  text-align: center;
+}
+
+.rwd-summary-emoji {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.rwd-summary-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+}
+
+.rwd-summary-rows {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 4px 18px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.rwd-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.rwd-summary-row:last-child {
+  border-bottom: none;
+}
+
+.rwd-summary-row__value {
+  font-weight: 700;
+  color: #1a8a4a;
+}
+
+.rwd-summary-message {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.rwd-summary-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}

@@ -6,11 +6,14 @@ import { useAuth } from "@/features/auth/hooks";
 import { useProfile } from "@/lib/ProfileContext";
 import { useCart } from "@/lib/CartContext";
 import { useCreateOrderMutation } from "@/features/orders/ordersApi";
+import type { PaymentMethod } from "@/features/orders/types";
+import { useGetWalletQuery } from "@/features/rewards/rewardsApi";
+import { computeCashback } from "@/features/rewards/constants";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { BasketIcon, CheckCircleIcon, ChevronRightIcon, CloseIcon, PadlockIcon, PencilIcon, StoreIcon } from "@/components/icons";
+import { BasketIcon, CheckCircleIcon, CheckIcon, ChevronRightIcon, CloseIcon, PadlockIcon, PencilIcon, StoreIcon, WalletIcon } from "@/components/icons";
 
 function formatNaira(amount: number) {
   return `₦${amount.toLocaleString("en-NG")}`;
@@ -46,11 +49,17 @@ export function CartView() {
   const { user, isAuthenticated } = useAuth();
   const { profile } = useProfile();
   const [createOrder, { isLoading: isPlacingOrder }] = useCreateOrderMutation();
+  const { data: wallet } = useGetWalletQuery(user?.id ?? "", { skip: !user });
 
   const [noteId, setNoteId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState<{ id: string } | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pay_on_delivery");
+
+  const walletBalance = Number(wallet?.balance ?? 0);
+  const canPayWithWallet = walletBalance >= cartTotal;
+  const cashbackPreview = computeCashback(cartTotal);
 
   const handleRemove = (id: string) => {
     setRemovingId(id);
@@ -69,7 +78,7 @@ export function CartView() {
 
     setOrderError(null);
     try {
-      await createOrder({
+      const order = await createOrder({
         customerId: user.id,
         restaurantId: cart.restaurantId,
         items: cart.entries.map((e) => ({
@@ -79,28 +88,33 @@ export function CartView() {
           unitPrice: Number(e.item.price),
         })),
         totalAmount: cartTotal,
+        paymentMethod,
         deliveryAddress: profile.address.line1
           ? `${profile.address.line1}, ${profile.address.city}`
           : undefined,
         deliveryLat: profile.address.lat,
         deliveryLng: profile.address.lng,
       }).unwrap();
-      setOrderPlaced(true);
+      setPlacedOrder({ id: order.id });
       clearCart();
     } catch (err) {
       setOrderError(normalizeApiError(err as never).message);
     }
   };
 
-  if (orderPlaced) {
+  if (placedOrder) {
     return (
       <EmptyState
         icon={CheckCircleIcon}
-        title="Order placed!"
-        message="We'll let you know when it's confirmed."
+        title="Order confirmed!"
+        // Cashback/loyalty/free-delivery credit on delivery, not at
+        // checkout (blueprint screen 34) — the rider app makes "delivered"
+        // a real status now, so the reward summary lives on the order's
+        // own tracking page instead of here (see OrderDetail.tsx).
+        message="We'll let you know when it's on the way. Your rewards will show up here once it's delivered."
         action={
-          <Link href="/vendors/restaurants" className="vp-empty-cta">
-            Browse Restaurants
+          <Link href={`/orders/${placedOrder.id}`} className="vp-empty-cta">
+            Track Order
           </Link>
         }
       />
@@ -214,11 +228,49 @@ export function CartView() {
               <span>Subtotal</span>
               <span>{formatNaira(cartTotal)}</span>
             </div>
+            <div className="cart-summary__line cart-summary__line--discount">
+              <span>You&apos;ll earn</span>
+              <span>+{formatNaira(cashbackPreview)} cashback</span>
+            </div>
           </div>
 
           <div className="cart-summary__total">
             <span>Total</span>
             <span>{formatNaira(cartTotal)}</span>
+          </div>
+
+          <div className="cart-payment">
+            <p className="cart-payment__title">Pay with</p>
+            <button
+              type="button"
+              className={`cart-payment__option ${paymentMethod === "wallet" ? "cart-payment__option--active" : ""} ${!canPayWithWallet ? "cart-payment__option--disabled" : ""}`}
+              onClick={() => setPaymentMethod("wallet")}
+              disabled={!canPayWithWallet}
+            >
+              <span className="cart-payment__option-label">
+                <span>
+                  <WalletIcon width={13} height={13} style={{ marginRight: 6, verticalAlign: "-2px" }} />
+                  TummyTime Wallet
+                </span>
+                <span className="cart-payment__option-balance">Balance: {formatNaira(walletBalance)}</span>
+              </span>
+              {paymentMethod === "wallet" && <CheckIcon width={16} height={16} />}
+            </button>
+            {!canPayWithWallet && (
+              <p className="cart-payment__topup-hint">
+                Not enough balance · <Link href="/wallet" className="cart-payment__topup-link">Top up your wallet</Link>
+              </p>
+            )}
+            <button
+              type="button"
+              className={`cart-payment__option ${paymentMethod === "pay_on_delivery" ? "cart-payment__option--active" : ""}`}
+              onClick={() => setPaymentMethod("pay_on_delivery")}
+            >
+              <span className="cart-payment__option-label">
+                <span>Pay on Delivery</span>
+              </span>
+              {paymentMethod === "pay_on_delivery" && <CheckIcon width={16} height={16} />}
+            </button>
           </div>
 
           {orderError && <p className="cart-promo__error">{orderError}</p>}

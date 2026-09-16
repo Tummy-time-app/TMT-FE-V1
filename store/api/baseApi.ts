@@ -31,6 +31,13 @@ const SERVICE_ROUTES: readonly (readonly [prefix: string, url: string])[] = [
   ["/api/restaurants", env.restaurantServiceUrl],
   ["/api/orders", env.orderServiceUrl],
   ["/api/notifications", env.notificationServiceUrl],
+  ["/api/rewards", env.rewardsServiceUrl],
+  // Rider sub-resources are split across three services — order matters
+  // here since resolveUrl uses the first prefix match.
+  ["/api/rider/profile", env.userServiceUrl],
+  ["/api/rider/auth", env.userServiceUrl],
+  ["/api/rider/orders", env.orderServiceUrl],
+  ["/api/rider/earnings", env.rewardsServiceUrl],
 ];
 
 /**
@@ -111,7 +118,9 @@ export const baseApi = createApi({
   // one deliberate exception — net-new marketplace surfaces (see features/
   // shops/shopsApi.ts and features/markets/marketsApi.ts's doc comments)
   // with no backend endpoint to mirror at all yet, added on explicit
-  // direction rather than assumed.
+  // direction rather than assumed. Wallet/Cashback/Loyalty/FreeDelivery are
+  // a second, newer exception: TMT-BE-V1 now has a real rewards-service
+  // behind these (see features/rewards/rewardsApi.ts's doc comment).
   tagTypes: [
     "Auth",
     "Restaurants",
@@ -128,6 +137,12 @@ export const baseApi = createApi({
     "Reviews",
     "Settlements",
     "VendorStaff",
+    "Wallet",
+    "Cashback",
+    "Loyalty",
+    "FreeDelivery",
+    "RiderProfile",
+    "RiderEarnings",
   ],
   endpoints: () => ({}),
 });

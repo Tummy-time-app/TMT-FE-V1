@@ -26,6 +26,20 @@ export interface OrderItem {
   unitPrice: number;
 }
 
+export type PaymentMethod = "wallet" | "pay_on_delivery";
+
+/** Set once a rider accepts the delivery (order-service's riderOrders.ts PUT /:id/accept) — see features/rider/. */
+export interface RiderInfo {
+  riderId?: string;
+  name?: string;
+  phone?: string;
+  vehicle?: string;
+  plateNumber?: string;
+  rating?: number;
+  photoUrl?: string;
+  etaMinutes?: number;
+}
+
 export interface Order {
   id: string;
   customerId: string;
@@ -33,10 +47,17 @@ export interface Order {
   items: OrderItem[];
   status: OrderStatus;
   totalAmount: string | number;
+  /** Added alongside TMT-BE-V1's rewards-service integration — see features/rewards/. */
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: "pending" | "paid" | "refunded";
   deliveryAddress?: string;
   /** Not in the backend doc's order-service schema yet — added frontend-side for the map feature (components/maps/); absent means no tracking map to show. */
   deliveryLat?: number | null;
   deliveryLng?: number | null;
+  /** Shown to the customer once out for delivery, given to the rider to confirm drop-off (features/rider/riderOrdersApi.ts's deliver mutation). */
+  deliveryPin?: string | null;
+  deliveredAt?: string | null;
+  riderInfo?: RiderInfo | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -51,6 +72,8 @@ export interface CreateOrderPayload {
   restaurantId: string;
   items: OrderItem[];
   totalAmount: number;
+  /** Defaults to "pay_on_delivery" backend-side if omitted. */
+  paymentMethod?: PaymentMethod;
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;

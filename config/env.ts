@@ -27,6 +27,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_RESTAURANT_SERVICE_URL: z.string().url().optional().or(z.literal("")),
   NEXT_PUBLIC_ORDER_SERVICE_URL: z.string().url().optional().or(z.literal("")),
   NEXT_PUBLIC_NOTIFICATION_SERVICE_URL: z.string().url().optional().or(z.literal("")),
+  NEXT_PUBLIC_REWARDS_SERVICE_URL: z.string().url().optional().or(z.literal("")),
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional().or(z.literal("")),
   NEXT_PUBLIC_USE_MOCKS: z.string().optional(),
 });
@@ -37,6 +38,7 @@ const parsed = envSchema.safeParse({
   NEXT_PUBLIC_RESTAURANT_SERVICE_URL: process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_URL,
   NEXT_PUBLIC_ORDER_SERVICE_URL: process.env.NEXT_PUBLIC_ORDER_SERVICE_URL,
   NEXT_PUBLIC_NOTIFICATION_SERVICE_URL: process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL,
+  NEXT_PUBLIC_REWARDS_SERVICE_URL: process.env.NEXT_PUBLIC_REWARDS_SERVICE_URL,
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
   NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS,
 });
@@ -56,6 +58,7 @@ export const env = {
   restaurantServiceUrl: raw.NEXT_PUBLIC_RESTAURANT_SERVICE_URL || "",
   orderServiceUrl: raw.NEXT_PUBLIC_ORDER_SERVICE_URL || "",
   notificationServiceUrl: raw.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL || "",
+  rewardsServiceUrl: raw.NEXT_PUBLIC_REWARDS_SERVICE_URL || "",
   googleMapsApiKey: raw.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   useMocks: raw.NEXT_PUBLIC_USE_MOCKS === "true",
 } as const;

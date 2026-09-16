@@ -1,0 +1,170 @@
+/**
+ * Rider portal — reuses app/vendor-portal.css's `vd-*` shell/sidebar/
+ * metrics/table classes and app/orders.css's `op-badge` pills directly
+ * (see components/rider-portal/RiderPortalShell.tsx's doc comment) rather
+ * than duplicating that CSS. Only genuinely new pieces live here: delivery
+ * request cards, the online/offline toggle, and the PIN input.
+ */
+
+.rd-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.rd-toggle-row__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.rd-toggle-row__sub {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.rd-switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: #ccc;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.rd-switch--on {
+  background: var(--crimson);
+}
+
+.rd-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rd-switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+.rd-switch--on .rd-switch__knob {
+  transform: translateX(20px);
+}
+
+/* ── Delivery request / active-delivery cards ────────────────────── */
+
+.rd-delivery-card {
+  background: #fff;
+  border: 1px solid rgba(172, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.rd-delivery-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rd-delivery-card__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.rd-delivery-card__value {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.rd-delivery-card__total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--crimson);
+  font-size: 1.05rem;
+}
+
+.rd-delivery-card__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ── Buttons (mirrors features/rewards' .rwd-btn — kept local since the
+   rider portal doesn't otherwise depend on app/rewards.css) ───────── */
+
+.rd-btn {
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  flex: 1;
+}
+
+.rd-btn--primary {
+  background: var(--crimson);
+  color: var(--white);
+}
+
+.rd-btn--primary:hover {
+  background: var(--crimson-dark);
+}
+
+.rd-btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rd-btn--ghost {
+  background: transparent;
+  color: var(--crimson);
+  border: 1px solid rgba(172, 0, 0, 0.3);
+}
+
+/* ── PIN input (delivery confirmation) ───────────────────────────── */
+
+.rd-pin-input {
+  width: 100%;
+  max-width: 220px;
+  font-size: 1.4rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  margin: 12px 0;
+}
+
+.rd-pin-display {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--crimson);
+  background: rgba(172, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 8px 16px;
+  margin: 6px 0;
+}

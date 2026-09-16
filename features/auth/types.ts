@@ -5,8 +5,11 @@
  *
  * This is NOT the richer role/profile model the `frontend` branch's ported
  * code assumed (that one talked to Supabase Auth + a NestJS profiles table).
- * There is no "rider" role, no "super_admin", no "support" — vendor staff
- * roles cover restaurant-side accounts instead.
+ * There is no "super_admin", no "support" — vendor staff roles cover
+ * restaurant-side accounts instead. "rider" was added alongside the Rider
+ * app build — see auth.ts's ALLOWED_ROLES (the actual code path RegisterForm
+ * hits for every role, including vendor's — vendorRoutes.ts's/riderRoutes.ts's
+ * own /auth/register endpoints exist server-side but nothing here calls them).
  */
 export type UserRole =
   | "customer"
@@ -15,7 +18,8 @@ export type UserRole =
   | "vendor_owner"
   | "vendor_manager"
   | "vendor_kitchen"
-  | "vendor_accountant";
+  | "vendor_accountant"
+  | "rider";
 
 /**
  * The user object the backend actually sends back. Deliberately thin —
@@ -77,7 +81,7 @@ export interface RegisterPayload {
   phone: string;
   password: string;
   /** Defaults to "customer" server-side if omitted. */
-  role?: Extract<UserRole, "customer" | "restaurant_owner">;
+  role?: Extract<UserRole, "customer" | "restaurant_owner" | "rider">;
 }
 
 /**

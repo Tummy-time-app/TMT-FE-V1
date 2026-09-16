@@ -1,19 +1,12 @@
-import type { Metadata } from "next";
-import { TruckIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Become a Rider — TummyTime",
-  description: "Deliver orders and earn with TummyTime.",
-};
-
-/** No "rider" role or rider-facing route exists anywhere in TMT-BE-V1 yet — see BusinessView.tsx's doc comment. */
+/**
+ * Was a ComingSoonPage holding page while no rider role/route existed
+ * anywhere in TMT-BE-V1. Now that the Rider app is real (see
+ * components/rider-portal/), this just forwards to the actual signup flow
+ * rather than maintaining a second, near-duplicate marketing surface
+ * alongside components/marketing/BusinessView.tsx's rider panel.
+ */
 export default function RidersPage() {
-  return (
-    <ComingSoonPage
-      icon={TruckIcon}
-      title="Become a Rider"
-      message="Rider sign-up isn't open yet — check back soon, or register your store instead from TummyTime for Business."
-    />
-  );
+  redirect("/rider/signup");
 }

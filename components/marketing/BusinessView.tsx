@@ -17,11 +17,12 @@ const RIDER_POINTS = [
 ];
 
 /**
- * Vendor signup is real (backend-backed — see /vendor/signup). Rider
- * signup isn't: TMT-BE-V1's user_role enum has no "rider" role and no
- * rider-facing route exists anywhere in the backend, so that panel is
- * honestly marked "Coming soon" and points at /riders (a holding page)
- * rather than a signup flow that doesn't exist yet.
+ * Both panels are real now — vendor signup (see /vendor/signup) and, since
+ * the Rider app build, rider signup too (see /rider/signup and
+ * features/rider/). A brand-new rider account still lands "pending
+ * verification" until an Admin dashboard exists to approve it (see the
+ * rider-app implementation plan) — that's surfaced inside the rider portal
+ * itself, not here.
  */
 export function BusinessView() {
   return (
@@ -66,7 +67,7 @@ export function BusinessView() {
           </div>
 
           <div className="mkt-panel">
-            <span className="mkt-panel__badge mkt-panel__badge--soon">Coming soon</span>
+            <span className="mkt-panel__badge mkt-panel__badge--live">Open now</span>
             <div className="mkt-card__icon" style={{ marginBottom: 16 }}>
               <TruckIcon width={22} height={22} aria-hidden />
             </div>
@@ -81,8 +82,11 @@ export function BusinessView() {
               ))}
             </ul>
             <div className="mkt-panel__actions">
-              <Link href="/riders" className="mkt-btn mkt-btn--outline">
-                Learn more
+              <Link href="/rider/signup" className="mkt-btn mkt-btn--primary">
+                Become a rider
+              </Link>
+              <Link href="/rider/login" className="mkt-btn mkt-btn--outline">
+                Rider login
               </Link>
             </div>
           </div>

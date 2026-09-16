@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { CameraIcon, LogOutIcon, MapPinIcon, PencilIcon } from "@/components/icons";
+import { CameraIcon, LogOutIcon, MapPinIcon, PencilIcon, WalletIcon } from "@/components/icons";
 import { useAuth } from "@/features/auth/hooks";
+import { useGetWalletQuery } from "@/features/rewards/rewardsApi";
 import { Chip } from "@/components/ui/Chip";
 import { cuisineOptions, dietaryOptions } from "@/lib/foodPreferences";
 import {
@@ -71,6 +72,7 @@ export function ProfileView() {
   const router = useRouter();
   const { user, logout, isAuthenticated, isSessionLoading } = useAuth();
   const { profile, isHydrated, updateProfile } = useProfile();
+  const { data: wallet } = useGetWalletQuery(user?.id ?? "", { skip: !user });
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<UserProfile>(profile);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -325,6 +327,27 @@ export function ProfileView() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* wallet */}
+      <section className="mt-8">
+        <h2 className="text-xs font-semibold tracking-wide text-neutral-500 uppercase">
+          Wallet
+        </h2>
+        <Link
+          href="/wallet"
+          className="mt-3 flex items-center justify-between rounded-xl border border-neutral-200 p-4 transition-colors hover:bg-neutral-50"
+        >
+          <span className="flex items-center gap-3">
+            <WalletIcon className="size-5 text-neutral-400" />
+            <span className="text-sm font-medium text-neutral-900">
+              Balance
+            </span>
+          </span>
+          <span className="text-sm font-semibold text-neutral-900">
+            ₦{Number(wallet?.balance ?? 0).toLocaleString("en-NG")}
+          </span>
+        </Link>
       </section>
 
       {/* food preferences — always directly editable, no edit-mode gate */}
