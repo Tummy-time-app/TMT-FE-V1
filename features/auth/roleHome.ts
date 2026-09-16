@@ -15,6 +15,8 @@ export function defaultRouteForRole(role: UserRole): string {
       return "/vendor";
     case "admin":
       return "/admin";
+    case "rider":
+      return "/rider";
     default:
       return "/";
   }

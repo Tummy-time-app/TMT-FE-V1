@@ -587,7 +587,78 @@
 /* Empty/order-placed states now use the shared EmptyState component
    (components/ui/EmptyState.tsx, `tmt-empty*`) + vp-empty-cta
    (app/vendors-listing.css) instead of the bespoke .cart-empty* markup
-   this replaced. */
+   this replaced. A successful order now renders RewardSummary
+   (components/rewards/RewardSummary.tsx, `rwd-*` classes from
+   app/rewards.css) instead of that generic empty state. */
+
+/* ── Payment method (checkout) ──────────────────────────────── */
+
+.cart-payment {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid rgba(172, 0, 0, 0.07);
+}
+
+.cart-payment__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.cart-payment__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1.5px solid rgba(172, 0, 0, 0.12);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  color: var(--text-dark);
+}
+
+.cart-payment__option:disabled {
+  cursor: not-allowed;
+}
+
+.cart-payment__option--active {
+  border-color: var(--crimson);
+  background: rgba(172, 0, 0, 0.04);
+}
+
+.cart-payment__option--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-payment__option-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-payment__option-balance {
+  font-size: 0.72rem;
+  color: #999;
+}
+
+.cart-payment__topup-hint {
+  font-size: 0.75rem;
+  color: #999;
+  margin: -4px 0 8px;
+}
+
+.cart-payment__topup-link {
+  color: var(--crimson);
+  font-weight: 600;
+  text-decoration: underline;
+}
 
 /* ── Responsive ──────────────────────────────────────────── */
 

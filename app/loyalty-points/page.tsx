@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { StarIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { Navigation } from "@/components/nav/Navigation";
+import { LoyaltyView } from "@/components/rewards/LoyaltyView";
+import "@/app/rewards.css";
 
 export const metadata: Metadata = {
   title: "Loyalty Points — TummyTime",
@@ -9,10 +10,9 @@ export const metadata: Metadata = {
 
 export default function LoyaltyPointsPage() {
   return (
-    <ComingSoonPage
-      icon={StarIcon}
-      title="Loyalty Points"
-      message="Collect points on every order and redeem them for rewards — coming soon."
-    />
+    <>
+      <Navigation />
+      <LoyaltyView />
+    </>
   );
 }

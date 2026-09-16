@@ -7,6 +7,7 @@ import type {
   RegisterResult,
   User,
 } from "@/features/auth/types";
+import { ensureSeededVerifiedRiderProfile, getOrCreateRiderProfileSync } from "@/lib/mocks/riderProfile.mock";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -65,6 +66,15 @@ function seedUsers(): MockUserRecord[] {
       password: "password123",
       isEmailVerified: true,
     },
+    {
+      id: "dev-rider-1",
+      email: "rider@tummytime.dev",
+      name: "Demo Rider",
+      role: "rider",
+      phone: "+2348030000004",
+      password: "password123",
+      isEmailVerified: true,
+    },
   ];
 }
 
@@ -75,6 +85,7 @@ function loadUsers(): MockUserRecord[] {
     if (!raw) {
       const seeded = seedUsers();
       window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(seeded));
+      ensureSeededVerifiedRiderProfile("dev-rider-1");
       return seeded;
     }
     return JSON.parse(raw) as MockUserRecord[];
@@ -150,6 +161,14 @@ export async function mockRegister(payload: RegisterPayload): Promise<RegisterRe
     isEmailVerified: true,
   };
   saveUsers([...users, record]);
+
+  // Matches the real backend's auth.ts: registering with role "rider"
+  // creates a pending rider_profiles row (see riderProfile.mock.ts's doc
+  // comment — no way to become verified in-app without an Admin dashboard).
+  if (payload.role === "rider") {
+    getOrCreateRiderProfileSync(record.id);
+  }
+
   return {
     message: "An email has been sent to you, please verify your account.",
     requiresVerification: true,

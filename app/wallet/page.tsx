@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { ReceiptIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { Navigation } from "@/components/nav/Navigation";
+import { WalletView } from "@/components/rewards/WalletView";
+import "@/app/rewards.css";
 
 export const metadata: Metadata = {
   title: "Wallet — TummyTime",
@@ -9,10 +10,9 @@ export const metadata: Metadata = {
 
 export default function WalletPage() {
   return (
-    <ComingSoonPage
-      icon={ReceiptIcon}
-      title="Wallet"
-      message="Fund your TummyTime wallet and pay for orders in one tap — coming soon."
-    />
+    <>
+      <Navigation />
+      <WalletView />
+    </>
   );
 }

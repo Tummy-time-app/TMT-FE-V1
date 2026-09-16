@@ -50,9 +50,10 @@ import LottieIcon from "@/components/LottieIcon";
  * every destination under the app's real IA (Marketplace / Rewards /
  * Account, matching the home screen's service tiles) instead of the ad hoc
  * link list it had before. Destinations with no feature behind them yet
- * (Groceries, Personal Shopper, Cashback, Loyalty Points, Free Deliveries,
- * Wallet, Addresses, Favorites) render a shared ComingSoonPage
- * (components/ui/ComingSoon.tsx) rather than 404ing.
+ * (Groceries, Personal Shopper, Addresses, Favorites) render a shared
+ * ComingSoonPage (components/ui/ComingSoon.tsx) rather than 404ing. Cashback,
+ * Loyalty Points, Free Deliveries and Wallet are real now — backed by
+ * TMT-BE-V1's rewards-service (see features/rewards/rewardsApi.ts).
  */
 
 const vendorCategories: { icon: IconComponent; label: string; desc: string; href: string; badge: string | null }[] = [

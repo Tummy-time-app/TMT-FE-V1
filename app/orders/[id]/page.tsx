@@ -2,6 +2,7 @@ import { Navigation } from "@/components/nav/Navigation";
 import { OrderDetail } from "@/components/orders/OrderDetail";
 import "@/app/vendors-listing.css";
 import "@/app/orders.css";
+import "@/app/rewards.css";
 
 export default async function OrderDetailPage({
   params,

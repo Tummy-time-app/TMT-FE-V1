@@ -1,6 +1,7 @@
 import { mockDelay } from "@/lib/dev/devMode";
 import type { CreateOrderPayload, Order, OrderStatus } from "@/features/orders/types";
 import type { NotificationLogEntry } from "@/features/notifications/types";
+import { mockDebitWalletForOrder } from "@/lib/mocks/rewards.mock";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -59,16 +60,35 @@ export async function mockCreateOrder(payload: CreateOrderPayload): Promise<Orde
   if (!payload.items.length) {
     throw { status: 400, message: "Missing required order fields: customerId, restaurantId, items array, totalAmount" };
   }
+
+  const orderId = crypto.randomUUID();
+  const paymentMethod = payload.paymentMethod === "wallet" ? "wallet" : "pay_on_delivery";
+
+  // Wallet debit must happen before the order exists — mirrors order-service's
+  // routes/orders.ts, which rejects order creation on insufficient balance
+  // rather than creating an unpaid order.
+  if (paymentMethod === "wallet") {
+    await mockDebitWalletForOrder(payload.customerId, Number(payload.totalAmount), orderId);
+  }
+
+  // Shown to the customer once out for delivery; the rider must supply it to
+  // complete the delivery (see riderOrders.mock.ts's mockDeliverOrder) —
+  // mirrors order-service's routes/orders.ts.
+  const deliveryPin = String(Math.floor(1000 + Math.random() * 9000));
+
   const order: Order = {
-    id: crypto.randomUUID(),
+    id: orderId,
     customerId: payload.customerId,
     restaurantId: payload.restaurantId,
     items: payload.items,
     status: "pending",
     totalAmount: String(payload.totalAmount),
+    paymentMethod,
+    paymentStatus: paymentMethod === "wallet" ? "paid" : "pending",
     deliveryAddress: payload.deliveryAddress || "123 Main St, Apt 4B",
     deliveryLat: payload.deliveryLat,
     deliveryLng: payload.deliveryLng,
+    deliveryPin,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

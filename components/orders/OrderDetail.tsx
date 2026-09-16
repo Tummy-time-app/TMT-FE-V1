@@ -9,6 +9,7 @@ import { useGetRestaurantQuery } from "@/features/restaurants/restaurantsApi";
 import { CANCELABLE_STATUSES, ORDER_JOURNEY, ORDER_STATUS_META } from "@/features/orders/statusMeta";
 import { normalizeApiError } from "@/lib/utils/apiError";
 import { Map, type MapMarker } from "@/components/maps/Map";
+import { RewardSummary } from "@/components/rewards/RewardSummary";
 
 function formatNaira(n: number) {
   return `₦${n.toLocaleString("en-NG")}`;
@@ -27,7 +28,7 @@ function formatDateTime(iso?: string) {
 
 export function OrderDetail({ orderId }: { orderId: string }) {
   const router = useRouter();
-  const { isAuthenticated, isSessionLoading } = useAuth();
+  const { user, isAuthenticated, isSessionLoading } = useAuth();
 
   useEffect(() => {
     if (!isSessionLoading && !isAuthenticated) {
@@ -158,6 +159,27 @@ export function OrderDetail({ orderId }: { orderId: string }) {
               🛵 Your rider is on the way.
             </p>
           )}
+        </div>
+      )}
+
+      {order.riderInfo && !isStopped && (
+        <div className="op-summary" style={{ marginBottom: 16 }}>
+          <p className="op-detail__vendor">{order.riderInfo.name ?? "Your rider"}</p>
+          {order.riderInfo.vehicle && <p className="op-address">{order.riderInfo.vehicle}{order.riderInfo.plateNumber ? ` · ${order.riderInfo.plateNumber}` : ""}</p>}
+          {order.riderInfo.phone && <p className="op-address">📞 {order.riderInfo.phone}</p>}
+
+          {["rider_arrived", "picked_up", "out_for_delivery"].includes(order.status) && order.deliveryPin && (
+            <>
+              <p className="op-address" style={{ marginTop: 10 }}>Give this code to your rider to confirm delivery:</p>
+              <span className="rwd-summary-row__value" style={{ fontSize: "1.3rem", letterSpacing: "0.3em" }}>{order.deliveryPin}</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {order.status === "delivered" && user && (
+        <div style={{ marginBottom: 20 }}>
+          <RewardSummary userId={user.id} orderId={order.id} restaurantId={order.restaurantId} />
         </div>
       )}
 

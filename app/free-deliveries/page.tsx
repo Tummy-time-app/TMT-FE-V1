@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { TruckIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { Navigation } from "@/components/nav/Navigation";
+import { FreeDeliveryView } from "@/components/rewards/FreeDeliveryView";
+import "@/app/rewards.css";
 
 export const metadata: Metadata = {
   title: "Free Deliveries — TummyTime",
@@ -9,10 +10,9 @@ export const metadata: Metadata = {
 
 export default function FreeDeliveriesPage() {
   return (
-    <ComingSoonPage
-      icon={TruckIcon}
-      title="Free Deliveries"
-      message="Unlock free-delivery perks the more you order — coming soon."
-    />
+    <>
+      <Navigation />
+      <FreeDeliveryView />
+    </>
   );
 }
