@@ -38,6 +38,13 @@ const SERVICE_ROUTES: readonly (readonly [prefix: string, url: string])[] = [
   ["/api/rider/auth", env.userServiceUrl],
   ["/api/rider/orders", env.orderServiceUrl],
   ["/api/rider/earnings", env.rewardsServiceUrl],
+  // Admin sub-resources are likewise split across four services.
+  ["/api/admin/users", env.userServiceUrl],
+  ["/api/admin/riders", env.userServiceUrl],
+  ["/api/admin/auth", env.userServiceUrl],
+  ["/api/admin/orders", env.orderServiceUrl],
+  ["/api/admin/restaurants", env.restaurantServiceUrl],
+  ["/api/admin/rewards", env.rewardsServiceUrl],
 ];
 
 /**
@@ -114,12 +121,11 @@ export const baseApi = createApi({
   // (customer-facing subset — see restaurantsApi.ts/ordersApi.ts's doc
   // comments) rather than the speculative full domain list the `frontend`
   // branch's ported code assumed (Wallet/Payouts/Referrals/... don't exist
-  // as endpoints anywhere in this backend). Shops/Products/Markets are the
-  // one deliberate exception — net-new marketplace surfaces (see features/
-  // shops/shopsApi.ts and features/markets/marketsApi.ts's doc comments)
-  // with no backend endpoint to mirror at all yet, added on explicit
-  // direction rather than assumed. Wallet/Cashback/Loyalty/FreeDelivery are
-  // a second, newer exception: TMT-BE-V1 now has a real rewards-service
+  // as endpoints anywhere in this backend). Shops/Groceries/Markets are
+  // filtered views over the same "Restaurants" tag (businessType-tagged
+  // rows in the same table) rather than separate tag types — see the
+  // marketplace-expansion plan's Phase C. Wallet/Cashback/Loyalty/
+  // FreeDelivery are a real exception: TMT-BE-V1 has a real rewards-service
   // behind these (see features/rewards/rewardsApi.ts's doc comment).
   tagTypes: [
     "Auth",
@@ -130,9 +136,7 @@ export const baseApi = createApi({
     "VendorStores",
     "Categories",
     "Inventory",
-    "Shops",
-    "Products",
-    "Markets",
+    "ShopperRequests",
     "Promotions",
     "Reviews",
     "Settlements",
@@ -143,6 +147,8 @@ export const baseApi = createApi({
     "FreeDelivery",
     "RiderProfile",
     "RiderEarnings",
+    "Users",
+    "AdminRewards",
   ],
   endpoints: () => ({}),
 });

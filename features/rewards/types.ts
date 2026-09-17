@@ -1,8 +1,8 @@
 /**
  * Mirrors TMT-BE-V1's new rewards-service (services/rewards-service/src/db/
  * schema.ts + routes/rewards.ts) — a real backend now exists for these, so
- * (unlike features/shops/types.ts) this isn't a speculative placeholder
- * contract. Monetary fields are typed `string | number` matching
+ * this isn't a speculative placeholder contract. Monetary fields are typed
+ * `string | number` matching
  * features/vendor/types.ts's Settlement convention (Postgres numeric columns
  * come back as strings from Drizzle).
  */

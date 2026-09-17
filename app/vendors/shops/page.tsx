@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Navigation } from "@/components/nav/Navigation";
-import { ShopsList } from "@/components/shop/ShopsList";
+import { RestaurantsList } from "@/components/vendor/RestaurantsList";
 import "@/app/vendors-listing.css";
 
 export const metadata: Metadata = {
@@ -12,7 +13,16 @@ export default function ShopsPage() {
   return (
     <>
       <Navigation />
-      <ShopsList />
+      <Suspense fallback={null}>
+        <RestaurantsList
+          businessType="retail,other"
+          heading="Shops near you"
+          subtitle="Local businesses around {location}"
+          noun="shop"
+          searchPlaceholder="Search shops…"
+          emptyIconKey="store"
+        />
+      </Suspense>
     </>
   );
 }

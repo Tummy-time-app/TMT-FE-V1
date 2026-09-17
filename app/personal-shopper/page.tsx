@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { ShoppingBagIcon } from "@/components/icons";
-import { ComingSoonPage } from "@/components/ui/ComingSoon";
+import { Navigation } from "@/components/nav/Navigation";
+import { PersonalShopperView } from "@/components/personalShopper/PersonalShopperView";
+import "@/app/orders.css";
+import "@/app/vendors-listing.css";
+import "@/app/personal-shopper.css";
 
 export const metadata: Metadata = {
   title: "Personal Shopper — TummyTime",
@@ -9,10 +12,9 @@ export const metadata: Metadata = {
 
 export default function PersonalShopperPage() {
   return (
-    <ComingSoonPage
-      icon={ShoppingBagIcon}
-      title="Personal Shopper"
-      message="Have a TummyTime shopper pick and deliver items for you — coming soon."
-    />
+    <>
+      <Navigation />
+      <PersonalShopperView />
+    </>
   );
 }

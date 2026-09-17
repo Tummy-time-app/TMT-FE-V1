@@ -94,6 +94,11 @@ function loadUsers(): MockUserRecord[] {
   }
 }
 
+/** For the Admin dashboard's Users/Riders list mocks — sanitized (no password), same fields adminRoutes.ts's real GET /users returns. */
+export function listAllUsersSanitized(): Omit<MockUserRecord, "password">[] {
+  return loadUsers().map(({ password: _password, ...rest }) => rest);
+}
+
 function saveUsers(users: MockUserRecord[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));

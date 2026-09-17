@@ -281,3 +281,27 @@ export async function mockGetOrderRewardSummary(userId: string, orderId: string)
     },
   };
 }
+
+/** For the Admin dashboard's Rewards page — mirrors adminRewards.ts's real GET /summary, summed across every user's state instead of SQL aggregates. */
+export function getPlatformRewardsAggregate() {
+  const all = Object.values(loadAll());
+  let totalCashbackIssued = 0;
+  let totalWalletDeposits = 0;
+  let totalWalletBalance = 0;
+  let loyaltyPointsOutstanding = 0;
+  let freeDeliveriesEarned = 0;
+  let freeDeliveriesUsed = 0;
+  let freeDeliveriesExpired = 0;
+
+  for (const state of all) {
+    totalCashbackIssued += state.cashbackHistory.reduce((sum, c) => sum + Number(c.amount), 0);
+    totalWalletDeposits += state.walletTransactions.filter((t) => t.type === "deposit").reduce((sum, t) => sum + Number(t.amount), 0);
+    totalWalletBalance += state.walletBalance;
+    loyaltyPointsOutstanding += state.loyaltyBalance;
+    freeDeliveriesEarned += state.freeDeliveryHistory.filter((f) => f.event === "earned").length;
+    freeDeliveriesUsed += state.freeDeliveryHistory.filter((f) => f.event === "used").length;
+    freeDeliveriesExpired += state.freeDeliveryHistory.filter((f) => f.event === "expired").length;
+  }
+
+  return { totalCashbackIssued, totalWalletDeposits, totalWalletBalance, loyaltyPointsOutstanding, freeDeliveriesEarned, freeDeliveriesUsed, freeDeliveriesExpired };
+}

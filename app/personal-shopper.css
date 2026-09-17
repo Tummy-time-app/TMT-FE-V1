@@ -1,0 +1,122 @@
+/* ── Personal Shopper ──────────────────────────────────────
+   Customer-facing request form + status view. Reuses op-* (orders.css)
+   for the "My Requests" list/status badges and vp-empty (vendors-listing.css)
+   for empty/loading states — only the form itself needed new classes. */
+
+.ps-root {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.ps-header {
+  margin-bottom: 24px;
+}
+
+.ps-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 6px;
+}
+
+.ps-subtitle {
+  color: var(--line-strong, #6b6b6b);
+  margin: 0;
+}
+
+.ps-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.ps-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ps-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .ps-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.ps-field input,
+.ps-field textarea {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.ps-field input:focus,
+.ps-field textarea:focus {
+  outline: 2px solid var(--crimson-200, var(--crimson));
+  outline-offset: 1px;
+}
+
+.ps-photo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.ps-submit {
+  align-self: flex-start;
+  background: var(--crimson);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 12px 28px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--duration-base, 0.2s) ease;
+}
+
+.ps-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ps-success {
+  background: var(--crimson-50, #fdf1f0);
+  border: 1px solid var(--crimson-200, var(--crimson));
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.ps-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}

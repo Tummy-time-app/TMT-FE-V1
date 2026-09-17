@@ -2,15 +2,23 @@
  * Mirrors TMT-BE-V1's restaurant-service exactly — see
  * services/restaurant-service/src/db/schema.ts and
  * shared/src/types.ts's RestaurantDTO/MenuItemDTO (the backend's own
- * declared public contract). The DB row has many more vendor-management
- * columns (verificationStatus, openingHours, averagePrepTime, ...) — not
- * modeled here since there's no vendor dashboard UI to use them yet.
+ * declared public contract). The DB row has a few more vendor-management
+ * columns (openingHours, averagePrepTime, ...) not modeled here since
+ * there's no vendor dashboard UI to use them yet — but `verificationStatus`/
+ * `storeStatus` are now modeled, added for the Admin dashboard's Vendors
+ * page (components/admin-portal/).
  */
+/** Mirrors restaurant-service's businessTypeEnum — see features/vendor/types.ts's BusinessType for the vendor-facing form that sets this. */
+export type BusinessType = "restaurant" | "grocery" | "retail" | "market" | "other";
+
 export interface Restaurant {
   id: string;
   ownerId: string;
   name: string;
   address: string;
+  businessType?: BusinessType;
+  /** For `businessType: "market"` vendors, this doubles as the shared market display name (e.g. "Mile 12 Fresh Market") that groups several vendor rows into one market — see app/vendors/markets/. */
+  businessCategory?: string | null;
   /** Not in the backend doc's restaurant-service schema yet — added frontend-side for the map feature (components/maps/); absent means "no map to show." */
   lat?: number | null;
   lng?: number | null;
@@ -19,6 +27,9 @@ export interface Restaurant {
   rating?: string | number | null;
   imageUrl?: string | null;
   isOpen: boolean;
+  /** Admin-facing vendor approval state — see adminRestaurants.ts's PATCH /:id/approval. */
+  verificationStatus?: "PENDING" | "VERIFIED" | "REJECTED";
+  storeStatus?: string | null;
   createdAt?: string;
   updatedAt?: string;
 
