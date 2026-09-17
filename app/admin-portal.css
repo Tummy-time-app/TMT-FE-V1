@@ -1,0 +1,55 @@
+/**
+ * Admin portal — reuses `vd-*`/`vp-*` classes from app/vendor-portal.css/
+ * app/vendors-listing.css for the shell/sidebar/tables/empty-states, and
+ * `rd-btn`/`rd-btn--ghost` from app/rider-portal.css for buttons (see
+ * components/admin-portal/AdminPortalShell.tsx's doc comment) rather than
+ * duplicating either. Only the pagination footer is genuinely new.
+ */
+
+.ad-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ad-pagination__label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.ad-status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ad-status-filter__chip {
+  border: 1px solid rgba(172, 0, 0, 0.2);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.ad-status-filter__chip--active {
+  background: var(--crimson);
+  color: var(--white);
+  border-color: var(--crimson);
+}
+
+.ad-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ad-row-actions .rd-btn {
+  flex: none;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}

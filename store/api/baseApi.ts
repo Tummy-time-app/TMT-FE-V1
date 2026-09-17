@@ -38,6 +38,13 @@ const SERVICE_ROUTES: readonly (readonly [prefix: string, url: string])[] = [
   ["/api/rider/auth", env.userServiceUrl],
   ["/api/rider/orders", env.orderServiceUrl],
   ["/api/rider/earnings", env.rewardsServiceUrl],
+  // Admin sub-resources are likewise split across four services.
+  ["/api/admin/users", env.userServiceUrl],
+  ["/api/admin/riders", env.userServiceUrl],
+  ["/api/admin/auth", env.userServiceUrl],
+  ["/api/admin/orders", env.orderServiceUrl],
+  ["/api/admin/restaurants", env.restaurantServiceUrl],
+  ["/api/admin/rewards", env.rewardsServiceUrl],
 ];
 
 /**
@@ -143,6 +150,8 @@ export const baseApi = createApi({
     "FreeDelivery",
     "RiderProfile",
     "RiderEarnings",
+    "Users",
+    "AdminRewards",
   ],
   endpoints: () => ({}),
 });

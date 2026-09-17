@@ -42,6 +42,13 @@ export function mockCreditRiderEarnings(riderId: string, orderId: string) {
   save(all);
 }
 
+/** For the Admin dashboard's Rewards page — total rider earnings paid, platform-wide. */
+export function getTotalRiderEarningsPaid(): number {
+  return Object.values(load())
+    .flat()
+    .reduce((sum, e) => sum + Number(e.amount), 0);
+}
+
 export async function mockGetRiderEarningsSummary(riderId: string): Promise<RiderEarningsSummary> {
   await mockDelay();
   const history = load()[riderId] ?? [];

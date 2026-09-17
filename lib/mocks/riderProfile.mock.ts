@@ -27,6 +27,11 @@ function load(): Record<string, RiderProfile> {
   }
 }
 
+/** For the Admin dashboard's Riders list mock (lib/mocks/adminRiders.mock.ts). */
+export function loadAllRiderProfiles(): RiderProfile[] {
+  return Object.values(load());
+}
+
 function save(all: Record<string, RiderProfile>) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(RIDER_PROFILES_KEY, JSON.stringify(all));
@@ -86,6 +91,16 @@ export async function mockSetOnlineStatus(userId: string, isOnline: boolean): Pr
     throw { status: 403, message: "Your rider account is still pending verification." };
   }
   all[userId] = { ...current, isOnline };
+  save(all);
+  return all[userId];
+}
+
+/** Admin dashboard's Riders page — mirrors adminRoutes.ts's real PATCH /riders/:id/verify. */
+export async function mockSetRiderVerification(userId: string, status: "verified" | "rejected"): Promise<RiderProfile> {
+  await mockDelay();
+  const all = load();
+  const current = all[userId] ?? defaultProfile(userId);
+  all[userId] = { ...current, verificationStatus: status };
   save(all);
   return all[userId];
 }

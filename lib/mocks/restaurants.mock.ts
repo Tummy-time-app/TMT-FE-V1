@@ -20,7 +20,8 @@ const RST_2_ID = "d7c9e5f0-22a3-4b9b-8421-95b2fa592b02";
 const RST_3_ID = "e8da0f1a-33b4-4cac-9532-a6c3ab603c03";
 const RST_4_ID = "f9eb1a2b-44c5-4dbd-a643-b7d4bc714d04";
 
-const restaurants: Restaurant[] = [
+/** For the Admin dashboard's Vendors list mock (lib/mocks/adminVendors.mock.ts) — the base seed list, before any admin overrides. */
+export const BASE_RESTAURANTS: Restaurant[] = [
   {
     id: RST_1_ID,
     ownerId: "a29b3c4d-5e6f-4a1b-8c9d-0e1f2a3b4c5d",
@@ -158,12 +159,12 @@ const menuItemsByRestaurant: Record<string, MenuItem[]> = {
 
 export async function mockListRestaurants(): Promise<Restaurant[]> {
   await mockDelay();
-  return restaurants;
+  return BASE_RESTAURANTS;
 }
 
 export async function mockGetRestaurant(id: string): Promise<Restaurant> {
   await mockDelay();
-  const restaurant = restaurants.find((r) => r.id === id);
+  const restaurant = BASE_RESTAURANTS.find((r) => r.id === id);
   if (!restaurant) throw { status: 404, message: "Restaurant not found" };
   return restaurant;
 }

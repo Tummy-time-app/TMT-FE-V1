@@ -2,9 +2,11 @@
  * Mirrors TMT-BE-V1's restaurant-service exactly — see
  * services/restaurant-service/src/db/schema.ts and
  * shared/src/types.ts's RestaurantDTO/MenuItemDTO (the backend's own
- * declared public contract). The DB row has many more vendor-management
- * columns (verificationStatus, openingHours, averagePrepTime, ...) — not
- * modeled here since there's no vendor dashboard UI to use them yet.
+ * declared public contract). The DB row has a few more vendor-management
+ * columns (openingHours, averagePrepTime, ...) not modeled here since
+ * there's no vendor dashboard UI to use them yet — but `verificationStatus`/
+ * `storeStatus` are now modeled, added for the Admin dashboard's Vendors
+ * page (components/admin-portal/).
  */
 export interface Restaurant {
   id: string;
@@ -19,6 +21,9 @@ export interface Restaurant {
   rating?: string | number | null;
   imageUrl?: string | null;
   isOpen: boolean;
+  /** Admin-facing vendor approval state — see adminRestaurants.ts's PATCH /:id/approval. */
+  verificationStatus?: "PENDING" | "VERIFIED" | "REJECTED";
+  storeStatus?: string | null;
   createdAt?: string;
   updatedAt?: string;
 
