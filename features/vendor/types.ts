@@ -7,7 +7,7 @@ import type { Order } from "@/features/orders/types";
  * much richer than features/restaurants/types.ts's `Restaurant` (the
  * thin, read-only shape customer-facing browsing uses).
  */
-export type BusinessType = "restaurant" | "grocery" | "retail" | "other";
+export type BusinessType = "restaurant" | "grocery" | "retail" | "market" | "other";
 export type StoreStatus = "OPEN" | "CLOSED" | "TEMPORARILY_CLOSED";
 export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
 

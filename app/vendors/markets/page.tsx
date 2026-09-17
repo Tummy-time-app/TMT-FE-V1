@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Navigation } from "@/components/nav/Navigation";
-import { MarketsList } from "@/components/market/MarketsList";
+import { MarketsIndex } from "@/components/vendor/MarketsIndex";
 import "@/app/vendors-listing.css";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export default function MarketsPage() {
   return (
     <>
       <Navigation />
-      <MarketsList />
+      <MarketsIndex />
     </>
   );
 }

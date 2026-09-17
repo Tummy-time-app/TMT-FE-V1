@@ -13,6 +13,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { CategoryRail, type CategoryRailItem } from "@/components/marketplace/CategoryRail";
 import {
   AlertTriangleIcon,
+  BasketIcon,
   BurgerIcon,
   CakeIcon,
   FilterIcon,
@@ -21,6 +22,7 @@ import {
   PizzaIcon,
   SearchIcon,
   StarIcon,
+  StoreIcon,
   ToastIcon,
   UtensilsIcon,
   CloseIcon,
@@ -90,15 +92,70 @@ function countActiveFilters(f: Filters): number {
  * now) computed from lib/storefront/displayMeta.ts's placeholder fields,
  * replacing the single inline "Open now" toggle. Cuisine itself isn't
  * duplicated into the filter sheet — the rail above already does that job.
+ *
+ * Reused for Groceries/Shops/Markets (marketplace-expansion plan's Phase
+ * C): those are just this same restaurants list filtered server-side by
+ * `businessType`, with copy overrides — there's no separate product/shop
+ * concept anywhere in TMT-BE-V1, so a "grocery" or a "market stall" is a
+ * `restaurants` row like any other, browsed and ordered from the exact
+ * same product-detail-modal flow.
  */
-export function RestaurantsList() {
-  const { data: restaurants = [], isLoading, isError, error, refetch } = useListRestaurantsQuery();
+interface RestaurantsListProps {
+  /** Comma-separated restaurant-service businessType filter, e.g. "grocery" or "retail,other". Omit for the default all-restaurants view. */
+  businessType?: string;
+  /** Client-side filter to one named market's stalls (matches Restaurant.businessCategory exactly) — see app/vendors/markets/[marketName]/page.tsx. */
+  businessCategory?: string;
+  heading?: string;
+  /**
+   * Header subtitle, with `{location}` substituted for the customer's
+   * delivery-location label. A plain string, not a function — this
+   * component is rendered from server-component pages (app/groceries/
+   * page.tsx etc.), which can't pass closures across the RSC boundary.
+   */
+  subtitle?: string;
+  /** Singular noun used for "{count} {noun}s" copy and empty states — defaults to "restaurant". */
+  noun?: string;
+  searchPlaceholder?: string;
+  /**
+   * A key into EMPTY_ICON_MAP rather than an IconComponent reference —
+   * this component is rendered from server-component pages (app/groceries/
+   * page.tsx etc.), which can't pass a function/component reference across
+   * the RSC boundary.
+   */
+  emptyIconKey?: "utensils" | "store" | "basket";
+}
+
+const EMPTY_ICON_MAP: Record<NonNullable<RestaurantsListProps["emptyIconKey"]>, IconComponent> = {
+  utensils: UtensilsIcon,
+  store: StoreIcon,
+  basket: BasketIcon,
+};
+
+export function RestaurantsList({
+  businessType,
+  businessCategory,
+  heading = "Discover your next meal",
+  subtitle = "Great food around {location}",
+  noun = "restaurant",
+  searchPlaceholder = "Search restaurants or cuisines…",
+  emptyIconKey = "utensils",
+}: RestaurantsListProps = {}) {
+  const { data: restaurants = [], isLoading, isError, error, refetch } = useListRestaurantsQuery(
+    businessType ? { businessType } : undefined,
+  );
   const { profile } = useProfile();
 
   // Only when the query genuinely succeeded with nothing — never on
-  // loading or error, which already have their own states below.
-  const isDummy = !isLoading && !isError && restaurants.length === 0;
-  const sourceRestaurants = isDummy ? DUMMY_RESTAURANTS : restaurants;
+  // loading or error, which already have their own states below. Skipped
+  // entirely for businessType-filtered views (Shops/Groceries/Markets):
+  // DUMMY_RESTAURANTS is restaurant-flavored sample data and would be
+  // actively misleading shown on those pages, so an empty result there
+  // just renders the genuine "nothing found" empty state instead.
+  const isDummy = !businessType && !isLoading && !isError && restaurants.length === 0;
+  const sourceRestaurants = useMemo(() => {
+    const base = isDummy ? DUMMY_RESTAURANTS : restaurants;
+    return businessCategory ? base.filter((r) => r.businessCategory === businessCategory) : base;
+  }, [isDummy, restaurants, businessCategory]);
 
   // Seeds from ?q=... when arriving via the nav search bar (components/nav/
   // Navigation.tsx) — a plain useState initializer, not a synced effect, so
@@ -178,8 +235,8 @@ export function RestaurantsList() {
     <main className="vp-root">
       <header className="vp-header">
         <div>
-          <h1 className="vp-title">Discover your next meal</h1>
-          <p className="vp-subtitle">Great food around {locationLabel}</p>
+          <h1 className="vp-title">{heading}</h1>
+          <p className="vp-subtitle">{subtitle.replace("{location}", locationLabel)}</p>
         </div>
 
         <div className="vp-search-wrap">
@@ -187,13 +244,13 @@ export function RestaurantsList() {
           <input
             type="text"
             className="vp-search-input"
-            placeholder="Search restaurants or cuisines…"
+            placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            aria-label="Search restaurants"
+            aria-label={`Search ${noun}s`}
           />
           {search && (
             <button className="vp-search-clear" onClick={() => setSearch("")} aria-label="Clear">
@@ -241,8 +298,8 @@ export function RestaurantsList() {
 
       <section className="vp-section">
         <div className="vp-section-row">
-          <h2 className="vp-section-title">All restaurants</h2>
-          <span className="vp-count">{filtered.length} restaurants</span>
+          <h2 className="vp-section-title">All {noun}s</h2>
+          <span className="vp-count">{filtered.length} {noun}{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
         {isDummy && filtered.length > 0 && <DummyBanner message="No restaurants have been added yet — showing sample listings so you can see how this page works." />}
@@ -253,7 +310,7 @@ export function RestaurantsList() {
           ) : isError ? (
             <EmptyState
               icon={AlertTriangleIcon}
-              title="Couldn't load restaurants"
+              title={`Couldn't load ${noun}s`}
               message={getErrorMessage(error)}
               action={
                 <button className="vp-empty-cta" onClick={() => refetch()}>
@@ -263,8 +320,8 @@ export function RestaurantsList() {
             />
           ) : filtered.length === 0 ? (
             <EmptyState
-              icon={UtensilsIcon}
-              title="No restaurants found"
+              icon={EMPTY_ICON_MAP[emptyIconKey]}
+              title={`No ${noun}s found`}
               message="Try adjusting your search or filters."
               action={
                 <button className="vp-empty-cta" onClick={resetFilters}>
@@ -280,7 +337,7 @@ export function RestaurantsList() {
         {!isLoading && !isError && hasMore && (
           <div className="vp-load-more">
             <button className="vp-load-more-btn" onClick={() => setPage((p) => p + 1)}>
-              View more restaurants
+              View more {noun}s
             </button>
           </div>
         )}
@@ -301,7 +358,7 @@ export function RestaurantsList() {
               Reset all
             </button>
             <button type="button" className="vp-filter-sheet__apply" onClick={() => setFilterOpen(false)}>
-              Show {filtered.length} restaurant{filtered.length !== 1 ? "s" : ""}
+              Show {filtered.length} {noun}{filtered.length !== 1 ? "s" : ""}
             </button>
           </div>
         }

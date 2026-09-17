@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -24,7 +25,7 @@ export default function Home() {
       <section className="categories">
         <div className="categories__grid">
           {/* RESTAURANTS */}
-          <div className="card card--restaurants flex flex-col justify-between">
+          <Link href="/vendors/restaurants" className="card card--restaurants flex flex-col justify-between">
             <div>
               <div className="card__icon-wrap">
                 <Image src="/images/restaurant.jpg" width={65} height={65} alt="shopping-basket" />
@@ -67,10 +68,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* SHOPS */}
-          <div className="card card--shops">
+          <Link href="/vendors/shops" className="card card--shops flex flex-col justify-between">
             <div className="card__icon-wrap">
               <Image src="/images/food-basket.png" width={65} height={65} alt="food basket" />
             </div>
@@ -88,11 +89,10 @@ export default function Home() {
                 alt="shopping-basket"
               />
             </div>
-            <div className="card__coming-soon">COMING SOON</div>
-          </div>
+          </Link>
 
           {/* LOCAL MARKETS */}
-          <div className="card card--markets flex flex-col justify-between">
+          <Link href="/vendors/markets" className="card card--markets flex flex-col justify-between">
             <div>
               <div className="card__icon-wrap">
                 <Image src="/images/fruit-basket.png" width={65} height={65} alt="shopping-basket" />
@@ -125,8 +125,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="card__coming-soon">COMING SOON</div>
-          </div>
+          </Link>
         </div>
       </section>
 

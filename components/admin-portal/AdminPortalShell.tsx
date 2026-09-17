@@ -5,9 +5,9 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useAdminGuard } from "./useAdminGuard";
 import { AdminTopBar } from "./AdminTopBar";
-import { HomeIcon, ReceiptIcon, StoreIcon, TruckIcon, UsersIcon, WalletIcon, MenuIcon, CloseIcon, type IconComponent } from "@/components/icons";
+import { HomeIcon, ReceiptIcon, StoreIcon, TruckIcon, UsersIcon, WalletIcon, ShoppingBagIcon, MenuIcon, CloseIcon, type IconComponent } from "@/components/icons";
 
-export type AdminSection = "dashboard" | "orders" | "vendors" | "riders" | "customers" | "rewards";
+export type AdminSection = "dashboard" | "orders" | "vendors" | "riders" | "customers" | "rewards" | "shopper-requests";
 
 interface SidebarItem {
   id: AdminSection;
@@ -16,7 +16,7 @@ interface SidebarItem {
   href: string;
 }
 
-// Flat list — this pass covers 6 of the blueprint's ~15 admin modules (see
+// Flat list — this pass covers 7 of the blueprint's ~15 admin modules (see
 // the implementation plan's scope decision). If/when Payments/Promotions/
 // Support/etc. get added later, this is the point to borrow
 // VendorStoreShell.tsx's `children`-grouped sidebar instead of a flat list.
@@ -27,6 +27,7 @@ const SECTIONS: SidebarItem[] = [
   { id: "riders", label: "Riders", icon: TruckIcon, href: "/admin/riders" },
   { id: "customers", label: "Customers", icon: UsersIcon, href: "/admin/customers" },
   { id: "rewards", label: "Rewards", icon: WalletIcon, href: "/admin/rewards" },
+  { id: "shopper-requests", label: "Shopper Requests", icon: ShoppingBagIcon, href: "/admin/shopper-requests" },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = "tummytime_admin_sidebar_collapsed";

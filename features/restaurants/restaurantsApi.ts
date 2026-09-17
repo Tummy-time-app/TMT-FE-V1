@@ -15,11 +15,19 @@ import type { MenuItem, Restaurant } from "./types";
  */
 export const restaurantsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    listRestaurants: builder.query<Restaurant[], void>({
-      queryFn: async (_arg, _api, _extra, fetchWithBQ) => {
+    /**
+     * `businessType` filters to one or more of restaurant-service's
+     * businessTypeEnum values (comma-separated, e.g. "retail,other") — used
+     * to reuse this single vendor-browsing endpoint for Groceries/Shops/
+     * Markets instead of building parallel browse surfaces for each.
+     */
+    listRestaurants: builder.query<Restaurant[], { businessType?: string } | void>({
+      queryFn: async (arg, _api, _extra, fetchWithBQ) => {
         try {
-          if (isDevMode) return { data: await mockListRestaurants() };
-          const result = await fetchWithBQ("/api/restaurants");
+          const businessType = arg?.businessType;
+          if (isDevMode) return { data: await mockListRestaurants(businessType) };
+          const qs = businessType ? `?businessType=${encodeURIComponent(businessType)}` : "";
+          const result = await fetchWithBQ(`/api/restaurants${qs}`);
           if (result.error) return { error: result.error };
           return { data: (result.data as { restaurants: Restaurant[] }).restaurants };
         } catch (error) {

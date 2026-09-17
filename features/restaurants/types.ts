@@ -8,11 +8,17 @@
  * `storeStatus` are now modeled, added for the Admin dashboard's Vendors
  * page (components/admin-portal/).
  */
+/** Mirrors restaurant-service's businessTypeEnum — see features/vendor/types.ts's BusinessType for the vendor-facing form that sets this. */
+export type BusinessType = "restaurant" | "grocery" | "retail" | "market" | "other";
+
 export interface Restaurant {
   id: string;
   ownerId: string;
   name: string;
   address: string;
+  businessType?: BusinessType;
+  /** For `businessType: "market"` vendors, this doubles as the shared market display name (e.g. "Mile 12 Fresh Market") that groups several vendor rows into one market — see app/vendors/markets/. */
+  businessCategory?: string | null;
   /** Not in the backend doc's restaurant-service schema yet — added frontend-side for the map feature (components/maps/); absent means "no map to show." */
   lat?: number | null;
   lng?: number | null;

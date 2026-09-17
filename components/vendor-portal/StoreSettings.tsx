@@ -24,6 +24,7 @@ const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
   { value: "restaurant", label: "Restaurant" },
   { value: "grocery", label: "Grocery" },
   { value: "retail", label: "Retail" },
+  { value: "market", label: "Market stall" },
   { value: "other", label: "Other" },
 ];
 
@@ -254,10 +255,12 @@ export function StoreSettings({ storeId }: { storeId: string }) {
               </select>
             </div>
             <div className="vd-field">
-              <label htmlFor="businessCategory">Category</label>
+              {/* For a "market" stall, this doubles as the market's name (e.g. "Mile 12 Fresh Market") — see the marketplace-expansion implementation plan; stalls sharing that name are grouped together on the customer-facing Markets page. */}
+              <label htmlFor="businessCategory">{form.businessType === "market" ? "Market name" : "Category"}</label>
               <input
                 id="businessCategory"
                 className="vd-input"
+                placeholder={form.businessType === "market" ? "e.g. Mile 12 Fresh Market" : undefined}
                 value={form.businessCategory}
                 onChange={(e) => patch("businessCategory", e.target.value)}
               />

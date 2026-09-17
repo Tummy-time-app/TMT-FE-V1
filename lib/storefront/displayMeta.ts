@@ -1,6 +1,4 @@
 import type { MenuItem, Restaurant } from "@/features/restaurants/types";
-import type { Shop } from "@/features/shops/types";
-import type { Market } from "@/features/markets/types";
 
 /**
  * Deterministic placeholder data for storefront fields the real backend
@@ -77,62 +75,6 @@ export function getRestaurantDisplayMeta(restaurant: Restaurant): RestaurantDisp
       restaurant.promoLabel !== undefined
         ? restaurant.promoLabel
         : promoRoll < 30
-          ? PROMO_LABELS[promoRoll % PROMO_LABELS.length]
-          : null,
-  };
-}
-
-export interface ShopDisplayMeta {
-  coverImageUrl: string | null;
-  reviewCount: number;
-  deliveryFeeNaira: number;
-  deliveryEtaMinutes: number;
-  minimumOrderNaira: number;
-  tags: string[];
-  isNew: boolean;
-  promoLabel: string | null;
-}
-
-/** Same placeholder contract as getRestaurantDisplayMeta — a shop's `category` stands in for a restaurant's `cuisine`. */
-export function getShopDisplayMeta(shop: Shop): ShopDisplayMeta {
-  const seed = hashSeed(shop.id);
-  const promoRoll = pick(seed, 0, 0, 99);
-
-  return {
-    coverImageUrl: shop.coverImageUrl ?? shop.imageUrl ?? null,
-    reviewCount: shop.reviewCount ?? pick(seed, 4, 10, 260),
-    deliveryFeeNaira: shop.deliveryFeeNaira ?? (pick(seed, 8, 0, 4) === 0 ? 0 : roundTo(pick(seed, 12, 100, 500), 50)),
-    deliveryEtaMinutes: shop.deliveryEtaMinutes ?? pick(seed, 16, 20, 60),
-    minimumOrderNaira: shop.minimumOrderNaira ?? roundTo(pick(seed, 20, 1000, 3000), 100),
-    tags: shop.tags ?? (shop.category ? [shop.category] : ["Retail"]),
-    isNew: shop.isNew ?? pick(seed, 28, 0, 8) === 0,
-    promoLabel:
-      shop.promoLabel !== undefined ? shop.promoLabel : promoRoll < 25 ? PROMO_LABELS[promoRoll % PROMO_LABELS.length] : null,
-  };
-}
-
-export interface MarketDisplayMeta {
-  reviewCount: number;
-  deliveryFeeNaira: number;
-  deliveryEtaMinutes: number;
-  minimumOrderNaira: number;
-  promoLabel: string | null;
-}
-
-/** Same placeholder contract again, pared down to what Market actually needs (no priceRange/tags — a market's own `categories` field already covers that). */
-export function getMarketDisplayMeta(market: Market): MarketDisplayMeta {
-  const seed = hashSeed(market.id);
-  const promoRoll = pick(seed, 0, 0, 99);
-
-  return {
-    reviewCount: market.reviewCount ?? pick(seed, 4, 30, 450),
-    deliveryFeeNaira: market.deliveryFeeNaira ?? (pick(seed, 8, 0, 5) === 0 ? 0 : roundTo(pick(seed, 12, 150, 600), 50)),
-    deliveryEtaMinutes: market.deliveryEtaMinutes ?? pick(seed, 16, 30, 75),
-    minimumOrderNaira: market.minimumOrderNaira ?? roundTo(pick(seed, 20, 1500, 4000), 100),
-    promoLabel:
-      market.promoLabel !== undefined
-        ? market.promoLabel
-        : promoRoll < 20
           ? PROMO_LABELS[promoRoll % PROMO_LABELS.length]
           : null,
   };
